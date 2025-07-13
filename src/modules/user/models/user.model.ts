@@ -24,7 +24,7 @@ export class UserModel extends Model implements User {
   password: string;
 
   @Column
-  birthday?: Date;
+  birthday?: string;
   @Column
   avatar?: string;
   @Column

@@ -41,6 +41,7 @@ export abstract class BaseRepository<E extends BaseEntity> {
     if (order) {
       queryOptions.order = order;
     }
+    console.log(queryOptions);
     const { where } = condition;
     const data = await this.getMany(queryOptions);
     const count = await this.model.count({ where });

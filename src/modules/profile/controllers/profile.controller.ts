@@ -29,8 +29,8 @@ export class ProfileController {
   @ApiOperation({ summary: 'Lấy thông tin profile của gia sư' })
   @Public()
   @Get('tutor/:tutor_id')
-  async getTutorProfile(@Param('tutor_id') tutorId: string) {
-    return this.profileService.getTutorProfile(tutorId);
+  async getTutorProfilePublic(@Param('tutor_id') tutorId: string) {
+    return this.profileService.getTutorProfilePublic(tutorId);
   }
   @ApiOperation({ summary: 'Lấy thông tin profile của học viên' })
   @Public()

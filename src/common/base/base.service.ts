@@ -40,4 +40,8 @@ export abstract class BaseService<T extends BaseEntity> {
     return this.repository.deleteOne({ where: { _id: id } });
   
   }
+  async count(condition?: any): Promise<number> {
+    return this.repository.count(condition);
+  }
+
 }

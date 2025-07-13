@@ -18,6 +18,7 @@ import { Enrollment } from '@/modules/enrollment/entities/enrollment.entity';
 import { EnrollmentStatus } from '@/modules/enrollment/common/constant';
 import { QueryOption } from '@/common/pipe/query-option.interface';
 import { PageableDto } from '@/common/dto/pageable.dto';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class ClassService extends BaseService<Class> {
@@ -34,15 +35,30 @@ export class ClassService extends BaseService<Class> {
   async getClass(
     condition: any,
     query: QueryOption,
+    q?: string,
   ): Promise<PageableDto<Class>> {
+    const whereClause = { ...condition };
+
+    if (q && q.trim() !== '') {
+      const searchQuery = `%${q.trim()}%`;
+      const searchCondition = {
+        [Op.or]: [
+          { title: { [Op.iLike]: searchQuery } },
+          { subject: { [Op.iLike]: searchQuery } },
+          { description: { [Op.iLike]: searchQuery } },
+          { location: { [Op.iLike]: searchQuery } },
+        ],
+      };
+      whereClause[Op.and] = [...(whereClause[Op.and] || []), searchCondition];
+    }
     const classList = await this.classRepository.getPage(
       {
-        where: condition,
+        where: whereClause,
         include: [
           {
             model: UserModel,
             as: 'tutor',
-            attributes: ['_id', 'fullname'],
+            attributes: ['_id', 'fullname', 'avatar'],
           },
         ],
       },
@@ -62,7 +78,15 @@ export class ClassService extends BaseService<Class> {
   }
 
   async getClassById(id: string): Promise<Class> {
-    return this.classRepository.getById(id);
+    return this.classRepository.getOne({
+      where: { _id: id },
+      include: [
+        {
+          model: UserModel,
+          as: 'tutor',
+          attributes: ['_id', 'fullname', 'avatar'],
+        }
+      ]});
   }
 
   // Tutor create class
@@ -145,6 +169,7 @@ export class ClassService extends BaseService<Class> {
   async tutorGetManagerClass(tutorId: string): Promise<ManagerClass[]> {
     const res = await this.classRepository.getMany({
       where: { tutor_id: tutorId },
+      order: [['createdAt', 'DESC']],
     });
     const tutorClass = await Promise.all(
       res.map(async (item) => {
@@ -173,6 +198,7 @@ export class ClassService extends BaseService<Class> {
   async studentGetClass(studentId: string): Promise<Class[] | any> {
     const bid = await this.bidRepository.getMany({
       where: { student_id: studentId },
+      order: [['createdAt', 'DESC']],
       attributes: ['_id', 'class_id', 'status', 'bid_price'],
       include: [
         {

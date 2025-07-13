@@ -14,6 +14,7 @@ import { TutorProfile } from '../entities/tutor-profile.entity';
 import { StudentProfile } from '../entities/stutent-profile.entity';
 import { UserModel } from '@/modules/user/models/user.model';
 import { UserRepository } from '@/modules/user/repositories/user.repository';
+import { EnrollmentRepository } from '@/modules/enrollment/repositories/enrollment.repository';
 
 @Injectable()
 export class ProfileService {
@@ -47,6 +48,24 @@ export class ProfileService {
     if (!profile) {
       throw ApiError.NotFound('Profile not found');
     }
+    return profile;
+  }
+  // public
+  async getTutorProfilePublic(userId: string): Promise<TutorProfile> {
+    const profile = await this.tutorProfileRepository.getOne({
+      where: { user_id: userId },
+      include: [
+        {
+          model: UserModel,
+          as: 'user',
+          attributes: ['fullname', 'avatar'],
+        }
+      ]
+    });
+    if (!profile) {
+      throw ApiError.NotFound('Profile not found');
+    }
+    profile['tutorReview'] = await this.userRepository.getTutorReview(userId); 
     return profile;
   }
 

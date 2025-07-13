@@ -21,6 +21,11 @@ export class BidModel extends Model implements Bid {
   @Column
   @ForeignKey(() => UserModel)
   student_id: string;
+  @BelongsTo(() => UserModel, {
+    foreignKey: 'student_id',
+    targetKey: '_id',
+  })
+  student: UserModel;
   @Column
   bid_price: number;
   @Column

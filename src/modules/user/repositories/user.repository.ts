@@ -47,7 +47,7 @@ export class UserRepository extends BaseRepository<User> {
     const avgRating = totalRating > 0 ? totalRating / review.length : 0;
     return {
       total: review.length,
-      avgRating,
+      avgRating: avgRating.toFixed(1),
     };
   }
   async getInfo(userId: string): Promise<Pick<User, 'phone' | 'email'>> {

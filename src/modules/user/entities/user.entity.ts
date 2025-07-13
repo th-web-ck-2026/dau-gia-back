@@ -22,9 +22,9 @@ export class User implements BaseEntity {
   @MinLength(8)
   password: string;
 
-  @IsDate()
+
   @IsOptional()
-  birthday?: Date;
+  birthday?: string;
 
   @IsOptional()
   avatar?: string;

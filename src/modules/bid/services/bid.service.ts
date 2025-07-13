@@ -15,6 +15,8 @@ import { Sequelize } from 'sequelize-typescript';
 import { EnrollmentRepository } from '@/modules/enrollment/repositories/enrollment.repository';
 import { NotificationService } from '@/modules/notification/services/notification.service';
 import { NotificationType } from '@/modules/notification/common/constant';
+import { User } from '@/modules/user/entities/user.entity';
+import { UserModel } from '@/modules/user/models/user.model';
 
 @Injectable()
 export class BidService extends BaseService<Bid> {
@@ -29,7 +31,17 @@ export class BidService extends BaseService<Bid> {
   }
 
   async getBidsOfClass(classId: string): Promise<Bid[]> {
-    return this.bidRepository.getMany({ where: { class_id: classId } });
+    return this.bidRepository.getMany({
+      where: { class_id: classId },
+      include: [
+        {
+          model: UserModel,
+          as: 'student',
+          attributes: ['_id', 'fullname', 'avatar'],
+        },
+
+      ],
+    });
   }
 
   async createBid(
@@ -68,7 +80,7 @@ export class BidService extends BaseService<Bid> {
       title: `Học viên - ${user.fullname} đã chào giá cho lớp - ${bidClass.title}`,
       content: `Học viên - ${user.fullname} đã chào giá cho lớp - ${bidClass.title} với giá là ${res.bid_price} VNĐ
       Hãy vào lớp học để xem chi tiết nhé.`,
-    }); 
+    });
     return res;
   }
   async updateBid(
@@ -104,17 +116,14 @@ export class BidService extends BaseService<Bid> {
   }
   // Tutor handle
   // tutor select student
-  async tutorSelectBidStudent(
-    tutorId: string,
-    bidId: string,
-  ): Promise<any> {
+  async tutorSelectBidStudent(tutorId: string, bidId: string): Promise<any> {
     const bid = await this.bidRepository.getOne({
       where: { _id: bidId },
       include: [
         {
           model: ClassModel,
           as: 'class',
-          attributes: ['_id', 'title' ,'tutor_id', 'status', 'max_student'],
+          attributes: ['_id', 'title', 'tutor_id', 'status', 'max_student'],
         },
       ],
     });
@@ -185,7 +194,7 @@ export class BidService extends BaseService<Bid> {
         {
           model: ClassModel,
           as: 'class',
-          attributes: ['_id', 'tutor_id', 'status'],
+          attributes: ['_id', 'tutor_id', 'status', 'title'],
         },
       ],
     });

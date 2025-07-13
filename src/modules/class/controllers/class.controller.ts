@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import { ClassService } from '../services/class.service';
 import { Public } from '@Decorators/public.decorator';
@@ -32,8 +33,9 @@ export class ClassController {
   async findAll(
     @RequestCondition(ConditionClassDto) condition,
     @RequestQuery() query: QueryOption,
+    @Query('q') q?: string,
   ) {
-    return this.classService.getClass(condition, query);
+    return this.classService.getClass(condition, query, q);
   }
   // Tutor Manager class
   @ApiOperation({ summary: 'Lấy các lớp học của gia sư' })
@@ -53,8 +55,15 @@ export class ClassController {
   @ApiOperation({ summary: 'Lấy các lớp học của gia sư theo ID' })
   @Public()
   @Get('tutor/:tutorId')
-  async getClassByTutorId(@Param('tutorId') tutorId: string) {
-    return this.classService.getMany({ where: { tutor_id: tutorId } });
+  async getClassByTutorId(
+    @Param('tutorId') tutorId: string,
+    @RequestQuery() query,
+  ) {
+    return this.classService.getPage({ where: { tutor_id: tutorId } }, query);
+  }
+  @Get('tutor/:tutorId/total')
+  async getTotalClassByTutorId(@Param('tutorId') tutorId: string) {
+    return this.classService.count({ where: { tutor_id: tutorId } });
   }
   // Chú Ý Cái Này !!!!!!
   @ApiOperation({ summary: 'Lấy thông tin lớp học theo ID' })

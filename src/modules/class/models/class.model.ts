@@ -26,13 +26,13 @@ export class ClassModel extends Model implements Class {
   })
   @ForeignKey(() => UserModel)
   tutor_id: string;
-
+  
   @BelongsTo(() => UserModel, {
     foreignKey: 'tutor_id',
     targetKey: '_id',
   })
   tutor: User;
-
+  
   @Column({
     type: DataType.STRING,
     allowNull: false,
@@ -43,7 +43,7 @@ export class ClassModel extends Model implements Class {
     allowNull: false,
   })
   subject: string;
-
+  
   @Column({
     type: DataType.STRING,
     allowNull: false,
@@ -65,7 +65,7 @@ export class ClassModel extends Model implements Class {
   })
   max_student: number;
   @Column({
-    type: DataType.STRING,
+    type: DataType.TEXT,
     allowNull: false,
   })
   description: string;
@@ -90,4 +90,9 @@ export class ClassModel extends Model implements Class {
     allowNull: false,
   })
   schedule: string;
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+  })
+  requirement: string;
 }
