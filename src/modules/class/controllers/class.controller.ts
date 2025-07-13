@@ -61,6 +61,8 @@ export class ClassController {
   ) {
     return this.classService.getPage({ where: { tutor_id: tutorId } }, query);
   }
+  @Public()
+  @ApiOperation({ summary: 'Lấy tổng số lớp học của gia sư' })
   @Get('tutor/:tutorId/total')
   async getTotalClassByTutorId(@Param('tutorId') tutorId: string) {
     return this.classService.count({ where: { tutor_id: tutorId } });
