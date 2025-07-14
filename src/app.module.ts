@@ -18,6 +18,7 @@ import { ReviewModule } from './modules/review/review.module';
 import { WalletModule } from './modules/wallet/wallet.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { DepositPackageModule } from './modules/deposit-package/deposit-package.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -25,6 +26,14 @@ import { DepositPackageModule } from './modules/deposit-package/deposit-package.
       isGlobal: true,
       load: [appConfig],
       envFilePath: '.env',
+    }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 10000,
+          limit: 10,
+        },
+      ],
     }),
     DatabaseModule,
     UsersModule,
@@ -52,6 +61,10 @@ import { DepositPackageModule } from './modules/deposit-package/deposit-package.
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })
