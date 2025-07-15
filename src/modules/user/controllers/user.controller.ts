@@ -6,11 +6,13 @@ import { UpdateUserPasswordDto } from '../dto/update-user-password.dto';
 import { UpdateUserAvatar } from '../dto/update-user-avatar.dto';
 import { Auth } from '@/common/decorators/auth.decorator';
 import { ApiOperation } from '@nestjs/swagger';
+import { Public } from '@/common/decorators/public.decorator';
 @Auth()
 @Controller('user')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Public()
   @Get('info/:id')
   async getUserInfo(@Param('id') id: string) {
     return this.usersService.getOne({
