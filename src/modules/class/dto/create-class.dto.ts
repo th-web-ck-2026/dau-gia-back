@@ -8,7 +8,4 @@ export class CreateClassDto extends OmitType(Class, [
   'status',
   'tutor',
 ]) {
-  @ApiHideProperty()
-  @IsOptional()
-  tutor_id?: string;
 }
