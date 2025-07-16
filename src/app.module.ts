@@ -19,6 +19,7 @@ import { WalletModule } from './modules/wallet/wallet.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { DepositPackageModule } from './modules/deposit-package/deposit-package.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { FileModule } from './modules/file/file.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
     WalletModule,
     NotificationModule,
     DepositPackageModule,
+    FileModule,
     AuthModule,
   ],
   controllers: [AppController],
