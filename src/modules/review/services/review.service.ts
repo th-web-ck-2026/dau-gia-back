@@ -14,13 +14,14 @@ import { NotificationType } from '@/modules/notification/common/constant';
 import { NotificationService } from '@/modules/notification/services/notification.service';
 import { PageableDto } from '@/common/dto/pageable.dto';
 import { QueryOption } from '@/common/pipe/query-option.interface';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class ReviewService extends BaseService<Review> {
   constructor(
     private readonly reviewRepository: ReviewRepository,
     private readonly enrollmentRepository: EnrollmentRepository,
-    private readonly classRepository: ClassRepository,
+    // private readonly classRepository: ClassRepository,
     private readonly notificationService: NotificationService,
   ) {
     super(reviewRepository);
@@ -137,5 +138,10 @@ export class ReviewService extends BaseService<Review> {
     });
 
     return res;
+  }
+  async getReviewOfListTutorIds(
+    tutorIds: string[],
+  ) {
+    return this.reviewRepository.getReviewsOfTutors(tutorIds);
   }
 }

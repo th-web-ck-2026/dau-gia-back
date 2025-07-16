@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { ProfileController } from './controllers/profile.controller';
 import { ProfileService } from './services/profile.service';
@@ -7,10 +7,12 @@ import { TutorProfileRepository } from './repositories/tutor-profile.repository'
 import { TutorProfileModel } from './models/tutor-profile.model';
 import { StudentProfileModel } from './models/stutent-profile.model';
 import { UsersModule } from '../user/user.module';
+import { ReviewModule } from '../review/review.module';
 @Module({
   imports: [
     SequelizeModule.forFeature([TutorProfileModel, StudentProfileModel]),
-    UsersModule,
+    forwardRef(() => UsersModule),
+    forwardRef(() => ReviewModule),
   ],
   controllers: [ProfileController],
   providers: [ProfileService, TutorProfileRepository, StudentProfileRepository],

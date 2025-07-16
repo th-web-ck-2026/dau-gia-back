@@ -1,7 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { BaseService } from '@Base/base.service';
-import { CreateProfileDto } from '../dto/create-profile.dto';
-import { UpdateProfileDto } from '../dto/update-profile.dto';
 import { ApiError } from '@Exceptions/api-error';
 import { StudentProfileRepository } from '../repositories/student-profile.repository';
 import { TutorProfileRepository } from '../repositories/tutor-profile.repository';
@@ -14,7 +11,9 @@ import { TutorProfile } from '../entities/tutor-profile.entity';
 import { StudentProfile } from '../entities/stutent-profile.entity';
 import { UserModel } from '@/modules/user/models/user.model';
 import { UserRepository } from '@/modules/user/repositories/user.repository';
-import { EnrollmentRepository } from '@/modules/enrollment/repositories/enrollment.repository';
+import { QueryOption } from '@/common/pipe/query-option.interface';
+import { ReviewRepository } from '@/modules/review/repositories/review.repository';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class ProfileService {
@@ -38,7 +37,7 @@ export class ProfileService {
     if (!profile) {
       throw ApiError.NotFound('Profile not found');
     }
-    profile['tutorReview'] = await this.userRepository.getTutorReview(userId); 
+    profile['tutorReview'] = await this.userRepository.getTutorReview(userId);
     return profile;
   }
   async getStudentProfile(userId: string): Promise<StudentProfile> {
@@ -59,13 +58,13 @@ export class ProfileService {
           model: UserModel,
           as: 'user',
           attributes: ['fullname', 'avatar'],
-        }
-      ]
+        },
+      ],
     });
     if (!profile) {
       throw ApiError.NotFound('Profile not found');
     }
-    profile['tutorReview'] = await this.userRepository.getTutorReview(userId); 
+    profile['tutorReview'] = await this.userRepository.getTutorReview(userId);
     return profile;
   }
 
@@ -95,30 +94,26 @@ export class ProfileService {
     });
   }
 
-  async createProfile(
-    user: User,
-  ): Promise<any> {
+  async createProfile(user: User): Promise<any> {
     if (user.role === UserRoles.STUDENT) {
       return this.createStudentProfile(user._id);
     }
     return this.createTutorProfile(user._id);
   }
 
-  async createTutorProfile(
-    userId: string,
-  ): Promise<any> {
+  async createTutorProfile(userId: string): Promise<any> {
     return this.tutorProfileRepository.create({
       user_id: userId,
     });
   }
 
-  async createStudentProfile(
-    userId: string,
-  ): Promise<any> {
+  async createStudentProfile(userId: string): Promise<any> {
     return this.studentProfileRepository.create({
       user_id: userId,
     });
   }
-  // Tutor Profile In Class
-  
+  // Get page tutor profile@Query('q') q?: string,
+  async getTutorProfilePage(query: QueryOption, q?: string) {
+    return this.tutorProfileRepository.getTutorProfilePage(query, q);
+  }
 }

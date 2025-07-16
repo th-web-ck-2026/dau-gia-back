@@ -12,9 +12,9 @@ import { NotificationModule } from '../notification/notification.module';
 @Module({
   imports: [
     SequelizeModule.forFeature([EnrollmentModel]),
-    ProfileModule,
-    UsersModule,
-    NotificationModule,
+    forwardRef(() => ProfileModule),
+    forwardRef(() => UsersModule),
+    forwardRef(() => NotificationModule),
     forwardRef(() => ClassModule),
   ],
   controllers: [EnrollmentController],

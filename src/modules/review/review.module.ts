@@ -7,17 +7,14 @@ import { ReviewRepository } from './repositories/review.repository';
 import { ClassModule } from '../class/class.module';
 import { EnrollmentModule } from '../enrollment/enrollment.module';
 import { UsersModule } from '../user/user.module';
-import { ProfileModule } from '../profile/profile.module';
 import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   imports: [
     SequelizeModule.forFeature([ReviewModel]),
     EnrollmentModule,
-    UsersModule,
-    ProfileModule,
+    forwardRef(() =>UsersModule),
     NotificationModule,
-    forwardRef(() => ClassModule),
   ],
   controllers: [ReviewController],
   providers: [ReviewService, ReviewRepository],
