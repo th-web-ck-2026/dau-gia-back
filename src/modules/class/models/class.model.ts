@@ -1,5 +1,5 @@
 import { User } from '@/modules/user/entities/user.entity';
-import { ClassMode, ClassStatus } from '../common/constant';
+import { ClassMode, ClassStatus, PriceUnit } from '../common/constant';
 import { Class } from '../entities/class.entity';
 import { StrObjectId } from '@/common/constants/base.constant';
 import {
@@ -30,6 +30,7 @@ export class ClassModel extends Model implements Class {
   @BelongsTo(() => UserModel, {
     foreignKey: 'tutor_id',
     targetKey: '_id',
+    onDelete: 'CASCADE',
   })
   tutor: User;
   
@@ -79,6 +80,14 @@ export class ClassModel extends Model implements Class {
     allowNull: false,
   })
   price_max: number;
+
+  @Column({
+    type: DataType.ENUM(...Object.values(PriceUnit)),
+    allowNull: false,
+    defaultValue: PriceUnit.HOUR,
+  })
+  price_unit: PriceUnit;
+
   @Column({
     type: DataType.ENUM(...Object.values(ClassStatus)),
     allowNull: false,

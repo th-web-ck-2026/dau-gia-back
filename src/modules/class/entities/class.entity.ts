@@ -1,4 +1,4 @@
-import { ClassMode, ClassStatus } from '../common/constant';
+import { ClassMode, ClassStatus, PriceUnit } from '../common/constant';
 import { BaseEntity } from '@/common/interfaces/base-entity.interface';
 import { StrObjectId } from '@/common/constants/base.constant';
 import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
@@ -46,7 +46,10 @@ export class Class implements BaseEntity {
   @IsNumber()
   @Min(0)
   price_max: number;
-  
+
+  @IsEnum(PriceUnit)
+  price_unit: PriceUnit;
+
   @IsEnum(ClassStatus)
   status?: ClassStatus;
 
