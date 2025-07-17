@@ -23,10 +23,7 @@ export class TutorProfileRepository extends BaseRepository<TutorProfile> {
   ): Promise<PageableDto<any>> {
     const limit = query.limit || 10;
     const offset = query.offset ?? ((query.page || 1) - 1) * limit; // Tính toán offset nếu không được cung cấp
-    const order = query.order
-      ? `${query.order[0]} ${query.order[1]}`
-      : 'tutorProfile._id ASC';
-
+    const order = 'score DESC, tutorProfile."createdAt" DESC';
     let whereClause = '';
     const replacements: any = {};
 
@@ -52,10 +49,13 @@ export class TutorProfileRepository extends BaseRepository<TutorProfile> {
           tutorProfile.intro,
           tutorProfile.teaching_subject,
           tutorProfile.certificate,
+          tutorProfile.experience_year,
           u.fullname,
           u.avatar,
           COALESCE(review_stats.total_review, 0) AS total_review,
-          COALESCE(review_stats.average_rating, 0) AS average_rating
+          COALESCE(review_stats.average_rating, 0) AS average_rating,
+          COALESCE(review_stats.total_review, 0) * COALESCE(review_stats.average_rating, 0) AS score,
+          tutorProfile."createdAt"
       FROM
           tutor_profile AS tutorProfile
       JOIN
@@ -87,7 +87,6 @@ export class TutorProfileRepository extends BaseRepository<TutorProfile> {
       type: QueryTypes.SELECT,
     });
     
-    console.log("ok")
     const rawCountQuery = `
       SELECT
           COUNT(DISTINCT tutorProfile._id)
@@ -116,7 +115,7 @@ export class TutorProfileRepository extends BaseRepository<TutorProfile> {
     const total = totalResult[0] ? parseInt(Object.values(totalResult[0])[0] as string, 10) : 0;
 
     const transformedProfiles = profiles.map((profile: any) => {
-      const { fullname, avatar, total_review, average_rating, ...res } =
+      const { fullname, avatar, total_review, average_rating, score, ...res } =
         profile;
       return {
         ...res,
@@ -127,6 +126,7 @@ export class TutorProfileRepository extends BaseRepository<TutorProfile> {
             total: total_review,
             avgRating: Number(average_rating).toFixed(1),
           },
+          score: Number(score).toFixed(1),
         },
       };
     });

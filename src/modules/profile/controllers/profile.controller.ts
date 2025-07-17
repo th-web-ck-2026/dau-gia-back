@@ -17,6 +17,7 @@ import { Auth } from '@/common/decorators/auth.decorator';
 import { ApiOperation } from '@nestjs/swagger';
 import { Public } from '@/common/decorators/public.decorator';
 import { RequestQuery } from '@/common/decorators/request-query.decorator';
+import { QueryOption } from '@/common/pipe/query-option.interface';
 
 @Auth()
 @Controller('profile')
@@ -47,7 +48,10 @@ export class ProfileController {
   @ApiOperation({ summary: 'Lấy danh sách profile của gia sư' })
   @Public()
   @Get('tutor')
-  async getTutorProfilePage(@RequestQuery() query, @Query('q') q?: string) {
+  async getTutorProfilePage(
+    @RequestQuery() query: QueryOption,
+    @Query('q') q?: string,
+  ) {
     return this.profileService.getTutorProfilePage(query, q);
   }
 }
