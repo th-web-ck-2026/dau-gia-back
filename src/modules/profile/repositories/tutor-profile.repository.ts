@@ -86,7 +86,34 @@ export class TutorProfileRepository extends BaseRepository<TutorProfile> {
       replacements: replacements,
       type: QueryTypes.SELECT,
     });
-    const total = await this.tutorProfileModel.count({});
+    
+    console.log("ok")
+    const rawCountQuery = `
+      SELECT
+          COUNT(DISTINCT tutorProfile._id)
+      FROM
+          tutor_profile AS tutorProfile
+      JOIN
+          "user" AS u ON tutorProfile.user_id = u._id
+      LEFT JOIN (
+          SELECT
+              reviewee_id,
+              COUNT(*) AS total_review,
+              AVG(rating) AS average_rating
+          FROM
+              review
+          GROUP BY
+              reviewee_id
+      ) AS review_stats ON u._id = review_stats.reviewee_id
+      ${whereClause};
+    `;
+
+    const totalResult = await this.sequelize.query(rawCountQuery, {
+      replacements: replacements,
+      type: QueryTypes.SELECT,
+    });
+
+    const total = totalResult[0] ? parseInt(Object.values(totalResult[0])[0] as string, 10) : 0;
 
     const transformedProfiles = profiles.map((profile: any) => {
       const { fullname, avatar, total_review, average_rating, ...res } =
