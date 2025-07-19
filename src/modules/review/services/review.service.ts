@@ -59,7 +59,7 @@ export class ReviewService extends BaseService<Review> {
     const totalRating = review.reduce((total, item) => total + item.rating, 0);
     return {
       totalReview,
-      averageRating: totalReview > 0 ? totalRating / totalReview : 0,
+      averageRating: totalReview > 0 ? (totalRating / totalReview).toFixed(1) : 0,
       review: review.map((item) => item.rating),
     };
 
