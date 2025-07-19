@@ -14,4 +14,5 @@ export const EntityTable = {
   BID: 'bid',
   ENROLLMENT: 'enrollment',
   DEPOSIT_PACKAGE: 'deposit_package',
+  REPORT: 'report',
 } as const;
