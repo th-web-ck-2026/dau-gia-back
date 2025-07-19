@@ -35,7 +35,7 @@ export class ClassModel extends Model implements Class {
   tutor: User;
   
   @Column({
-    type: DataType.STRING,
+    type: DataType.TEXT,
     allowNull: false,
   })
   title: string;
