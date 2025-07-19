@@ -101,29 +101,23 @@ export class AdminService implements OnModuleInit {
     const adminPassword = process.env.ADMIN_PASSWORD;
 
     const adminExists = await this.userService.getOne({
-      where: { email: adminEmail, role: UserRoles.ADMIN },
+      where: { email: adminEmail },
     });
 
     if (!adminExists) {
-      try {
-        const hashedPassword = await bcrypt.hash(adminPassword, 10);
-        await this.userService.create({
-          phone: '0000000000',
-          email: adminEmail,
-          password: hashedPassword,
-          role: UserRoles.ADMIN,
-          fullname: 'Admin',
-        });
-        console.log('Admin user created successfully.');
-      } catch (error) {
-        if (error.name === 'SequelizeUniqueConstraintError') {
-          console.warn(
-            'Could not create admin user. A user with the phone number 0000000000 already exists.',
-          );
-        } else {
-          throw error;
-        }
-      }
+      const newUser = await this.authService.register({
+        phone: '0000000000',
+        email: adminEmail,
+        password: adminPassword,
+        fullname: 'Admin',
+        role: UserRoles.STUDENT,
+      });
+
+      await this.userService.updateOne(
+        { role: UserRoles.ADMIN },
+        { where: { _id: newUser._id } },
+      );
+      console.log('Admin user created and role updated successfully.');
     }
   }
 }
