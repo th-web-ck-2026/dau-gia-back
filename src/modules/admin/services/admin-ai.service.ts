@@ -200,7 +200,7 @@ export class AdminAiService {
   }
 
   private async createSingleClass(tutor: User): Promise<Class> {
-    const subject = fakerVI.helpers.arrayElement(['Toán', 'Lý', 'Hóa', 'Anh']);
+    const subject = fakerVI.helpers.arrayElement(['Toán', 'Vật lý', 'Hoá học', 'Tiếng Anh']);
     const grade = fakerVI.helpers.arrayElement(['10', '11', '12']);
     const topic = `${subject} lớp ${grade}`;
     const aiDetails = await this.generateClassDetails(topic);
