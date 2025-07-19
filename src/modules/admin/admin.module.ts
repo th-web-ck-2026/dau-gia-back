@@ -12,6 +12,9 @@ import { EnrollmentModule } from '../enrollment/enrollment.module';
 import { ReviewModule } from '../review/review.module';
 import { AdminFlowService } from './services/admin-flow.service';
 import { AdminFlowController } from './controllers/admin-flow.controller';
+import { AdminAiController } from './controllers/admin-ai.controller';
+import { BidRepository } from '../bid/repositories/bid.repository';
+import { EnrollmentRepository } from '../enrollment/repositories/enrollment.repository';
 
 @Module({
   imports: [
@@ -24,8 +27,14 @@ import { AdminFlowController } from './controllers/admin-flow.controller';
     ReviewModule,
     ConfigModule,
   ],
-  controllers: [AdminController, AdminFlowController],
-  providers: [AdminService, AdminAiService, AdminFlowService],
+  controllers: [AdminController, AdminFlowController, AdminAiController],
+  providers: [
+    AdminService,
+    AdminAiService,
+    AdminFlowService,
+    BidRepository,
+    EnrollmentRepository,
+  ],
   exports: [AdminService, AdminFlowService],
 })
 export class AdminModule {}
