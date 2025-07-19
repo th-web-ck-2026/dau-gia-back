@@ -29,25 +29,36 @@ export class TutorProfileModel extends Model implements BaseEntity {
   })
   user: UserModel;
 
-  @Column
+  @Column({
+    allowNull: true,
+  })
   education_lever: EducationLever;
 
-  @Column
+  @Column({
+    allowNull: true,
+  })
   major: string;
 
-  @Column
+  @Column({
+    allowNull: true,
+  })
   experience_year: ExperienceYear;
 
   @Column({
     type: DataType.ARRAY(DataType.STRING),
+    allowNull: true,
   })
   certificate: string[];
 
-  @Column
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+  })
   intro: string;
 
   @Column({
     type: DataType.ARRAY(DataType.STRING),
+    allowNull: true,
   })
   teaching_subject: string[];
 
