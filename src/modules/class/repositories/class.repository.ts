@@ -39,11 +39,11 @@ export class ClassRepository extends BaseRepository<Class> {
       );
 
       const finalOrderParts = [];
+      finalOrderParts.push(defaultOrderByDate);
       if (!hasCustomCreatedAt) {
-        finalOrderParts.push(defaultOrderByDate);
+        finalOrderParts.push(...customOrderParts);
       }
-
-      finalOrderParts.push(...customOrderParts);
+      
       finalOrderParts.push(defaultTieBreaker);
 
       order = finalOrderParts.join(', ');
