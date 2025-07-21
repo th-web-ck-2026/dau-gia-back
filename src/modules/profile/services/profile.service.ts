@@ -57,7 +57,7 @@ export class ProfileService {
         {
           model: UserModel,
           as: 'user',
-          attributes: ['fullname', 'avatar'],
+          attributes: ['fullname', 'avatar', 'address'],
         },
       ],
     });
