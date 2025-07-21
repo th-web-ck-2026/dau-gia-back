@@ -37,44 +37,7 @@ export class ClassService extends BaseService<Class> {
     query: QueryOption,
     q?: string,
   ): Promise<PageableDto<Class>> {
-    const whereClause = { ...condition };
-
-    if (q && q.trim() !== '') {
-      const searchQuery = `%${q.trim()}%`;
-      const searchCondition = {
-        [Op.or]: [
-          { title: { [Op.iLike]: searchQuery } },
-          { subject: { [Op.iLike]: searchQuery } },
-          { description: { [Op.iLike]: searchQuery } },
-          { location: { [Op.iLike]: searchQuery } },
-        ],
-      };
-      whereClause[Op.and] = [...(whereClause[Op.and] || []), searchCondition];
-    }
-    const classList = await this.classRepository.getPage(
-      {
-        where: whereClause,
-        include: [
-          {
-            model: UserModel,
-            as: 'tutor',
-            attributes: ['_id', 'fullname', 'avatar'],
-          },
-        ],
-      },
-      query,
-    );
-    classList.result = await Promise.all(
-      classList.result.map(async (item) => {
-        item.tutor['tutorReview'] = await this.userRepositroy.getTutorReview(
-          item.tutor._id,
-        );
-        return {
-          ...item,
-        };
-      }),
-    );
-    return classList;
+    return this.classRepository.getClassPage(query, condition, q);
   }
 
   async getClassById(id: string): Promise<Class> {

@@ -7,6 +7,7 @@ import * as bcrypt from 'bcrypt';
 import { UserRepository } from '@/modules/user/repositories/user.repository';
 import { ProfileService } from '@/modules/profile/services/profile.service';
 import { WalletService } from '@/modules/wallet/services/wallet.service';
+import { Op } from 'sequelize';
 @Injectable()
 export class AuthService {
   constructor(
@@ -17,11 +18,13 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const existingUser = await this.userRepository.findByEmail(
-      registerDto.email,
-    );
+    const existingUser = await this.userRepository.getOne({
+      where: {
+        [Op.or]: [{ email: registerDto.email }, { phone: registerDto.phone }],
+      },
+    });
     if (existingUser) {
-      throw ApiError.Conflict('Email already exists');
+      throw ApiError.Conflict('Email hoặc số điện thoại đã tồn tại');
     }
 
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);

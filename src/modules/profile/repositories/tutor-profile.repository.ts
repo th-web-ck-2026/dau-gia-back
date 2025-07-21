@@ -7,6 +7,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { QueryOption } from '@/common/pipe/query-option.interface';
 import { PageableDto } from '@/common/dto/pageable.dto';
 import { QueryTypes } from 'sequelize';
+import { buildWhereClause } from '@/common/utils/sql.utils';
 
 @Injectable()
 export class TutorProfileRepository extends BaseRepository<TutorProfile> {
@@ -24,8 +25,14 @@ export class TutorProfileRepository extends BaseRepository<TutorProfile> {
     const limit = query.limit || 10;
     const offset = query.offset ?? ((query.page || 1) - 1) * limit; // Tính toán offset nếu không được cung cấp
     const order = 'score DESC, tutorProfile."createdAt" DESC';
+    
+    const { page, limit: queryLimit, offset: queryOffset, order: queryOrder, ...condition } = query;
+    
+    const { whereClause: filterClause, replacements: filterReplacements } =
+      buildWhereClause(condition, 'tutorProfile');
+
     let whereClause = '';
-    const replacements: any = {};
+    const replacements: any = { ...filterReplacements };
 
     if (q) {
       const splitQ = q.split(' ').filter((word) => word.trim() !== '');
@@ -34,13 +41,31 @@ export class TutorProfileRepository extends BaseRepository<TutorProfile> {
 
         splitQ.forEach((word, index) => {
           searchConditions.push(`u.fullname ILIKE :q${index}`);
+          searchConditions.push(
+            `array_to_string(tutorProfile.teaching_subject, ' ') ILIKE :q${index}`,
+          );
+          searchConditions.push(
+            `array_to_string(tutorProfile.certificate, ' ') ILIKE :q${index}`,
+          );
           replacements[`q${index}`] = `%${word}%`;
         });
 
         if (searchConditions.length > 0) {
-          whereClause = `WHERE (${searchConditions.join(' OR ')})`;
+          whereClause = `(${searchConditions.join(' OR ')})`;
         }
       }
+    }
+
+    if (filterClause) {
+      if (whereClause) {
+        whereClause = `${whereClause} AND ${filterClause}`;
+      } else {
+        whereClause = filterClause;
+      }
+    }
+
+    if (whereClause) {
+      whereClause = `WHERE ${whereClause}`;
     }
 
     const rawQuery = `
