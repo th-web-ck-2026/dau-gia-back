@@ -19,7 +19,7 @@ import { join } from 'path';
           },
         },
         defaults: {
-          from: `"No Reply" <${configService.get('MAIL_FROM')}>`,
+          from: `"Cổng gia sư" <${configService.get('MAIL_FROM')}>`,
         },
         template: {
           dir: join(__dirname, 'templates'),

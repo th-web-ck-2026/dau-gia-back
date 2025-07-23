@@ -5,37 +5,16 @@ import { Class } from '@/modules/class/entities/class.entity';
 import { Bid } from '@/modules/bid/entities/bid.entity';
 
 @Injectable()
-export class SendMailService implements OnModuleInit {
+export class SendMailService {
   constructor(private readonly mailerService: MailerService) {}
-  async onModuleInit() {
-    console.log('SEND MAIL');
-    await this.sendBidCreate(
-      {
-        email: 'tung@gmail.com',
-        fullname: 'Nguyen Văn Dương',
-      } as User,
-      {
-        bid_price: 100000,
-      } as Bid,
-      {
-        email: 'tungnguyenduong473@gmail.com',
-        fullname: 'Nguyen Tùng Dương',
-      } as User,
-      {
-        title: 'Lớp học 1',
-      } as Class,
-    );
-  }
   async sendUserConfirmation(user: User, token: string) {
     const url = `example.com/auth/confirm?token=${token}`;
 
     await this.mailerService.sendMail({
       to: user.email,
-      // from: '"Support Team" <support@example.com>', // override default from
       subject: 'Welcome to Nice App! Confirm your Email',
-      template: './welcome', // `.hbs` extension is appended automatically
+      template: './welcome',
       context: {
-        // ✏️ filling curly brackets with content
         name: user.fullname,
         url,
         platformName: 'Cổng gia sư',
@@ -57,23 +36,55 @@ export class SendMailService implements OnModuleInit {
       },
     });
   }
-  async sendBidCreate(user: User, bid: Bid, tutor: User, tutorClass: Class) {
+  async sendBidCreate(student: User, bid: Bid, tutor: User, tutorClass: Class) {
     await this.mailerService.sendMail({
       to: tutor.email,
       subject: `Đề xuất giá mới cho lớp học: ${tutorClass.title}`,
       template: './bid-create',
       context: {
         subject: `Đề xuất giá mới cho lớp học: ${tutorClass.title}`,
-        tutorName: tutor.fullname,
-        studentName: user.fullname,
-        classTitle: tutorClass.title,
-        bidPrice: bid.bid_price,
-        classUrl: `https://conggiasu.com/quan-ly-lop.html`, // URL phải thật cụ thể
 
-        // --- Biến cho Branding & Footer ---
+        tutorName: tutor.fullname,
+        studentName: student.fullname,
+        classTitle: tutorClass.title,
+        bidPrice: new Intl.NumberFormat('vi-VN', {
+          style: 'currency',
+          currency: 'VND',
+        }).format(bid.bid_price),
+        classUrl: `https://conggiasu.com/quan-ly-lop.html`,
+
         platformName: 'Cổng gia sư',
         platformUrl: 'https://conggiasu.com',
-        platformLogoUrl: 'http://conggiasu.com/assets/img/logo.png', // URL đến logo của bạn
+        platformLogoUrl: 'http://conggiasu.com/assets/img/logo.png',
+        currentYear: new Date().getFullYear(),
+      },
+    });
+  }
+  async sendTutorSelectBid(
+    student: User,
+    bid: Bid,
+    tutor: User,
+    tutorClass: Class,
+  ) {
+    await this.mailerService.sendMail({
+      to: student.email,
+      subject: `Đề xuất của bạn cho lớp "${tutorClass.title}" đã được chấp nhận!`,
+      template: './tutor-select-bid',
+      context: {
+        subject: `Đề xuất của bạn cho lớp "${tutorClass.title}" đã được chấp nhận!`,
+
+        studentName: student.fullname,
+        classTitle: tutorClass.title,
+        tutorName: tutor.fullname,
+        acceptedPrice: new Intl.NumberFormat('vi-VN', {
+          style: 'currency',
+          currency: 'VND',
+        }).format(bid.bid_price),
+        classUrl: `https://conggiasu.com/quan-ly-lop.html`,
+
+        platformName: 'Cổng gia sư',
+        platformUrl: 'https://conggiasu.com',
+        platformLogoUrl: 'http://conggiasu.com/assets/img/logo.png',
         currentYear: new Date().getFullYear(),
       },
     });

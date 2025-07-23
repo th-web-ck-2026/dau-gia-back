@@ -17,19 +17,16 @@
                 <table role="presentation" width="600" cellpadding="0" cellspacing="0"><tr><td>
                 <![endif]-->
                 <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width: 100%; max-width: 600px; margin: 20px auto;">
-                    
-                    <!-- === (SỬA ĐỔI) LOGO & PLATFORM NAME HEADER === -->
+                    <!-- HEADER -->
                     <tr>
                         <td align="center" style="padding: 20px 0;">
                             <table border="0" cellpadding="0" cellspacing="0" role="presentation">
                                 <tr>
-                                    <!-- Logo (thu nhỏ) -->
                                     <td style="padding-right: 15px; vertical-align: middle;">
                                         <a href="{{platformUrl}}" target="_blank">
                                             <img src="{{platformLogoUrl}}" alt="{{platformName}} Logo" width="40" style="display: block; border: 0;">
                                         </a>
                                     </td>
-                                    <!-- Tên nền tảng (văn bản) -->
                                     <td style="vertical-align: middle;">
                                         <a href="{{platformUrl}}" target="_blank" style="font-family: Arial, sans-serif; font-size: 22px; font-weight: bold; color: #111111; text-decoration: none;">
                                             {{platformName}}
@@ -40,17 +37,17 @@
                         </td>
                     </tr>
 
-                    <!-- MAIN CONTENT CARD (Không thay đổi) -->
+                    <!-- MAIN CONTENT CARD -->
                     <tr>
                         <td style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
                             <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
                                 <!-- CONTENT -->
                                 <tr>
                                     <td style="padding: 40px 30px 30px 30px; font-family: Arial, sans-serif; color: #333333;">
-                                        <h1 style="margin: 0 0 20px; font-size: 24px; font-weight: bold; color: #111111;">Bạn có một đề xuất giá mới!</h1>
-                                        <p style="margin: 0 0 10px; font-size: 16px; line-height: 1.6;">Chào <strong>{{tutorName}}</strong>,</p>
+                                        <h1 style="margin: 0 0 20px; font-size: 24px; font-weight: bold; color: #111111;">Chúc mừng! Đề xuất của bạn đã được chấp nhận.</h1>
+                                        <p style="margin: 0 0 10px; font-size: 16px; line-height: 1.6;">Chào <strong>{{studentName}}</strong>,</p>
                                         <p style="margin: 0 0 25px; font-size: 16px; line-height: 1.6;">
-                                            Một học viên vừa gửi đề xuất giá cho lớp học của bạn. Đây là một cơ hội kết nối tuyệt vời đang chờ bạn phản hồi.
+                                            Tin vui! Gia sư đã chấp nhận đề xuất giá của bạn cho lớp học bên dưới. Bạn đã sẵn sàng để bắt đầu hành trình học tập mới của mình.
                                         </p>
 
                                         <!-- DETAILS BOX -->
@@ -60,24 +57,24 @@
                                                     <p style="margin: 0 0 12px; font-size: 14px; color: #555555;">Lớp học:</p>
                                                     <h2 style="margin: 0 0 20px; font-size: 18px; font-weight: bold; color: #111111;">{{classTitle}}</h2>
                                                     
-                                                    <p style="margin: 0 0 12px; font-size: 14px; color: #555555;">Học viên:</p>
-                                                    <p style="margin: 0 0 20px; font-size: 16px; font-weight: bold; color: #111111;">{{studentName}}</p>
+                                                    <p style="margin: 0 0 12px; font-size: 14px; color: #555555;">Gia sư phụ trách:</p>
+                                                    <p style="margin: 0 0 20px; font-size: 16px; font-weight: bold; color: #111111;">{{tutorName}}</p>
 
-                                                    <p style="margin: 0 0 12px; font-size: 14px; color: #555555;">Mức giá đề xuất:</p>
-                                                    <p style="margin: 0; font-size: 22px; font-weight: bold; color: #28a745;">{{bidPrice}}</p>
+                                                    <p style="margin: 0 0 12px; font-size: 14px; color: #555555;">Mức giá được chấp nhận:</p>
+                                                    <p style="margin: 0; font-size: 22px; font-weight: bold; color: #28a745;">{{acceptedPrice}} VNĐ</p>
                                                 </td>
                                             </tr>
                                         </table>
 
                                         <p style="margin: 25px 0; font-size: 16px; line-height: 1.6;">
-                                            Phản hồi sớm sẽ làm tăng đáng kể cơ hội được học viên lựa chọn. Vui lòng xem xét đề xuất và phản hồi trong thời gian sớm nhất.
+                                            Bước tiếp theo là kết nối với gia sư để sắp xếp buổi học đầu tiên. Hãy nhấp vào nút bên dưới để xem thông tin liên hệ chi tiết.
                                         </p>
 
                                         <!-- CTA BUTTON -->
                                         <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin: 30px auto 0 auto;">
                                             <tr>
-                                                <td align="center" bgcolor="#007bff" style="border-radius: 5px;">
-                                                    <a href="{{classUrl}}" target="_blank" style="font-size: 16px; font-family: Arial, sans-serif; font-weight: bold; color: #ffffff; text-decoration: none; display: inline-block; padding: 15px 30px; border-radius: 5px;">Xem và Phản hồi đề xuất</a>
+                                                <td align="center" bgcolor="#28a745" style="border-radius: 5px;">
+                                                    <a href="{{classUrl}}" target="_blank" style="font-size: 16px; font-family: Arial, sans-serif; font-weight: bold; color: #ffffff; text-decoration: none; display: inline-block; padding: 15px 30px; border-radius: 5px;">Xem thông tin liên hệ của Gia sư</a>
                                                 </td>
                                             </tr>
                                         </table>
@@ -87,10 +84,10 @@
                         </td>
                     </tr>
 
-                    <!-- FOOTER (Không thay đổi) -->
+                    <!-- FOOTER -->
                     <tr>
                         <td align="center" style="padding: 30px 20px; font-family: Arial, sans-serif; font-size: 12px; color: #888888; line-height: 1.5;">
-                            <p style="margin: 0;">Bạn nhận được email này vì tài khoản gia sư của bạn tại {{platformName}} có hoạt động mới.</p>
+                            <p style="margin: 0;">Bạn nhận được email này vì tài khoản học viên của bạn tại {{platformName}} có hoạt động mới.</p>
                             <p style="margin: 15px 0 0;">
                                 © {{currentYear}} {{platformName}}. Bảo lưu mọi quyền.
                             </p>
