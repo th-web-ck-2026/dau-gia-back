@@ -22,6 +22,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { FileModule } from './modules/file/file.module';
 import { ReportModule } from './modules/report/report.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { SendMailModule } from './modules/send-mail/send-mail.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { AdminModule } from './modules/admin/admin.module';
     FileModule,
     ReportModule,
     AdminModule,
+    SendMailModule,
     AuthModule,
   ],
   controllers: [AppController],
