@@ -60,6 +60,13 @@ export class ClassModel extends Model implements Class {
     allowNull: false,
   })
   location: string;
+  
+  @Column({
+    type: DataType.ARRAY(DataType.STRING),
+    allowNull: true,
+  })
+  location_detail?: string[];
+
   @Column({
     type: DataType.INTEGER,
     allowNull: false,

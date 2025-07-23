@@ -31,6 +31,10 @@ export class Class implements BaseEntity {
   @IsNotEmpty()
   location: string;
 
+  @IsString({ each: true })
+  @IsOptional()
+  location_detail?: string[];
+
   @IsNumber()
   @Min(1)
   @Max(20)
