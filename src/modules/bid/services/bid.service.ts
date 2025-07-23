@@ -82,7 +82,7 @@ export class BidService extends BaseService<Bid> {
       throw ApiError.BadRequest('Create bid failed');
     }
     // send notification to tutor
-    await this.notificationService.createNotification({
+    this.notificationService.createNotification({
       user_id: bidClass.tutor_id,
       type: NotificationType.COURSE,
       title: `Học viên - ${user.fullname} đã chào giá cho lớp - ${bidClass.title}`,
@@ -195,14 +195,14 @@ export class BidService extends BaseService<Bid> {
         );
       }
       // send notification to student
-      await this.notificationService.createNotification({
+      this.notificationService.createNotification({
         user_id: bid.student_id,
         type: NotificationType.COURSE,
         title: `Chào giá của bạn ở lớp - ${bidClass.title} đã được chấp nhận`,
         content: `Bạn đã được chấp nhận vào lớp học - ${bidClass.title} với giá là ${newBid.bid_price} VNĐ
         Hãy vào lớp học để nhận thông tin liên hệ với gia sư nhé.`,
       });
-      await this.sendMailService.sendTutorSelectBid(
+      this.sendMailService.sendTutorSelectBid(
         bid.student,
         newBid,
         bidClass.tutor,
