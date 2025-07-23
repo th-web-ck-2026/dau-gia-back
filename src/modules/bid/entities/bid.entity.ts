@@ -14,6 +14,8 @@ export class Bid implements BaseEntity {
   class?: Class;
   @IsString()
   student_id: string;
+  @ApiHideProperty()
+  student?: any;
   @IsNumber()
   bid_price: number;
   @IsOptional()
