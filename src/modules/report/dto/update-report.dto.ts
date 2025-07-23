@@ -1,11 +1,7 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreateReportDto } from './create-report.dto';
-import { IsOptional, IsString } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { PickType } from '@nestjs/swagger';
+import { Report } from '../entities/report.entity';
 
-export class UpdateReportDto extends PartialType(CreateReportDto) {
-  @ApiProperty({ description: 'Status of the report (e.g., pending, resolved, rejected)', required: false })
-  @IsOptional()
-  @IsString()
-  status?: string;
-}
+export class UpdateReportDto extends PickType(Report, [
+  'admin_note',
+  'status',
+]) {}

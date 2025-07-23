@@ -11,7 +11,6 @@ import { ClassModule } from '@Modules/class/class.module';
   imports: [
     SequelizeModule.forFeature([ReportModel]),
     UsersModule,
-    ClassModule,
   ],
   controllers: [ReportController],
   providers: [ReportService, ReportRepository],

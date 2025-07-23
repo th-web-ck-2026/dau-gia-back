@@ -24,7 +24,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Lấy thông tin của tôi' })
   @Get('profile/me')
   async getProfileMe(@ReqUser() user) {
-    console.log('Full user object:', user);
+    // console.log('Full user object:', user);
     return this.usersService.getOne({
       where: { _id: user.id },
       attributes: [
