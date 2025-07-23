@@ -8,6 +8,7 @@ import { UserRepository } from '@/modules/user/repositories/user.repository';
 import { ProfileService } from '@/modules/profile/services/profile.service';
 import { WalletService } from '@/modules/wallet/services/wallet.service';
 import { Op } from 'sequelize';
+import { UserStatus } from '@/modules/user/common/constant';
 @Injectable()
 export class AuthService {
   constructor(
@@ -42,16 +43,19 @@ export class AuthService {
   async login(loginDto: LoginDto): Promise<any> {
     const user = await this.userRepository.findByEmail(loginDto.email);
     if (!user) {
-      throw ApiError.Unauthorized('Invalid email or password');
+      throw ApiError.Unauthorized('Email hoặc mật khẩu không đúng');
     }
     const isPasswordValid = await bcrypt.compare(
       loginDto.password,
       user.password,
     );
     if (!isPasswordValid) {
-      throw ApiError.Unauthorized('Invalid email or password');
+      throw ApiError.Unauthorized('Email hoặc mật khẩu không đúng');
     }
-
+    if (user.userStatus === UserStatus.BLOCKED) {
+      throw ApiError.Unauthorized('Tài khoản đã bị khóa');
+    }
+    
     const payload = {
       sub: user._id,
       id: user._id,
