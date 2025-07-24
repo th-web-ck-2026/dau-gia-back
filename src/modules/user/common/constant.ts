@@ -10,6 +10,7 @@ export enum UserStatus {
 }
 
 export enum Gender {
+    NONE = '',
     MALE = 'MALE',
     FEMALE = 'FEMALE',
     OTHER = 'OTHER'
