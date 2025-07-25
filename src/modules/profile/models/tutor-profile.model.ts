@@ -66,4 +66,10 @@ export class TutorProfileModel extends Model implements BaseEntity {
     defaultValue: false,
   })
   is_verified?: boolean;
+
+  @Column({
+    type: DataType.ARRAY(DataType.STRING),
+    allowNull: true,
+  })
+  achievements?: string[];
 }
