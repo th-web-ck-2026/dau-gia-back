@@ -23,6 +23,7 @@ import { FileModule } from './modules/file/file.module';
 import { ReportModule } from './modules/report/report.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { SendMailModule } from './modules/send-mail/send-mail.module';
+import { RecaptchaModule } from './modules/recaptcha/recaptcha.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { SendMailModule } from './modules/send-mail/send-mail.module';
     AdminModule,
     SendMailModule,
     AuthModule,
+    RecaptchaModule,
   ],
   controllers: [AppController],
   providers: [
