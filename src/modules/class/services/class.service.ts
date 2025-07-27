@@ -48,8 +48,9 @@ export class ClassService extends BaseService<Class> {
           model: UserModel,
           as: 'tutor',
           attributes: ['_id', 'fullname', 'avatar'],
-        }
-      ]});
+        },
+      ],
+    });
   }
 
   // Tutor create class
@@ -61,6 +62,15 @@ export class ClassService extends BaseService<Class> {
       ...createClassDto,
       tutor_id: user.id,
     };
+    const countClass = await this.classRepository.count({
+      where: { tutor_id: user.id, status: ClassStatus.OPEN },
+    });
+    if (countClass >= 5) {
+      throw ApiError.BadRequest(
+        'Gia sư chỉ được mở tối đa 5 lớp học.\n' +
+          'Vui lòng đóng các lớp học trước đó để mở lớp mới',
+      );
+    }
     return this.classRepository.create(classData);
   }
 
