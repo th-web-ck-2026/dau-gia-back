@@ -6,6 +6,7 @@ import { CreateClassDto } from '../dto/create-class.dto';
 import { AuthUser } from '@/common/interfaces/auth-user.interface';
 import { ClassStatus, ManagerClass } from '../common/constant';
 import { UpdateClassDto } from '../dto/update-class.dto';
+import { Bid } from '@/modules/bid/entities/bid.entity';
 import { BidRepository } from '@/modules/bid/repositories/bid.repository';
 import { EnrollmentRepository } from '@/modules/enrollment/repositories/enrollment.repository';
 import { ApiError } from '@/common/exceptions/api-error';
@@ -172,7 +173,7 @@ export class ClassService extends BaseService<Class> {
     const bid = await this.bidRepository.getMany({
       where: { student_id: studentId },
       order: [['createdAt', 'DESC']],
-      attributes: ['_id', 'class_id', 'status', 'bid_price'],
+      attributes: ['_id', 'class_id', 'status', 'bid_price', 'createdAt'],
       include: [
         {
           model: ClassModel,
@@ -197,15 +198,15 @@ export class ClassService extends BaseService<Class> {
       ],
     });
     const bidClass = await Promise.all(
-      bid.map(async (bid) => {
+      bid.map(async (bid: Bid & { createdAt?: Date }) => {
         const classInfo = bid.class as Class;
         classInfo.tutor['tutorReview'] =
           await this.userRepositroy.getTutorReview(classInfo.tutor_id);
-        let enrollment: Enrollment;
+        let enrollment: Enrollment & { createdAt?: Date };
         if (bid.status === BidStatus.ACCEPTED) {
           enrollment = await this.enrollmentRepository.getOne({
             where: { class_id: classInfo._id },
-            attributes: ['status'],
+            attributes: ['status', 'createdAt'],
           });
           if (enrollment.status === EnrollmentStatus.STUDYING) {
             const tutorInfo = await this.userRepositroy.getInfo(
@@ -222,8 +223,13 @@ export class ClassService extends BaseService<Class> {
           }
         }
         return {
-          ...bid,
+          _id: bid._id,
+          class_id: bid.class_id,
+          status: bid.status,
+          bid_price: bid.bid_price,
+          class: bid.class,
           classStatus: enrollment?.status || bid.status,
+          createdAt: enrollment?.createdAt || bid.createdAt,
           //Đang học, Đã học xong, Đã chào giá, Bị từ chối.
           //STUDYING, COMPLETE, PENDING, REJECT
         };
