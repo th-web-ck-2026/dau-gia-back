@@ -28,6 +28,7 @@ export class ClassRepository extends BaseRepository<Class> {
     let order: string;
     const defaultOrderByDate = 'CAST(class."createdAt" AS DATE) DESC';
     const defaultTieBreaker = '(average_rating * total_review) DESC';
+    const defaultOrderById = 'class._id DESC';
 
     if (query.order && Array.isArray(query.order) && query.order.length > 0) {
       const customOrderParts = query.order.map(
@@ -45,6 +46,7 @@ export class ClassRepository extends BaseRepository<Class> {
       }
       
       finalOrderParts.push(defaultTieBreaker);
+      finalOrderParts.push(defaultOrderById);
 
       order = finalOrderParts.join(', ');
     } else {
@@ -94,7 +96,8 @@ export class ClassRepository extends BaseRepository<Class> {
           tutor.fullname AS tutor_fullname,
           tutor.avatar AS tutor_avatar,
           COALESCE(review_stats.total_review, 0) AS total_review,
-          COALESCE(review_stats.average_rating, 0) AS average_rating
+          COALESCE(review_stats.average_rating, 0) AS average_rating,
+          COALESCE(bid_counts.bid_count, 0) AS bid_count
       FROM
           class
       JOIN
@@ -109,6 +112,15 @@ export class ClassRepository extends BaseRepository<Class> {
           GROUP BY
               reviewee_id
       ) AS review_stats ON class.tutor_id = review_stats.reviewee_id
+      LEFT JOIN (
+          SELECT
+              class_id,
+              COUNT(*) AS bid_count
+          FROM
+              bid
+          GROUP BY
+              class_id
+      ) AS bid_counts ON class._id = bid_counts.class_id
       ${finalWhereClause}
       ORDER BY
           ${order}
