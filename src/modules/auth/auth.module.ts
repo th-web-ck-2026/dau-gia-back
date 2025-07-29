@@ -8,9 +8,11 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { UsersModule } from '@Modules/user/user.module';
 import { ProfileModule } from '../profile/profile.module';
 import { WalletModule } from '../wallet/wallet.module';
+import { SendMailModule } from '../send-mail/send-mail.module';
 
 @Module({
   imports: [
+    SendMailModule,
     UsersModule,
     ProfileModule,
     WalletModule,

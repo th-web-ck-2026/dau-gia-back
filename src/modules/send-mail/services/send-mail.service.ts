@@ -6,7 +6,15 @@ import { Bid } from '@/modules/bid/entities/bid.entity';
 
 @Injectable()
 export class SendMailService {
-  constructor(private readonly mailerService: MailerService) {}
+  private readonly platformName: string;
+  private readonly platformUrl: string;
+  private readonly platformLogoUrl: string;
+
+  constructor(private readonly mailerService: MailerService) {
+    this.platformName = process.env.PLATFORM_NAME;
+    this.platformUrl = process.env.PLATFORM_URL;
+    this.platformLogoUrl = process.env.PLATFORM_LOGO_URL;
+  }
   async sendUserConfirmation(user: User, token: string) {
     const url = `example.com/auth/confirm?token=${token}`;
 
@@ -23,18 +31,34 @@ export class SendMailService {
     });
   }
 
-  async sendPasswordReset(user: User, token: string) {
-    await this.mailerService.sendMail({
-      to: user.email,
-      subject: 'Reset your password',
-      template: './reset-password',
-      context: {
-        name: user.fullname,
-        token,
-        platformName: 'Cổng gia sư',
-        currentYear: new Date().getFullYear(),
-      },
-    });
+  async sendPasswordReset(user: User, token: string): Promise<void> {
+    const subject = `Yêu cầu đặt lại mật khẩu cho tài khoản ${this.platformName} của bạn`;
+
+    const expiresInMinutes =
+      process.env.PASSWORD_RESET_TOKEN_EXPIRES_IN_MINUTES;
+
+    const resetUrl = `${this.platformUrl}/reset-password.html?token=${token}`;
+
+    const emailContext = {
+      subject: subject,
+      userName: user.fullname,
+      resetUrl: resetUrl,
+      expiresInMinutes: expiresInMinutes,
+
+      // Sử dụng cấu hình đã được nạp sẵn
+      platformName: this.platformName,
+      platformUrl: this.platformUrl,
+      platformLogoUrl: this.platformLogoUrl,
+      currentYear: new Date().getFullYear(),
+    };
+
+      await this.mailerService.sendMail({
+        to: user.email,
+        subject: subject,
+        template: './reset-password',
+        context: emailContext,
+      });
+  
   }
   async sendBidCreate(student: User, bid: Bid, tutor: User, tutorClass: Class) {
     await this.mailerService.sendMail({
