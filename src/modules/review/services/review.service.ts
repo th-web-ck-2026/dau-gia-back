@@ -12,17 +12,59 @@ import { EnrollmentStatus } from '@/modules/enrollment/common/constant';
 import { ClassModel } from '@/modules/class/models/class.model';
 import { NotificationType } from '@/modules/notification/common/constant';
 import { NotificationService } from '@/modules/notification/services/notification.service';
+import { PageableDto } from '@/common/dto/pageable.dto';
+import { QueryOption } from '@/common/pipe/query-option.interface';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class ReviewService extends BaseService<Review> {
   constructor(
     private readonly reviewRepository: ReviewRepository,
     private readonly enrollmentRepository: EnrollmentRepository,
-    private readonly classRepository: ClassRepository,
+    // private readonly classRepository: ClassRepository,
     private readonly notificationService: NotificationService,
   ) {
     super(reviewRepository);
   }
+  async getListReviewsOfTutor(
+    tutorId: string,
+    query: QueryOption,
+  ): Promise<PageableDto<Review>> {
+    const where: any = { reviewee_id: tutorId };
+    const review = await this.reviewRepository.getPage(
+      {
+        where,
+        include: [
+          {
+            model: UserModel,
+            as: 'reviewer',
+            attributes: ['fullname', 'avatar'],
+          },
+        ],
+        attributes: ['rating', 'comment', 'createdAt'],
+      },
+      query,
+    );
+    return review;
+  }
+  async getStatisticOfTutor(
+    tutorId: string,
+  ) {
+    const where: any = { reviewee_id: tutorId };
+    const review = await this.reviewRepository.getMany({
+      where,
+      attributes: ['rating'],
+    });
+    const totalReview = review.length;
+    const totalRating = review.reduce((total, item) => total + item.rating, 0);
+    return {
+      totalReview,
+      averageRating: totalReview > 0 ? (totalRating / totalReview).toFixed(1) : 0,
+      review: review.map((item) => item.rating),
+    };
+
+  }
+
   async getReviewsOfClass(
     classId: string,
     studentId?: string,
@@ -52,15 +94,14 @@ export class ReviewService extends BaseService<Review> {
   ): Promise<Review> {
     const enrollment = await this.enrollmentRepository.getOne({
       where: { class_id: classId, student_id: user.id },
-      attributes: ['_id', 'status',],
+      attributes: ['_id', 'status'],
       include: [
         {
           model: ClassModel,
           as: 'class',
           attributes: ['tutor_id', 'title'],
-        }
-      ]
-
+        },
+      ],
     });
     if (!enrollment) {
       throw ApiError.NotFound('Enrollment not found');
@@ -68,7 +109,7 @@ export class ReviewService extends BaseService<Review> {
     if (enrollment.status !== EnrollmentStatus.COMPLETED) {
       throw ApiError.BadRequest('Enrollment is not completed');
     }
-    
+
     const review = await this.reviewRepository.exists({
       where: { enrollment_id: enrollment._id, reviewer_id: user.id },
     });
@@ -97,5 +138,10 @@ export class ReviewService extends BaseService<Review> {
     });
 
     return res;
+  }
+  async getReviewOfListTutorIds(
+    tutorIds: string[],
+  ) {
+    return this.reviewRepository.getReviewsOfTutors(tutorIds);
   }
 }

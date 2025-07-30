@@ -1,6 +1,6 @@
 import { StrObjectId } from '@/common/constants/base.constant';
 import { BaseEntity } from '@/common/interfaces/base-entity.interface';
-import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsArray, ArrayMaxSize, IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
 import { EducationLever, ExperienceYear } from '../common/constant';
 import { User } from '@/modules/user/entities/user.entity';
 
@@ -34,4 +34,9 @@ export class TutorProfile implements BaseEntity {
   @IsOptional()
   @IsBoolean()
   is_verified?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(5)
+  achievements?: string[];
 }

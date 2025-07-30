@@ -13,11 +13,21 @@ export class UsersService extends BaseService<User> {
     super(userRepository);
   }
   async updateUserProfile(user: AuthUser, updateUserDto: UpdateUserProfileDto) {
+    const { phone } = updateUserDto;
+    if (phone) {
+      const existingUser = await this.userRepository.getOne({
+        where: { phone },
+        attributes: ['_id'],
+      });
+      if (existingUser && existingUser._id !== user.id) {
+        throw ApiError.Conflict('Số điện thoại đã tồn tại');
+      }
+    }
     const userUpdate = await this.userRepository.updateOne(updateUserDto, {
       where: { _id: user.id },
     });
     if (!userUpdate) {
-      throw ApiError.NotFound('User not found');
+      throw ApiError.NotFound('Người dùng không tồn tại');
     }
     return userUpdate;
   }
@@ -31,12 +41,15 @@ export class UsersService extends BaseService<User> {
       where: { _id: userId },
       attributes: ['_id', 'password'],
     });
+    if (!user) {
+      throw ApiError.NotFound('Người dùng không tồn tại');
+    }
     const isOldPasswordValid = await bcrypt.compare(
       old_password,
       user.password,
     );
     if (!isOldPasswordValid) {
-      throw ApiError.BadRequest('Old password is incorrect');
+      throw ApiError.BadRequest('Mật khẩu không chính xác');
     }
     const hashedPassword = await bcrypt.hash(new_password, 10);
     const result = await this.userRepository.updateOne(
@@ -44,7 +57,7 @@ export class UsersService extends BaseService<User> {
       { where: { _id: userId } },
     );
     if (!result) {
-      throw ApiError.InternalServerError('Failed to update password');
+      throw ApiError.InternalServerError('Cập nhật mật khẩu thất bại');
     }
     return { updated: true };
   }

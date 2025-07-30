@@ -18,6 +18,12 @@ import { ReviewModule } from './modules/review/review.module';
 import { WalletModule } from './modules/wallet/wallet.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { DepositPackageModule } from './modules/deposit-package/deposit-package.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { FileModule } from './modules/file/file.module';
+import { ReportModule } from './modules/report/report.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { SendMailModule } from './modules/send-mail/send-mail.module';
+import { RecaptchaModule } from './modules/recaptcha/recaptcha.module';
 
 @Module({
   imports: [
@@ -25,6 +31,14 @@ import { DepositPackageModule } from './modules/deposit-package/deposit-package.
       isGlobal: true,
       load: [appConfig],
       envFilePath: '.env',
+    }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 10000,
+          limit: 10,
+        },
+      ],
     }),
     DatabaseModule,
     UsersModule,
@@ -36,7 +50,12 @@ import { DepositPackageModule } from './modules/deposit-package/deposit-package.
     WalletModule,
     NotificationModule,
     DepositPackageModule,
+    FileModule,
+    ReportModule,
+    AdminModule,
+    SendMailModule,
     AuthModule,
+    RecaptchaModule,
   ],
   controllers: [AppController],
   providers: [
@@ -52,6 +71,10 @@ import { DepositPackageModule } from './modules/deposit-package/deposit-package.
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })

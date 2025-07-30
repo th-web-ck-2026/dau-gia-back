@@ -1,4 +1,4 @@
-import { Controller, Get, Post } from '@nestjs/common';
+import { Controller, Get, Param, Post } from '@nestjs/common';
 import { NotificationService } from '../services/notification.service';
 import { ReqUser } from '@/common/decorators/user.decorator';
 import { RequestQuery } from '@/common/decorators/request-query.decorator';
@@ -16,17 +16,17 @@ export class NotificationController {
   ) {
     return this.notificationService.getMyNotifications(user.id, query);
   }
-  @ApiOperation({ summary: 'Đánh dấu đã đọc thông báo' })
-  @Post('read/:notificationId')
-  async markAsRead(
-    @ReqUser() user,
-    @RequestQuery('notificationId') notificationId: string,
-  ) {
-    return this.notificationService.markAsRead(user.id, notificationId);
-  }
   @ApiOperation({ summary: 'Đánh dấu tất cả thông báo đã đọc' })
   @Post('read/all')
   async markAllAsRead(@ReqUser() user) {
     return this.notificationService.markAllAsRead(user.id);
+  }
+  @ApiOperation({ summary: 'Đánh dấu đã đọc thông báo' })
+  @Post('read/:notificationId')
+  async markAsRead(
+    @ReqUser() user,
+    @Param('notificationId') notificationId: string,
+  ) {
+    return this.notificationService.markAsRead(user.id, notificationId);
   }
 }

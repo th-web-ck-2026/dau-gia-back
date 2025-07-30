@@ -1,4 +1,4 @@
-import { Controller, Get, Body, Put } from '@nestjs/common';
+import { Controller, Get, Body, Put, Param } from '@nestjs/common';
 import { UsersService } from '../services/user.service';
 import { UpdateUserProfileDto } from '../dto/update-user-profile.dto';
 import { ReqUser } from '@/common/decorators/user.decorator';
@@ -6,17 +6,38 @@ import { UpdateUserPasswordDto } from '../dto/update-user-password.dto';
 import { UpdateUserAvatar } from '../dto/update-user-avatar.dto';
 import { Auth } from '@/common/decorators/auth.decorator';
 import { ApiOperation } from '@nestjs/swagger';
+import { Public } from '@/common/decorators/public.decorator';
 @Auth()
 @Controller('user')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Public()
+  @Get('info/:id')
+  async getUserInfo(@Param('id') id: string) {
+    return this.usersService.getOne({
+      where: { _id: id },
+      attributes: ['fullname'],
+    });
+  }
+
   @ApiOperation({ summary: 'Lấy thông tin của tôi' })
   @Get('profile/me')
   async getProfileMe(@ReqUser() user) {
-    console.log('Full user object:', user);
+    // console.log('Full user object:', user);
     return this.usersService.getOne({
       where: { _id: user.id },
-      attributes: ['_id', 'fullname', 'email', 'phone', 'role', 'avatar'],
+      attributes: [
+        '_id',
+        'fullname',
+        'email',
+        'phone',
+        'role',
+        'avatar',
+        'birthday',
+        'address',
+        'gender',
+      ],
     });
   }
   @ApiOperation({ summary: 'Cập nhật thông tin của tôi' })

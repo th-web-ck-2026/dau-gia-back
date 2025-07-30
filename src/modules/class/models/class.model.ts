@@ -1,5 +1,5 @@
 import { User } from '@/modules/user/entities/user.entity';
-import { ClassMode, ClassStatus } from '../common/constant';
+import { ClassMode, ClassStatus, PriceUnit } from '../common/constant';
 import { Class } from '../entities/class.entity';
 import { StrObjectId } from '@/common/constants/base.constant';
 import {
@@ -26,15 +26,16 @@ export class ClassModel extends Model implements Class {
   })
   @ForeignKey(() => UserModel)
   tutor_id: string;
-
+  
   @BelongsTo(() => UserModel, {
     foreignKey: 'tutor_id',
     targetKey: '_id',
+    onDelete: 'CASCADE',
   })
   tutor: User;
-
+  
   @Column({
-    type: DataType.STRING,
+    type: DataType.TEXT,
     allowNull: false,
   })
   title: string;
@@ -43,7 +44,7 @@ export class ClassModel extends Model implements Class {
     allowNull: false,
   })
   subject: string;
-
+  
   @Column({
     type: DataType.STRING,
     allowNull: false,
@@ -59,13 +60,20 @@ export class ClassModel extends Model implements Class {
     allowNull: false,
   })
   location: string;
+  
+  @Column({
+    type: DataType.ARRAY(DataType.STRING),
+    allowNull: true,
+  })
+  location_detail?: string[];
+
   @Column({
     type: DataType.INTEGER,
     allowNull: false,
   })
   max_student: number;
   @Column({
-    type: DataType.STRING,
+    type: DataType.TEXT,
     allowNull: false,
   })
   description: string;
@@ -79,6 +87,14 @@ export class ClassModel extends Model implements Class {
     allowNull: false,
   })
   price_max: number;
+
+  @Column({
+    type: DataType.ENUM(...Object.values(PriceUnit)),
+    allowNull: false,
+    defaultValue: PriceUnit.HOUR,
+  })
+  price_unit: PriceUnit;
+
   @Column({
     type: DataType.ENUM(...Object.values(ClassStatus)),
     allowNull: false,
@@ -90,4 +106,9 @@ export class ClassModel extends Model implements Class {
     allowNull: false,
   })
   schedule: string;
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+  })
+  requirement: string;
 }

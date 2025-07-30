@@ -49,8 +49,9 @@ export class NotificationService extends BaseService<Notification> {
   // mark all notifications as read
   async markAllAsRead(userId: string): Promise<void> {
     const notifications = await this.notificationRepository.getMany({
-      where: { user_id: userId, is_read: false },
+      where: { user_id: userId},
     });
+    console.log("notifications: ",notifications);
     if (notifications.length === 0) {
       throw ApiError.NotFound('No unread notifications found');
     }

@@ -17,3 +17,9 @@ export interface ManagerClass extends Class {
   totalBid: number;
   peddingBid: number;
 }
+
+export enum PriceUnit {
+  HOUR = 'giờ',
+  PER_SESSION = 'buổi',
+  PER_SLOT = 'ca',
+}

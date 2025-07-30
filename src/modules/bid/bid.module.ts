@@ -9,14 +9,16 @@ import { ClassModule } from '../class/class.module';
 import { UsersModule } from '../user/user.module';
 import { EnrollmentModule } from '../enrollment/enrollment.module';
 import { NotificationModule } from '../notification/notification.module';
+import { SendMailModule } from '../send-mail/send-mail.module';
 
 @Module({
   imports: [
     SequelizeModule.forFeature([BidModel]),
     forwardRef(() => ClassModule),
     forwardRef(() => EnrollmentModule),
-    UsersModule,
-    NotificationModule,
+    forwardRef(() => UsersModule),
+    forwardRef(() => NotificationModule),
+    SendMailModule,
   ],
   controllers: [BidController],
   providers: [BidService, BidRepository],

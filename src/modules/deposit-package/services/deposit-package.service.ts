@@ -4,31 +4,26 @@ import { DepositPackage } from '../entities/deposit-package.entity';
 import { DepositPackageRepository } from '../repositories/deposit-package.repository';
 
 @Injectable()
-export class DepositPackageService extends BaseService<DepositPackage>  {
+export class DepositPackageService
+  extends BaseService<DepositPackage>
+  implements OnModuleInit
+{
   constructor(
     private readonly depositPackageRepository: DepositPackageRepository,
   ) {
     super(depositPackageRepository);
   }
-  
+  async onModuleInit() {
+    await this.initDepositPackages();
+  }
   async initDepositPackages(): Promise<void> {
     console.log('Init Deposit Packages');
-    const existingPackages = await this.depositPackageRepository.getMany({
-      attributes: ['amount'],
-    });
-    if (existingPackages.length > 0) {
+    const existingPackages = await this.depositPackageRepository.exists({});
+    if (existingPackages) {
       console.log('Deposit packages already exist, skipping initialization.');
       return;
     }
     const depositPackages = [
-      {
-        amount: 2000,
-        promotion: 0,
-      },
-      {
-        amount: 50000,
-        promotion: 0,
-      },
       {
         amount: 100000,
         promotion: 0,

@@ -6,6 +6,7 @@ import { CreateClassDto } from '../dto/create-class.dto';
 import { AuthUser } from '@/common/interfaces/auth-user.interface';
 import { ClassStatus, ManagerClass } from '../common/constant';
 import { UpdateClassDto } from '../dto/update-class.dto';
+import { Bid } from '@/modules/bid/entities/bid.entity';
 import { BidRepository } from '@/modules/bid/repositories/bid.repository';
 import { EnrollmentRepository } from '@/modules/enrollment/repositories/enrollment.repository';
 import { ApiError } from '@/common/exceptions/api-error';
@@ -16,6 +17,9 @@ import { UserRepository } from '@/modules/user/repositories/user.repository';
 import { UserModel } from '@/modules/user/models/user.model';
 import { Enrollment } from '@/modules/enrollment/entities/enrollment.entity';
 import { EnrollmentStatus } from '@/modules/enrollment/common/constant';
+import { QueryOption } from '@/common/pipe/query-option.interface';
+import { PageableDto } from '@/common/dto/pageable.dto';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class ClassService extends BaseService<Class> {
@@ -29,12 +33,25 @@ export class ClassService extends BaseService<Class> {
     super(classRepository);
   }
   // Student get class
-  async getClass(): Promise<Class[]> {
-    return this.classRepository.getMany();
+  async getClass(
+    condition: any,
+    query: QueryOption,
+    q?: string,
+  ): Promise<PageableDto<Class>> {
+    return this.classRepository.getClassPage(query, condition, q);
   }
 
   async getClassById(id: string): Promise<Class> {
-    return this.classRepository.getById(id);
+    return this.classRepository.getOne({
+      where: { _id: id },
+      include: [
+        {
+          model: UserModel,
+          as: 'tutor',
+          attributes: ['_id', 'fullname', 'avatar'],
+        },
+      ],
+    });
   }
 
   // Tutor create class
@@ -46,6 +63,15 @@ export class ClassService extends BaseService<Class> {
       ...createClassDto,
       tutor_id: user.id,
     };
+    const countClass = await this.classRepository.count({
+      where: { tutor_id: user.id, status: ClassStatus.OPEN },
+    });
+    if (countClass >= 5) {
+      throw ApiError.BadRequest(
+        'Gia sư chỉ được mở tối đa 5 lớp học.\n' +
+          'Vui lòng đóng các lớp học trước đó để mở lớp mới',
+      );
+    }
     return this.classRepository.create(classData);
   }
 
@@ -117,6 +143,7 @@ export class ClassService extends BaseService<Class> {
   async tutorGetManagerClass(tutorId: string): Promise<ManagerClass[]> {
     const res = await this.classRepository.getMany({
       where: { tutor_id: tutorId },
+      order: [['createdAt', 'DESC']],
     });
     const tutorClass = await Promise.all(
       res.map(async (item) => {
@@ -145,7 +172,8 @@ export class ClassService extends BaseService<Class> {
   async studentGetClass(studentId: string): Promise<Class[] | any> {
     const bid = await this.bidRepository.getMany({
       where: { student_id: studentId },
-      attributes: ['_id', 'class_id', 'status', 'bid_price'],
+      order: [['createdAt', 'DESC']],
+      attributes: ['_id', 'class_id', 'status', 'bid_price', 'createdAt'],
       include: [
         {
           model: ClassModel,
@@ -170,17 +198,15 @@ export class ClassService extends BaseService<Class> {
       ],
     });
     const bidClass = await Promise.all(
-      bid.map(async (bid) => {
+      bid.map(async (bid: Bid & { createdAt?: Date }) => {
         const classInfo = bid.class as Class;
-        const avgRating = await this.userRepositroy.getTutorAvgRating(
-          classInfo.tutor_id,
-        );
-        classInfo.tutor['avgRating'] = avgRating;
-        let enrollment: Enrollment;
+        classInfo.tutor['tutorReview'] =
+          await this.userRepositroy.getTutorReview(classInfo.tutor_id);
+        let enrollment: Enrollment & { createdAt?: Date };
         if (bid.status === BidStatus.ACCEPTED) {
           enrollment = await this.enrollmentRepository.getOne({
             where: { class_id: classInfo._id },
-            attributes: ['status'],
+            attributes: ['status', 'createdAt'],
           });
           if (enrollment.status === EnrollmentStatus.STUDYING) {
             const tutorInfo = await this.userRepositroy.getInfo(
@@ -197,8 +223,13 @@ export class ClassService extends BaseService<Class> {
           }
         }
         return {
-          ...bid,
+          _id: bid._id,
+          class_id: bid.class_id,
+          status: bid.status,
+          bid_price: bid.bid_price,
+          class: bid.class,
           classStatus: enrollment?.status || bid.status,
+          createdAt: enrollment?.createdAt || bid.createdAt,
           //Đang học, Đã học xong, Đã chào giá, Bị từ chối.
           //STUDYING, COMPLETE, PENDING, REJECT
         };

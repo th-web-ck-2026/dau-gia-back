@@ -10,5 +10,8 @@ export const appConfig = () => ({
     clientId : process.env.PAYOS_CLIENT_ID || 'default-client-id',
     apiKey: process.env.PAYOS_API_KEY || 'default-api',
     checksumKey: process.env.PAYOS_CHECKSUM_KEY || 'default-checksum-key',
+  },
+  file: {
+    apiKey: process.env.FILE_API_KEY || 'default-file-api-key',
   }
 });

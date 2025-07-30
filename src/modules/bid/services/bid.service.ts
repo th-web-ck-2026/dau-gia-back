@@ -15,6 +15,9 @@ import { Sequelize } from 'sequelize-typescript';
 import { EnrollmentRepository } from '@/modules/enrollment/repositories/enrollment.repository';
 import { NotificationService } from '@/modules/notification/services/notification.service';
 import { NotificationType } from '@/modules/notification/common/constant';
+import { User } from '@/modules/user/entities/user.entity';
+import { UserModel } from '@/modules/user/models/user.model';
+import { SendMailService } from '@/modules/send-mail/services/send-mail.service';
 
 @Injectable()
 export class BidService extends BaseService<Bid> {
@@ -23,13 +26,23 @@ export class BidService extends BaseService<Bid> {
     private readonly classRepository: ClassRepository,
     private readonly enrollmentRepository: EnrollmentRepository,
     private readonly notificationService: NotificationService,
+    private readonly sendMailService: SendMailService,
     private readonly sequelize: Sequelize,
   ) {
     super(bidRepository);
   }
 
   async getBidsOfClass(classId: string): Promise<Bid[]> {
-    return this.bidRepository.getMany({ where: { class_id: classId } });
+    return this.bidRepository.getMany({
+      where: { class_id: classId },
+      include: [
+        {
+          model: UserModel,
+          as: 'student',
+          attributes: ['_id', 'fullname', 'avatar'],
+        },
+      ],
+    });
   }
 
   async createBid(
@@ -39,6 +52,13 @@ export class BidService extends BaseService<Bid> {
   ): Promise<Bid> {
     const bidClass = await this.classRepository.getOne({
       where: { _id: classId },
+      include: [
+        {
+          model: UserModel,
+          as: 'tutor',
+          attributes: ['_id', 'fullname', 'email'],
+        },
+      ],
     });
     if (!bidClass) {
       throw ApiError.NotFound('Class not found');
@@ -62,13 +82,19 @@ export class BidService extends BaseService<Bid> {
       throw ApiError.BadRequest('Create bid failed');
     }
     // send notification to tutor
-    await this.notificationService.createNotification({
+    this.notificationService.createNotification({
       user_id: bidClass.tutor_id,
       type: NotificationType.COURSE,
       title: `Học viên - ${user.fullname} đã chào giá cho lớp - ${bidClass.title}`,
       content: `Học viên - ${user.fullname} đã chào giá cho lớp - ${bidClass.title} với giá là ${res.bid_price} VNĐ
       Hãy vào lớp học để xem chi tiết nhé.`,
-    }); 
+    });
+    this.sendMailService.sendBidCreate(
+      { fullname: user.fullname } as User,
+      res,
+      bidClass.tutor,
+      bidClass,
+    );
     return res;
   }
   async updateBid(
@@ -104,18 +130,27 @@ export class BidService extends BaseService<Bid> {
   }
   // Tutor handle
   // tutor select student
-  async tutorSelectBidStudent(
-    tutorId: string,
-    bidId: string,
-  ): Promise<any> {
+  async tutorSelectBidStudent(tutorId: string, bidId: string): Promise<any> {
     const bid = await this.bidRepository.getOne({
       where: { _id: bidId },
       include: [
         {
           model: ClassModel,
           as: 'class',
-          attributes: ['_id', 'title' ,'tutor_id', 'status', 'max_student'],
+          attributes: ['_id', 'title', 'tutor_id', 'status', 'max_student'],
+          include: [
+            {
+              model: UserModel,
+              as: 'tutor',
+              attributes: ['_id', 'fullname'],
+            }
+          ]
         },
+        {
+          model: UserModel,
+          as: 'student',
+          attributes: ['_id', 'fullname', 'email'],
+        }
       ],
     });
     const bidClass = bid.class as Class;
@@ -160,13 +195,19 @@ export class BidService extends BaseService<Bid> {
         );
       }
       // send notification to student
-      await this.notificationService.createNotification({
+      this.notificationService.createNotification({
         user_id: bid.student_id,
         type: NotificationType.COURSE,
         title: `Chào giá của bạn ở lớp - ${bidClass.title} đã được chấp nhận`,
         content: `Bạn đã được chấp nhận vào lớp học - ${bidClass.title} với giá là ${newBid.bid_price} VNĐ
         Hãy vào lớp học để nhận thông tin liên hệ với gia sư nhé.`,
       });
+      this.sendMailService.sendTutorSelectBid(
+        bid.student,
+        newBid,
+        bidClass.tutor,
+        bidClass,
+      )
       await transaction.commit();
       return newBid;
     } catch (error) {
@@ -185,7 +226,7 @@ export class BidService extends BaseService<Bid> {
         {
           model: ClassModel,
           as: 'class',
-          attributes: ['_id', 'tutor_id', 'status'],
+          attributes: ['_id', 'tutor_id', 'status', 'title'],
         },
       ],
     });

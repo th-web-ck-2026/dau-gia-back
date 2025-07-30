@@ -1,7 +1,7 @@
 import { EntityTable } from '@/common/constants/entity.constant';
 import { Column, Model, Table } from 'sequelize-typescript';
 import { User } from '../entities/user.entity';
-import { Gender, UserRoles } from '../common/constant';
+import { Gender, UserRoles, UserStatus } from '../common/constant';
 import { StrObjectId } from '@/common/constants/base.constant';
 import * as bcrypt from 'bcrypt';
 @Table({
@@ -24,7 +24,7 @@ export class UserModel extends Model implements User {
   password: string;
 
   @Column
-  birthday?: Date;
+  birthday?: string;
   @Column
   avatar?: string;
   @Column
@@ -40,7 +40,14 @@ export class UserModel extends Model implements User {
   wardId?: string;
   @Column
   address?: string;
-
+  @Column({
+    defaultValue: false,
+  })
+  isVerified?: boolean;
+  @Column({
+    defaultValue: UserStatus.ACTIVE,
+  })
+  userStatus?: UserStatus;
   public async comparePassword(password: string): Promise<boolean> {
     return bcrypt.compare(password, this.password);
   }

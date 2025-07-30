@@ -24,6 +24,18 @@ export class EnrollmentService extends BaseService<Enrollment> {
   ) {
     super(enrollmentRepository);
   }
+  async getTotalStudentEnrollByTutor(tutorId: string): Promise<number> {
+    return this.enrollmentRepository.count({
+      where: { status: EnrollmentStatus.COMPLETED },
+      include: [
+        {
+          model: ClassModel,
+          as: 'class',
+          where: { tutor_id: tutorId },
+        },
+      ],
+    });
+  }
   async tutorGetEnrollmentsOfClass(
     tutorId: string,
     classId: string,
@@ -59,15 +71,15 @@ export class EnrollmentService extends BaseService<Enrollment> {
           where: { user_id: item.student._id },
           attributes: ['school', 'grade'],
         });
-        let studentInfo: Pick<UserModel, 'phone' | 'email'>
+        let studentInfo: Pick<UserModel, 'phone' | 'email'>;
         if (item.status === EnrollmentStatus.STUDYING) {
           studentInfo = await this.userRepository.getInfo(item.student._id);
         }
         item.student = {
           ...student,
           ...studentInfo,
-          ...studentProfile
-        }
+          ...studentProfile,
+        };
 
         return {
           ...item,
@@ -92,7 +104,7 @@ export class EnrollmentService extends BaseService<Enrollment> {
           model: UserModel,
           as: 'student',
           attributes: ['fullname'],
-        }
+        },
       ],
       attributes: ['status'],
     });

@@ -26,7 +26,7 @@ export class UserRepository extends BaseRepository<User> {
     return this.getMany({ where: { isActive: true } });
   }
   // forTutor
-  async getTutorAvgRating(tutorId: string): Promise<number> {
+  async getTutorReview(tutorId: string): Promise<unknown> {
     const tutor = await this.getOne({
       where: { _id: tutorId },
     });
@@ -40,12 +40,15 @@ export class UserRepository extends BaseRepository<User> {
       },
       attributes: ['rating'],
     });
-    const totalRating = review.reduce((total, item) => total + item.toJSON().rating, 0);
+    const totalRating = review.reduce(
+      (total, item) => total + item.toJSON().rating,
+      0,
+    );
     const avgRating = totalRating > 0 ? totalRating / review.length : 0;
-    // console.log(review);
-    // console.log(totalRating);
-    // console.log(avgRating);
-    return avgRating;
+    return {
+      total: review.length,
+      avgRating: avgRating.toFixed(1),
+    };
   }
   async getInfo(userId: string): Promise<Pick<User, 'phone' | 'email'>> {
     const user = await this.getOne({ where: { _id: userId } });

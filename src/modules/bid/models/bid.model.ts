@@ -16,11 +16,18 @@ export class BidModel extends Model implements Bid {
   @BelongsTo(() => ClassModel, {
     foreignKey: 'class_id',
     targetKey: '_id',
+    onDelete: 'CASCADE',
   })
   class: ClassModel;
   @Column
   @ForeignKey(() => UserModel)
   student_id: string;
+  @BelongsTo(() => UserModel, {
+    foreignKey: 'student_id',
+    targetKey: '_id',
+    onDelete: 'CASCADE',
+  })
+  student: UserModel;
   @Column
   bid_price: number;
   @Column
