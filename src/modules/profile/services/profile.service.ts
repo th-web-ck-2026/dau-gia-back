@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ApiError } from '@Exceptions/api-error';
 import { StudentProfileRepository } from '../repositories/student-profile.repository';
 import { TutorProfileRepository } from '../repositories/tutor-profile.repository';
@@ -14,15 +14,27 @@ import { UserRepository } from '@/modules/user/repositories/user.repository';
 import { QueryOption } from '@/common/pipe/query-option.interface';
 import { ReviewRepository } from '@/modules/review/repositories/review.repository';
 import { Op } from 'sequelize';
+import { ExperienceYear } from '../common/constant';
 
 @Injectable()
-export class ProfileService {
+export class ProfileService implements OnModuleInit {
   constructor(
     private readonly tutorProfileRepository: TutorProfileRepository,
     private readonly studentProfileRepository: StudentProfileRepository,
     private readonly userRepository: UserRepository,
   ) {}
+  async onModuleInit() {
+    const tutorProfiles = await this.tutorProfileRepository.getMany({});
+    const updatePromises = tutorProfiles.map(async (profile) => {
+      const score = await this.calcTutorProfileScore(profile.user_id, profile);
+      return this.tutorProfileRepository.updateOne(
+        { profileScore: score },
+        { where: { _id: profile._id } },
+      );
+    });
 
+    await Promise.all(updatePromises);
+  }
   async getMeProfile(user: AuthUser): Promise<unknown> {
     if (user.role === UserRoles.STUDENT) {
       return this.getStudentProfile(user.id);
@@ -80,9 +92,22 @@ export class ProfileService {
     userId: string,
     updateTutorProfileDto: UpdateTutorProfileDto,
   ): Promise<any> {
-    return this.tutorProfileRepository.updateOne(updateTutorProfileDto, {
-      where: { user_id: userId },
-    });
+    const tutorProfile = await this.tutorProfileRepository.updateOne(
+      updateTutorProfileDto,
+      {
+        where: { user_id: userId },
+      },
+    );
+    const newProfileScore = await this.calcTutorProfileScore(
+      userId,
+      tutorProfile,
+    );
+    return this.tutorProfileRepository.updateOne(
+      { profileScore: newProfileScore },
+      {
+        where: { user_id: userId },
+      },
+    );
   }
 
   async updateStudentProfile(
@@ -115,5 +140,50 @@ export class ProfileService {
   // Get page tutor profile@Query('q') q?: string,
   async getTutorProfilePage(query: QueryOption, q?: string) {
     return this.tutorProfileRepository.getTutorProfilePage(query, q);
+  }
+  // FUCNTION
+  async calcTutorProfileScore(userId: string, profile?: TutorProfile) {
+    let tutorProfile: TutorProfile;
+    if (!profile) {
+      tutorProfile = await this.tutorProfileRepository.getOne({
+        where: { user_id: userId },
+        attributes: [
+          'education_lever',
+          'major',
+          'experience_year',
+          'certificate',
+          'intro',
+          'teaching_subject',
+          'achievements',
+        ],
+      });
+    } else {
+      tutorProfile = profile;
+    }
+    if (!tutorProfile) {
+      return;
+    }
+    let score = 0;
+    if (tutorProfile.education_lever) score += 2;
+    if (tutorProfile.major) score += 1;
+    if (
+      tutorProfile.experience_year &&
+      tutorProfile.experience_year !== ExperienceYear.NONE
+    )
+      score += 2;
+    if (tutorProfile.certificate && tutorProfile.certificate.length > 0) {
+      score += Math.max(tutorProfile.certificate.length, 2);
+    }
+    if (tutorProfile.intro && tutorProfile.intro.length > 10) score += 2;
+    if (
+      tutorProfile.teaching_subject &&
+      tutorProfile.teaching_subject.length > 0
+    ) {
+      score += Math.max(tutorProfile.teaching_subject.length, 2);
+    }
+    if (tutorProfile.achievements && tutorProfile.achievements.length > 0) {
+      score += Math.max(tutorProfile.achievements.length, 5);
+    }
+    return score;
   }
 }

@@ -27,7 +27,7 @@ export class ClassRepository extends BaseRepository<Class> {
     const offset = query.offset ?? ((query.page || 1) - 1) * limit;
     let order: string;
     const defaultOrderByDate = 'CAST(class."createdAt" AS DATE) DESC';
-    const defaultTieBreaker = '(average_rating * total_review) DESC';
+    const defaultTieBreaker = 'score DESC';
     const defaultOrderById = 'class._id DESC';
 
     if (query.order && Array.isArray(query.order) && query.order.length > 0) {
@@ -97,7 +97,12 @@ export class ClassRepository extends BaseRepository<Class> {
           tutor.avatar AS tutor_avatar,
           COALESCE(review_stats.total_review, 0) AS total_review,
           COALESCE(review_stats.average_rating, 0) AS average_rating,
-          COALESCE(bid_counts.bid_count, 0) AS bid_count
+          COALESCE(bid_counts.bid_count, 0) AS bid_count,
+          (COALESCE(review_stats.total_review, 0) *
+            COALESCE(review_stats.average_rating, 0) *
+            2 +
+            COALESCE(tutorProfile."profileScore", 0) +
+            COALESCE(bid_counts.bid_count, 0)) AS score
       FROM
           class
       JOIN
@@ -121,6 +126,13 @@ export class ClassRepository extends BaseRepository<Class> {
           GROUP BY
               class_id
       ) AS bid_counts ON class._id = bid_counts.class_id
+      LEFT JOIN (
+          SELECT
+              user_id,
+              "profileScore"
+          FROM
+              tutor_profile
+      ) AS tutorProfile ON class.tutor_id = tutorProfile.user_id
       ${finalWhereClause}
       ORDER BY
           ${order}
@@ -168,10 +180,12 @@ export class ClassRepository extends BaseRepository<Class> {
         tutor_avatar,
         total_review,
         average_rating,
+        score,
         ...res
       } = cls;
       return {
         ...res,
+        score: Number(score).toFixed(1),
         tutor: {
           _id: tutor_id,
           fullname: tutor_fullname,

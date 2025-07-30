@@ -54,4 +54,10 @@ export class ProfileController {
   ) {
     return this.profileService.getTutorProfilePage(query, q);
   }
+
+  @Public()
+  @Get('tutor-score/:id')
+  async getTutorProfile(@Param('id') id: string) {
+    return this.profileService.calcTutorProfileScore(id);
+  }
 }
