@@ -24,6 +24,7 @@ import { ReportModule } from './modules/report/report.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { SendMailModule } from './modules/send-mail/send-mail.module';
 import { RecaptchaModule } from './modules/recaptcha/recaptcha.module';
+import { TutorVerificationModule } from './modules/tutor-verification/tutor-verification.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { RecaptchaModule } from './modules/recaptcha/recaptcha.module';
     AdminModule,
     SendMailModule,
     AuthModule,
+    TutorVerificationModule,
     RecaptchaModule,
   ],
   controllers: [AppController],

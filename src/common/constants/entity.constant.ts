@@ -16,4 +16,5 @@ export const EntityTable = {
   DEPOSIT_PACKAGE: 'deposit_package',
   REPORT: 'report',
   MAIL_CONFIG: 'mail_config',
+  TUTOR_VERIFICATION: 'tutor_verification',
 } as const;
