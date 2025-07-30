@@ -102,6 +102,7 @@ export class ProfileService implements OnModuleInit {
       userId,
       tutorProfile,
     );
+    // console.log(newProfileScore)
     return this.tutorProfileRepository.updateOne(
       { profileScore: newProfileScore },
       {
@@ -172,17 +173,17 @@ export class ProfileService implements OnModuleInit {
     )
       score += 2;
     if (tutorProfile.certificate && tutorProfile.certificate.length > 0) {
-      score += Math.max(tutorProfile.certificate.length, 2);
+      score += Math.min(tutorProfile.certificate.length, 2);
     }
     if (tutorProfile.intro && tutorProfile.intro.length > 10) score += 2;
     if (
       tutorProfile.teaching_subject &&
       tutorProfile.teaching_subject.length > 0
     ) {
-      score += Math.max(tutorProfile.teaching_subject.length, 2);
+      score += Math.min(tutorProfile.teaching_subject.length, 2);
     }
     if (tutorProfile.achievements && tutorProfile.achievements.length > 0) {
-      score += Math.max(tutorProfile.achievements.length, 5);
+      score += Math.min(tutorProfile.achievements.length, 5);
     }
     return score;
   }
