@@ -85,7 +85,7 @@ export class TutorVerificationService extends BaseService<TutorVerification> {
       where: { _id: tutorVerify.tutor_id },
       attributes: ['userStatus', 'verifyLever'],
     });
-    if (tutor.userStatus !== UserStatus.ACTIVE) {
+    if (!tutor || tutor.userStatus !== UserStatus.ACTIVE) {
       return this.tutorVerificationRepository.deleteOne({
         where: { _id: idDon },
       });
