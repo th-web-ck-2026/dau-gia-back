@@ -30,13 +30,15 @@ export class TutorVerificationService extends BaseService<TutorVerification> {
       verifyLever: lever,
       tutor_id: user.id,
     };
-    const existTutorVerify = await this.tutorVerificationRepository.exists({
+    const tutorVerify = await this.tutorVerificationRepository.getOne({
       where: {
         tutor_id: user.id,
-        status: { [Op.in]: [VerifyStatus.PENDING, VerifyStatus.MEETING] },
       },
+      order: [['createdAt', 'DESC']],
     });
-    if (existTutorVerify) {
+    if (
+      [VerifyStatus.PENDING, VerifyStatus.MEETING].includes(tutorVerify?.status)
+    ) {
       throw ApiError.BadRequest(
         'Bạn đã có đơn xác minh đang chờ xử lý hoặc đang trong quá trình phỏng vấn.',
       );
@@ -44,6 +46,15 @@ export class TutorVerificationService extends BaseService<TutorVerification> {
     const validateLever = await this.validateVerifyLever(user, lever);
     if (!validateLever) {
       throw ApiError.BadRequest('Cấp xác minh không hợp lệ');
+    }
+    if (!!tutorVerify && lever === VerifyLever.LEVER_2) {
+      return this.tutorVerificationRepository.updateOne(
+        {
+          verifyLever: lever,
+          status: VerifyStatus.PENDING,
+        },
+        { where: { _id: tutorVerify._id } },
+      );
     }
     return this.tutorVerificationRepository.create(verifyData);
   }
@@ -148,8 +159,9 @@ export class TutorVerificationService extends BaseService<TutorVerification> {
       lever !== VerifyLever.LEVER_2
     )
       return false;
-    
-    return currnetVerifyLever !== VerifyLever.LEVER_2 &&
-      currnetVerifyLever !== lever;
+
+    return (
+      currnetVerifyLever !== VerifyLever.LEVER_2 && currnetVerifyLever !== lever
+    );
   }
 }
