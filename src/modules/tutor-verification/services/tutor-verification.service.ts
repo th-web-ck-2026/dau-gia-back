@@ -140,9 +140,8 @@ export class TutorVerificationService extends BaseService<TutorVerification> {
 
   // FUNCTION
   async tutorGetMyVerification(user: AuthUser): Promise<VerifyLever> {
-    const tutor = await this.tutorVerificationRepository.getOne({
-      where: { tutor_id: user.id },
-      order: [['createdAt', 'DESC']],
+    const tutor = await this.userRepository.getOne({
+      where: { _id: user.id},
       attributes: ['verifyLever'],
     });
     if (!tutor) {
@@ -152,6 +151,7 @@ export class TutorVerificationService extends BaseService<TutorVerification> {
   }
   async validateVerifyLever(user: AuthUser, lever: Omit<VerifyLever, 'NONE'>) {
     const currnetVerifyLever = await this.tutorGetMyVerification(user);
+    // console.log("currnetVerifyLever : ", currnetVerifyLever)
     if (
       currnetVerifyLever === VerifyLever.NONE &&
       lever !== VerifyLever.LEVER_1

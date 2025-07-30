@@ -45,4 +45,7 @@ export class FileService {
       throw error;
     }
   }
+  async uploadPrivateFile(file: Express.Multer.File): Promise<string> {
+    return "";
+  }
 }
