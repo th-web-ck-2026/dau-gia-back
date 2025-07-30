@@ -100,7 +100,10 @@ export class TutorVerificationService extends BaseService<TutorVerification> {
           { where: { _id: idDon } },
         ),
         this.userRepository.updateOne(
-          { verifyLever: tutorVerify.verifyLever },
+          {
+            verifyLever: tutorVerify.verifyLever,
+            verifyScore: this.getScoreByLever(tutorVerify.verifyLever),
+          },
           { where: { _id: tutorVerify.tutor_id } },
         ),
       ]);
@@ -163,5 +166,15 @@ export class TutorVerificationService extends BaseService<TutorVerification> {
     return (
       currnetVerifyLever !== VerifyLever.LEVER_2 && currnetVerifyLever !== lever
     );
+  }
+  private getScoreByLever(lever: VerifyLever) {
+    switch (lever) {
+      case VerifyLever.LEVER_1:
+        return 5;
+      case VerifyLever.LEVER_2:
+        return 10;
+      default:
+        return 0;
+    }
   }
 }

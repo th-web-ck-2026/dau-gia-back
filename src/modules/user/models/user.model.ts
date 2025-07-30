@@ -56,6 +56,13 @@ export class UserModel extends Model implements User {
     defaultValue: VerifyLever.NONE,
   })
   verifyLever: VerifyLever;
+  @Column({
+    defaultValue: 0,
+    type: DataType.INTEGER,
+    allowNull: true,
+  })
+  verifyScore?: number;
+
   public async comparePassword(password: string): Promise<boolean> {
     return bcrypt.compare(password, this.password);
   }

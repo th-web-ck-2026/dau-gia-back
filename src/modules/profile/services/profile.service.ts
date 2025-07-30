@@ -69,7 +69,7 @@ export class ProfileService implements OnModuleInit {
         {
           model: UserModel,
           as: 'user',
-          attributes: ['fullname', 'avatar', 'address'],
+          attributes: ['fullname', 'avatar', 'address', 'verifyLever'],
         },
       ],
     });

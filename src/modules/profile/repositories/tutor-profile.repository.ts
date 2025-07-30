@@ -83,9 +83,12 @@ export class TutorProfileRepository extends BaseRepository<TutorProfile> {
           tutorProfile.experience_year,
           u.fullname,
           u.avatar,
+          u."verifyLever",
           COALESCE(review_stats.total_review, 0) AS total_review,
           COALESCE(review_stats.average_rating, 0) AS average_rating,
-          (COALESCE(review_stats.total_review, 0) * COALESCE(review_stats.average_rating, 0) * 2 + tutorProfile."profileScore") AS score,
+          (COALESCE(review_stats.total_review, 0) * COALESCE(review_stats.average_rating, 0) * 2 +
+           tutorProfile."profileScore" + 
+           u."verifyScore") AS score,
           tutorProfile."createdAt"
       FROM
           tutor_profile AS tutorProfile
@@ -148,7 +151,7 @@ export class TutorProfileRepository extends BaseRepository<TutorProfile> {
       : 0;
 
     const transformedProfiles = profiles.map((profile: any) => {
-      const { fullname, avatar, total_review, average_rating, score, ...res } =
+      const { fullname, avatar, total_review, average_rating, score, verifyLever, ...res } =
         profile;
       return {
         ...res,
@@ -159,6 +162,7 @@ export class TutorProfileRepository extends BaseRepository<TutorProfile> {
             total: total_review,
             avgRating: Number(average_rating).toFixed(1),
           },
+          verifyLever,
           score: Number(score).toFixed(1),
         },
       };

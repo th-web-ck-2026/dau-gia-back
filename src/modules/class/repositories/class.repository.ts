@@ -95,6 +95,7 @@ export class ClassRepository extends BaseRepository<Class> {
           tutor._id AS tutor_id,
           tutor.fullname AS tutor_fullname,
           tutor.avatar AS tutor_avatar,
+          tutor."verifyLever",
           COALESCE(review_stats.total_review, 0) AS total_review,
           COALESCE(review_stats.average_rating, 0) AS average_rating,
           COALESCE(bid_counts.bid_count, 0) AS bid_count,
@@ -102,7 +103,9 @@ export class ClassRepository extends BaseRepository<Class> {
             COALESCE(review_stats.average_rating, 0) *
             2 +
             COALESCE(tutorProfile."profileScore", 0) +
-            COALESCE(bid_counts.bid_count, 0)) AS score
+            COALESCE(bid_counts.bid_count, 0) +
+            tutor."verifyScore"
+            ) AS score
       FROM
           class
       JOIN
@@ -181,6 +184,7 @@ export class ClassRepository extends BaseRepository<Class> {
         total_review,
         average_rating,
         score,
+        verifyLever,
         ...res
       } = cls;
       return {
@@ -194,6 +198,7 @@ export class ClassRepository extends BaseRepository<Class> {
             total: total_review,
             avgRating: Number(average_rating).toFixed(1),
           },
+          verifyLever,
         },
       };
     });

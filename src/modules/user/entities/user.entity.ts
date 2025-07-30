@@ -56,4 +56,6 @@ export class User implements BaseEntity {
   userStatus?: UserStatus;
   @IsOptional()
   verifyLever?: VerifyLever;
+  @IsOptional()
+  verifyScore?: number;
 }
