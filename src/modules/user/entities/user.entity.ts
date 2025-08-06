@@ -3,6 +3,7 @@ import { IsDate, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, M
 import { BaseEntity } from '@Common/interfaces/base-entity.interface';
 import { StrObjectId } from '@Common/constants/base.constant';
 import { Is } from 'sequelize-typescript';
+import { VerifyLever } from '@/modules/tutor-verification/common/constant';
 
 export class User implements BaseEntity {
   @StrObjectId()
@@ -53,4 +54,8 @@ export class User implements BaseEntity {
 
   @IsEnum(UserStatus)
   userStatus?: UserStatus;
+  @IsOptional()
+  verifyLever?: VerifyLever;
+  @IsOptional()
+  verifyScore?: number;
 }

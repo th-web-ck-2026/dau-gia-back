@@ -25,9 +25,15 @@ export class TutorProfileRepository extends BaseRepository<TutorProfile> {
     const limit = query.limit || 10;
     const offset = query.offset ?? ((query.page || 1) - 1) * limit; // Tính toán offset nếu không được cung cấp
     const order = 'score DESC, tutorProfile."createdAt" DESC';
-    
-    const { page, limit: queryLimit, offset: queryOffset, order: queryOrder, ...condition } = query;
-    
+
+    const {
+      page,
+      limit: queryLimit,
+      offset: queryOffset,
+      order: queryOrder,
+      ...condition
+    } = query;
+
     const { whereClause: filterClause, replacements: filterReplacements } =
       buildWhereClause(condition, 'tutorProfile');
 
@@ -77,9 +83,12 @@ export class TutorProfileRepository extends BaseRepository<TutorProfile> {
           tutorProfile.experience_year,
           u.fullname,
           u.avatar,
+          u."verifyLever",
           COALESCE(review_stats.total_review, 0) AS total_review,
           COALESCE(review_stats.average_rating, 0) AS average_rating,
-          COALESCE(review_stats.total_review, 0) * COALESCE(review_stats.average_rating, 0) AS score,
+          (COALESCE(review_stats.total_review, 0) * COALESCE(review_stats.average_rating, 0) * 2 +
+           tutorProfile."profileScore" + 
+           u."verifyScore") AS score,
           tutorProfile."createdAt"
       FROM
           tutor_profile AS tutorProfile
@@ -111,7 +120,7 @@ export class TutorProfileRepository extends BaseRepository<TutorProfile> {
       replacements: replacements,
       type: QueryTypes.SELECT,
     });
-    
+
     const rawCountQuery = `
       SELECT
           COUNT(DISTINCT tutorProfile._id)
@@ -137,10 +146,12 @@ export class TutorProfileRepository extends BaseRepository<TutorProfile> {
       type: QueryTypes.SELECT,
     });
 
-    const total = totalResult[0] ? parseInt(Object.values(totalResult[0])[0] as string, 10) : 0;
+    const total = totalResult[0]
+      ? parseInt(Object.values(totalResult[0])[0] as string, 10)
+      : 0;
 
     const transformedProfiles = profiles.map((profile: any) => {
-      const { fullname, avatar, total_review, average_rating, score, ...res } =
+      const { fullname, avatar, total_review, average_rating, score, verifyLever, ...res } =
         profile;
       return {
         ...res,
@@ -151,6 +162,7 @@ export class TutorProfileRepository extends BaseRepository<TutorProfile> {
             total: total_review,
             avgRating: Number(average_rating).toFixed(1),
           },
+          verifyLever,
           score: Number(score).toFixed(1),
         },
       };

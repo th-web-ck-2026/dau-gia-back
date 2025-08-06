@@ -32,11 +32,10 @@ export class TutorProfile implements BaseEntity {
   teaching_subject?: string[];
 
   @IsOptional()
-  @IsBoolean()
-  is_verified?: boolean;
-
-  @IsOptional()
   @IsArray()
   @ArrayMaxSize(5)
   achievements?: string[];
+
+  @IsOptional()
+  profileScore?: number;
 }
