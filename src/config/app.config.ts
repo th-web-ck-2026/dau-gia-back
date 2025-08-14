@@ -13,5 +13,6 @@ export const appConfig = () => ({
   },
   file: {
     apiKey: process.env.FILE_API_KEY || 'default-file-api-key',
+    apiPrivateKey: process.env.FILE_API_PRIVATE_KEY || 'default-file-api-private-key',
   }
 });
