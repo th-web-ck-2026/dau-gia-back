@@ -46,6 +46,9 @@ export class SendMailService {
           user: serverConfig.user,
           pass: serverConfig.pass,
         },
+        tls: {
+        rejectUnauthorized: false,
+      }
       });
     });
 

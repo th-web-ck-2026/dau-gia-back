@@ -24,16 +24,16 @@ export class ProfileService implements OnModuleInit {
     private readonly userRepository: UserRepository,
   ) {}
   async onModuleInit() {
-    const tutorProfiles = await this.tutorProfileRepository.getMany({});
-    const updatePromises = tutorProfiles.map(async (profile) => {
-      const score = await this.calcTutorProfileScore(profile.user_id, profile);
-      return this.tutorProfileRepository.updateOne(
-        { profileScore: score },
-        { where: { _id: profile._id } },
-      );
-    });
+    // const tutorProfiles = await this.tutorProfileRepository.getMany({});
+    // const updatePromises = tutorProfiles.map(async (profile) => {
+    //   const score = await this.calcTutorProfileScore(profile.user_id, profile);
+    //   return this.tutorProfileRepository.updateOne(
+    //     { profileScore: score },
+    //     { where: { _id: profile._id } },
+    //   );
+    // });
 
-    await Promise.all(updatePromises);
+    // await Promise.all(updatePromises);
   }
   async getMeProfile(user: AuthUser): Promise<unknown> {
     if (user.role === UserRoles.STUDENT) {
