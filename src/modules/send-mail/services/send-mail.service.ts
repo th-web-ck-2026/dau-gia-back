@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
@@ -13,7 +13,7 @@ import { MailConfigService } from '@/modules/mail-config/services/mail-config.se
 import { MailConfig } from '@/modules/mail-config/entities/mail-config.entity';
 
 @Injectable()
-export class SendMailService implements OnModuleInit {
+export class SendMailService {
   private transporters: Transporter<SentMessageInfo>[];
   private currentTransporterIndex = 0;
   private templates: { [key: string]: handlebars.TemplateDelegate } = {};
@@ -30,10 +30,6 @@ export class SendMailService implements OnModuleInit {
     this.platformName = this.configService.get<string>('PLATFORM_NAME');
     this.platformUrl = this.configService.get<string>('PLATFORM_URL');
     this.platformLogoUrl = this.configService.get<string>('PLATFORM_LOGO_URL');
-  }
-
-  async onModuleInit() {
-    await this.loadMailConfigs();
     this.loadTemplates();
   }
 
@@ -54,7 +50,7 @@ export class SendMailService implements OnModuleInit {
     });
 
     if (this.transporters.length === 0) {
-      console.log('No mail transporters configured.');
+      Logger.warn('No mail transporters configured.', 'SendMailService');
     }
   }
 
@@ -85,21 +81,46 @@ export class SendMailService implements OnModuleInit {
   }
 
   async sendMail(mailOptions: nodemailer.SendMailOptions): Promise<void> {
-    const from = this.mailConfigs[this.currentTransporterIndex].user;
+    await this.loadMailConfigs();
+
+    if (!this.transporters || this.transporters.length === 0) {
+      Logger.error('No mail transporters configured.', 'SendMailService');
+      throw new Error('No mail transporters configured.');
+    }
 
     const maxRetries = this.transporters.length;
     for (let i = 0; i < maxRetries; i++) {
       const transporter = this.getNextTransporter();
+      const currentConfigIndex =
+        (this.currentTransporterIndex - 1 + this.transporters.length) %
+        this.transporters.length;
+      const from = this.mailConfigs[currentConfigIndex].user;
+
       try {
         await transporter.sendMail({
           ...mailOptions,
           from: `"${this.platformName}" <${from}>`,
         });
+        Logger.log(
+          `Email sent successfully to ${mailOptions.to} using ${from}`,
+        );
         return;
       } catch (error) {
-        console.log('Error sending email: ', i);
+        Logger.error(
+          `Failed to send email to ${mailOptions.to} using ${from}`,
+          error.stack,
+          'SendMailService',
+        );
       }
     }
+    Logger.error(
+      `All mail transporters failed to send email to ${mailOptions.to}`,
+      '',
+      'SendMailService',
+    );
+    throw new Error(
+      'Unable to send email after trying all available transporters.',
+    );
   }
 
   async sendUserConfirmation(user: User, token: string) {
