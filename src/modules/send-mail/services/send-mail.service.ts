@@ -14,7 +14,7 @@ import { MailConfig } from '@/modules/mail-config/entities/mail-config.entity';
 
 @Injectable()
 export class SendMailService {
-  private transporters: Transporter<SentMessageInfo>[];
+  private transporters: Transporter[];
   private currentTransporterIndex = 0;
   private templates: { [key: string]: handlebars.TemplateDelegate } = {};
 
@@ -38,10 +38,16 @@ export class SendMailService {
       where: { is_active: true },
     });
     this.transporters = this.mailConfigs.map((serverConfig) => {
-      const transportOptions = {
-        host: serverConfig.host,
-        port: serverConfig.port || 587,
-        secure: serverConfig.port === 465,
+      const isGmail = serverConfig.host === 'smtp.gmail.com';
+
+      const transportOptions: any = {
+        ...(isGmail
+          ? { service: 'gmail' }
+          : {
+              host: serverConfig.host,
+              port: serverConfig.port || 587,
+              secure: serverConfig.port === 465,
+            }),
         auth: {
           user: serverConfig.user,
           pass: serverConfig.pass,
@@ -54,7 +60,13 @@ export class SendMailService {
       };
 
       Logger.log(
-        `Creating mail transporter with host: ${transportOptions.host}, port: ${transportOptions.port}, secure: ${transportOptions.secure}, user: ${transportOptions.auth.user}`,
+        `Creating mail transporter with config: ${JSON.stringify({
+          service: transportOptions.service,
+          host: transportOptions.host,
+          port: transportOptions.port,
+          secure: transportOptions.secure,
+          user: transportOptions.auth.user,
+        })}`,
         'SendMailService',
       );
 
