@@ -38,18 +38,27 @@ export class SendMailService {
       where: { is_active: true },
     });
     this.transporters = this.mailConfigs.map((serverConfig) => {
-      return nodemailer.createTransport({
+      const transportOptions = {
         host: serverConfig.host,
-        port: serverConfig?.port ? serverConfig.port : null,
-        secure: serverConfig?.port ? serverConfig.port === 465 : null, // Use secure for port 465
+        port: serverConfig.port || 587,
+        secure: serverConfig.port === 465,
         auth: {
           user: serverConfig.user,
           pass: serverConfig.pass,
         },
         tls: {
-        rejectUnauthorized: false,
-      }
-      });
+          rejectUnauthorized: false,
+        },
+        connectionTimeout: 1000 * 15, // 15 seconds
+        socketTimeout: 1000 * 15, // 15 seconds
+      };
+
+      Logger.log(
+        `Creating mail transporter with host: ${transportOptions.host}, port: ${transportOptions.port}, secure: ${transportOptions.secure}, user: ${transportOptions.auth.user}`,
+        'SendMailService',
+      );
+
+      return nodemailer.createTransport(transportOptions);
     });
 
     if (this.transporters.length === 0) {
