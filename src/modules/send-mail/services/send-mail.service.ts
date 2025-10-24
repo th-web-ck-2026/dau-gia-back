@@ -3,8 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
 import { User } from 'src/modules/user/entities/user.entity';
-import { Class } from '@/modules/class/entities/class.entity';
-import { Bid } from '@/modules/bid/entities/bid.entity';
 import { SentMessageInfo } from 'nodemailer/lib/smtp-transport';
 import { join } from 'path';
 import * as fs from 'fs';
@@ -188,59 +186,6 @@ export class SendMailService {
     await this.sendMail({
       to: user.email,
       subject: subject,
-      html: html,
-    });
-  }
-
-  async sendBidCreate(student: User, bid: Bid, tutor: User, tutorClass: Class) {
-    const context = {
-      subject: `Đề xuất giá mới cho lớp học: ${tutorClass.title}`,
-      tutorName: tutor.fullname,
-      studentName: student.fullname,
-      classTitle: tutorClass.title,
-      bidPrice: new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND',
-      }).format(bid.bid_price),
-      classUrl: `https://conggiasu.com/quan-ly-lop.html`,
-      platformName: 'Cổng gia sư',
-      platformUrl: 'https://conggiasu.com',
-      platformLogoUrl: 'http://conggiasu.com/assets/img/logo.png',
-      currentYear: new Date().getFullYear(),
-    };
-    const html = this.renderTemplate('bid-create', context);
-    await this.sendMail({
-      to: tutor.email,
-      subject: `Đề xuất giá mới cho lớp học: ${tutorClass.title}`,
-      html: html,
-    });
-  }
-
-  async sendTutorSelectBid(
-    student: User,
-    bid: Bid,
-    tutor: User,
-    tutorClass: Class,
-  ) {
-    const context = {
-      subject: `Đề xuất của bạn cho lớp "${tutorClass.title}" đã được chấp nhận!`,
-      studentName: student.fullname,
-      classTitle: tutorClass.title,
-      tutorName: tutor.fullname,
-      acceptedPrice: new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND',
-      }).format(bid.bid_price),
-      classUrl: `https://conggiasu.com/quan-ly-lop.html`,
-      platformName: 'Cổng gia sư',
-      platformUrl: 'https://conggiasu.com',
-      platformLogoUrl: 'http://conggiasu.com/assets/img/logo.png',
-      currentYear: new Date().getFullYear(),
-    };
-    const html = this.renderTemplate('tutor-select-bid', context);
-    await this.sendMail({
-      to: student.email,
-      subject: `Đề xuất của bạn cho lớp "${tutorClass.title}" đã được chấp nhận!`,
       html: html,
     });
   }

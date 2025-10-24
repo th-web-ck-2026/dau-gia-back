@@ -2,8 +2,6 @@ import { Gender, UserRoles, UserStatus } from '../common/constant';
 import { IsDate, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { BaseEntity } from '@Common/interfaces/base-entity.interface';
 import { StrObjectId } from '@Common/constants/base.constant';
-import { Is } from 'sequelize-typescript';
-import { VerifyLever } from '@/modules/tutor-verification/common/constant';
 
 export class User implements BaseEntity {
   @StrObjectId()
@@ -24,7 +22,6 @@ export class User implements BaseEntity {
   @MinLength(8)
   password: string;
 
-
   @IsOptional()
   birthday?: string;
 
@@ -39,23 +36,7 @@ export class User implements BaseEntity {
   @IsEnum(Gender)
   gender?: Gender;
 
-  // 
-  @IsOptional()
-  provinceId?: string;
-  @IsOptional()
-  districtId?: string;
-  @IsOptional()
-  wardId?: string;
-  @IsOptional()
-  address?: string;
-
-  @IsOptional()
-  isVerified?: boolean;
-
   @IsEnum(UserStatus)
   userStatus?: UserStatus;
-  @IsOptional()
-  verifyLever?: VerifyLever;
-  @IsOptional()
-  verifyScore?: number;
+
 }

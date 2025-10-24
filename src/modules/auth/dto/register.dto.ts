@@ -10,6 +10,4 @@ export class RegisterDto extends PickType(User, [
   'password',
   'role'
 ]) {
-  @IsEnum([UserRoles.TUTOR, UserRoles.STUDENT])
-  role: UserRoles;
 }
