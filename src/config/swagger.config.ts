@@ -7,7 +7,7 @@ export function setupSwagger(app: INestApplication): void {
   
   // Cấu hình Swagger đơn giản
   const config = new DocumentBuilder()
-    .setTitle('Cong Gia Su API')
+    .setTitle('API Documentation')
     .setDescription('API Documentation')
     .setVersion('1.0')
     .addBearerAuth()
