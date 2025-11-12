@@ -5,12 +5,12 @@ export const databaseConfig = (
   configService: ConfigService,
 ): SequelizeModuleOptions => ({
   dialect: 'postgres',
-  dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: false,
-    },
-  },
+  // dialectOptions: {
+  //   ssl: {
+  //     require: true,
+  //     rejectUnauthorized: false,
+  //   },
+  // },
   host: configService.get<string>('DB_HOST'),
   port: configService.get<number>('DB_PORT'),
   username: configService.get<string>('DB_USERNAME'),

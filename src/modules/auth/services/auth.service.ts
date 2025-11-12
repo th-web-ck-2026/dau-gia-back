@@ -5,8 +5,6 @@ import { RegisterDto } from '../dto/register.dto';
 import { ApiError } from '../../../common/exceptions/api-error';
 import * as bcrypt from 'bcrypt';
 import { UserRepository } from '@/modules/user/repositories/user.repository';
-import { ProfileService } from '@/modules/profile/services/profile.service';
-import { WalletService } from '@/modules/wallet/services/wallet.service';
 import { Op } from 'sequelize';
 import { UserStatus } from '@/modules/user/common/constant';
 import { SendMailService } from '@/modules/send-mail/services/send-mail.service';
@@ -14,8 +12,6 @@ import { SendMailService } from '@/modules/send-mail/services/send-mail.service'
 export class AuthService {
   constructor(
     private userRepository: UserRepository,
-    private profileService: ProfileService,
-    private walletService: WalletService,
     private sendMailService: SendMailService,
     private jwtService: JwtService,
   ) {}
@@ -36,8 +32,6 @@ export class AuthService {
       password: hashedPassword,
     });
     // create profile when create user
-    await this.profileService.createProfile(user);
-    await this.walletService.createWallet(user._id);
     const { password, ...result } = user;
     return result;
   }

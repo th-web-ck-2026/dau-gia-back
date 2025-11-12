@@ -4,7 +4,6 @@ import { User } from '../entities/user.entity';
 import { Gender, UserRoles, UserStatus } from '../common/constant';
 import { StrObjectId } from '@/common/constants/base.constant';
 import * as bcrypt from 'bcrypt';
-import { VerifyLever } from '@/modules/tutor-verification/common/constant';
 @Table({
   tableName: EntityTable.USER,
 })
@@ -50,12 +49,6 @@ export class UserModel extends Model implements User {
   })
   userStatus?: UserStatus;
 
-  @Column({
-    type: DataType.ENUM(...Object.values(VerifyLever)),
-    allowNull: false,
-    defaultValue: VerifyLever.NONE,
-  })
-  verifyLever: VerifyLever;
   @Column({
     defaultValue: 0,
     type: DataType.INTEGER,

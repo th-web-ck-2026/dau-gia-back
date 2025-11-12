@@ -27,6 +27,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (user.userStatus === UserStatus.BLOCKED) {
       throw ApiError.Unauthorized('Người dùng đã bị khóa');
     }
-    return { id: payload.sub, fullname: payload.fullname, email: payload.email, role: payload.role };
+    return {
+      id: payload.sub,
+      fullname: payload.fullname,
+      email: payload.email,
+      role: payload.role,
+      phone: payload.phone,
+      status: user.userStatus,
+    };
   }
 }
