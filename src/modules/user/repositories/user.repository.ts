@@ -3,8 +3,7 @@ import { BaseRepository } from '../../../common/base/base.repository';
 import { User } from '../entities/user.entity';
 import { UserModel } from '../models/user.model';
 import { ApiError } from '@/common/exceptions/api-error';
-import { InjectModel } from '@nestjs/sequelize';
-import { UserRoles } from '../common/constant';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class UserRepository extends BaseRepository<User> {
@@ -19,6 +18,14 @@ export class UserRepository extends BaseRepository<User> {
 
   async findActiveUsers(): Promise<User[]> {
     return this.getMany({ where: { isActive: true } });
+  }
+
+  async findByLoginIdentifier(identifier: string): Promise<User | null> {
+    return this.getOne({
+      where: {
+        [Op.or]: [{ email: identifier }, { phone: identifier }],
+      },
+    });
   }
   async getInfo(userId: string): Promise<Pick<User, 'phone' | 'email'>> {
     const user = await this.getOne({ where: { _id: userId } });

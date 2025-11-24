@@ -56,6 +56,11 @@ export class UserModel extends Model implements User {
   })
   verifyScore?: number;
 
+  @Column({
+    allowNull: true,
+  })
+  refreshToken?: string;
+
   public async comparePassword(password: string): Promise<boolean> {
     return bcrypt.compare(password, this.password);
   }

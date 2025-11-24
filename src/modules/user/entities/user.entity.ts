@@ -39,4 +39,6 @@ export class User implements BaseEntity {
   @IsEnum(UserStatus)
   userStatus?: UserStatus;
 
+  @IsOptional()
+  refreshToken?: string;
 }
