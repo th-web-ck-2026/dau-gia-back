@@ -8,6 +8,5 @@ export class RegisterDto extends PickType(User, [
   'email',
   'phone',
   'password',
-  'role'
 ]) {
 }
