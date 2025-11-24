@@ -140,7 +140,7 @@ export class ${Name}Controller {
 // DTOs với kebab-case filename
 console.log(`📄 Tạo create-${kebabName}.dto.ts...`);
 fs.writeFileSync(`${basePath}/dto/create-${kebabName}.dto.ts`, 
-`export class Create${Name}Dto {
+`export class Create${Name}Dto extends OmitType(${Name}, ['_id']) {
   
 }
 `);

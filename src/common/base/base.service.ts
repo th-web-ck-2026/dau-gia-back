@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { BaseRepository } from './base.repository';
 import { BaseEntity } from '../interfaces/base-entity.interface';
-import { FindOptions, UpdateOptions } from 'sequelize';
+import { DestroyOptions, FindOptions, UpdateOptions } from 'sequelize';
 import { QueryOption } from '../pipe/query-option.interface';
 import { PageableDto } from '../dto/pageable.dto';
 
@@ -36,9 +36,8 @@ export abstract class BaseService<T extends BaseEntity> {
     return this.repository.getOne(condition);
   }
 
-  async deleteOne(id: string): Promise<T | null> {
-    return this.repository.deleteOne({ where: { _id: id } });
-  
+  async deleteOne(condition: DestroyOptions): Promise<T | null> {
+    return this.repository.deleteOne(condition);
   }
   async count(condition?: any): Promise<number> {
     return this.repository.count(condition);

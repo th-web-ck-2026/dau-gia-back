@@ -3,4 +3,5 @@ export const EntityTable = {
   AUTH: 'auth',
   NOTIFICATION: 'notification',
   MAIL_CONFIG: 'mail_config',
+  PROPERTIE: 'propertie',
 } as const;
