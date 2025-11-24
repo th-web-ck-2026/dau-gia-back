@@ -7,6 +7,8 @@ export class Unit implements BaseEntity {
   @StrObjectId()
   _id: string;
   @IsString()
+  code: string;
+  @IsString()
   propertieId: string;
   @IsString()
   ten: string;
