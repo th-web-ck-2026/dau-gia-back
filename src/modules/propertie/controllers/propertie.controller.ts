@@ -20,6 +20,7 @@ import { UserRoles } from '@/modules/user/common/constant';
 import { AuthUser } from '@/common/interfaces/auth-user.interface';
 import { ReqUser } from '@/common/decorators/user.decorator';
 import { QueryOption } from '@/common/pipe/query-option.interface';
+import { RequestQuery } from '@/common/decorators/request-query.decorator';
 
 @Auth(UserRoles.USER)
 @Controller('propertie')
@@ -36,7 +37,7 @@ export class PropertieController {
     });
   }
   @Get('me/page')
-  async getPage(@ReqUser() user: AuthUser, @Query() query: QueryOption) {
+  async getPage(@ReqUser() user: AuthUser, @RequestQuery() query: QueryOption) {
     return this.propertieService.getPage(
       {
         where: {
