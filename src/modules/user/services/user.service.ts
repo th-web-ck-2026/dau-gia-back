@@ -75,7 +75,7 @@ export class UsersService extends BaseService<User> {
       throw ApiError.BadRequest('Số lượng người dùng tối đa là 10');
     }
     // bắt buộc phải có condition
-    if (!search || search.trim() === '' || search.length < 5) {
+    if (!search || search.trim() === '' || search.trim().length < 5) {
       throw ApiError.BadRequest('Tìm kiếm phải có ít nhất 5 ký tự');
     }
     return this.userRepository.getPage(
@@ -89,7 +89,7 @@ export class UsersService extends BaseService<User> {
           userStatus: UserStatus.ACTIVE,
           role: UserRoles.USER,
         },
-        attributes: ['_id', 'fullname'],
+        attributes: ['_id', 'fullname', 'email', 'phone'],
       },
       query,
     );
