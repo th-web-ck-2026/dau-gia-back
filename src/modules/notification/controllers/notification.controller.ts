@@ -9,7 +9,7 @@ import { ApiOperation } from '@nestjs/swagger';
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
   @ApiOperation({ summary: 'Lấy thông báo của tôi' })
-  @Get('me')
+  @Get('me/page')
   async getMyNotifications(
     @ReqUser() user,
     @RequestQuery() query: QueryOption,
