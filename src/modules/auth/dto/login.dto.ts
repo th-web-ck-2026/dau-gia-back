@@ -10,14 +10,14 @@ export class LoginDto {
   @ValidateIf((o) => !o.refreshToken)
   @IsString()
   @IsNotEmpty()
-  username?: string;
+  email?: string;
 
   @ValidateIf((o) => !o.refreshToken)
   @IsNotEmpty()
   @MinLength(8)
   password?: string;
 
-  @ValidateIf((o) => !o.username)
+  @ValidateIf((o) => !o.email)
   @IsString()
   @IsNotEmpty()
   refreshToken?: string;

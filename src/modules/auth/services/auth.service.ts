@@ -44,12 +44,12 @@ export class AuthService {
       return this.refreshTokens(loginDto.refreshToken);
     }
 
-    if (!loginDto.username || !loginDto.password) {
+    if (!loginDto.email || !loginDto.password) {
       throw ApiError.BadRequest('Thiếu thông tin đăng nhập');
     }
 
     const user = await this.userRepository.findByLoginIdentifier(
-      loginDto.username,
+      loginDto.email,
     );
     if (!user) {
       throw ApiError.Unauthorized('Tên đăng nhập hoặc mật khẩu không đúng');
@@ -101,8 +101,8 @@ export class AuthService {
     tokens: { accessToken: string; refreshToken: string },
   ) {
     return {
-      access_token: tokens.accessToken,
-      refresh_token: tokens.refreshToken,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
       user: {
         id: user._id,
         email: user.email,

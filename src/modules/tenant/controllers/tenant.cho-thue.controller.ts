@@ -15,8 +15,10 @@ import { ApiError } from '@Exceptions/api-error';
 import { UserRoles } from '@/modules/user/common/constant';
 import { ReqUser } from '@/common/decorators/user.decorator';
 import { AuthUser } from '@/common/interfaces/auth-user.interface';
+import { ApiTags } from '@nestjs/swagger';
 @Auth(UserRoles.USER)
 @Controller('tenant/cho-thue')
+@ApiTags('Tenant Cho Thue')
 export class TenantChoThueController {
   constructor(private readonly tenantChoThueService: TenantChoThueService) {}
 

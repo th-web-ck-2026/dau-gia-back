@@ -17,6 +17,7 @@ import { SendMailModule } from './modules/send-mail/send-mail.module';
 import { RecaptchaModule } from './modules/recaptcha/recaptcha.module';
 import { PropertieModule } from './modules/propertie/propertie.module';
 import { UnitModule } from './modules/unit/unit.module';
+import { TenantModule } from './modules/tenant/tenant.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { UnitModule } from './modules/unit/unit.module';
     RecaptchaModule,
     PropertieModule,
     UnitModule,
+    TenantModule,
   ],
   controllers: [AppController],
   providers: [

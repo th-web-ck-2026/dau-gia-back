@@ -5,8 +5,9 @@ import { TenantRepository } from '../repositories/tenant.repository';
 import { AuthUser } from '@/common/interfaces/auth-user.interface';
 import { PageableDto } from '@/common/dto/pageable.dto';
 import { ApiError } from '@/common/exceptions/api-error';
-import { TenantTrangThai } from '../common/constant';
+import { TenantTrangThai, TenantTrangThaiPhanHoi } from '../common/constant';
 import { Sequelize } from 'sequelize-typescript';
+import { QueryOption } from '@/common/pipe/query-option.interface';
 
 @Injectable()
 export class TenantNguoiThueService extends BaseService<Tenant> {
@@ -16,17 +17,28 @@ export class TenantNguoiThueService extends BaseService<Tenant> {
   ) {
     super(tenantRepository);
   }
-  async getPageYeuCauChoThueMe(user: AuthUser): Promise<PageableDto<Tenant>> {
-    return this.tenantRepository.getPage({
-      where: {
-        khachHangUserId: user.id,
+  async getPageYeuCauChoThueMe(
+    user: AuthUser,
+    query: QueryOption,
+  ): Promise<PageableDto<Tenant>> {
+    return this.getPage(
+      {
+        where: {
+          khachHangUserId: user.id,
+        },
       },
+      query,
+    );
+  }
+  async getYeuCauChoThueMeById(user: AuthUser, id: string): Promise<Tenant> {
+    return this.getOne({
+      where: { _id: id, khachHangUserId: user.id },
     });
   }
   async phanHoiYeuCauChoThue(
     user: AuthUser,
     tenantId: string,
-    trangThai: TenantTrangThai,
+    trangThai: TenantTrangThaiPhanHoi,
   ): Promise<Tenant> {
     const transaction = await this.sequelize.transaction();
     try {
@@ -37,9 +49,12 @@ export class TenantNguoiThueService extends BaseService<Tenant> {
       if (!tenant) {
         throw ApiError.NotFound('Yêu cầu cho thuê không tồn tại');
       }
-      tenant.trangThai = trangThai;
+      tenant.trangThai =
+        trangThai === TenantTrangThaiPhanHoi.XAC_NHAN_THUE
+          ? TenantTrangThai.DANG_THUE
+          : TenantTrangThai.DA_HUY;
       const res = await this.tenantRepository.updateOne(tenant, {
-        where: { _id: tenantId},
+        where: { _id: tenantId },
         transaction,
       });
       await transaction.commit();
