@@ -1,4 +1,4 @@
-import { Controller, Get, Body, Put, Param } from '@nestjs/common';
+import { Controller, Get, Body, Put, Param, Query } from '@nestjs/common';
 import { UsersService } from '../services/user.service';
 import { UpdateUserProfileDto } from '../dto/update-user-profile.dto';
 import { ReqUser } from '@/common/decorators/user.decorator';
@@ -7,6 +7,10 @@ import { UpdateUserAvatar } from '../dto/update-user-avatar.dto';
 import { Auth } from '@/common/decorators/auth.decorator';
 import { ApiOperation } from '@nestjs/swagger';
 import { Public } from '@/common/decorators/public.decorator';
+import { RequestCondition } from '@/common/decorators/request-condition.decotator';
+import { ConditionUserDto } from '../dto/condition-user.dto';
+import { QueryOption } from '@/common/pipe/query-option.interface';
+import { RequestQuery } from '@/common/decorators/request-query.decorator';
 @Auth()
 @Controller('user')
 export class UsersController {
@@ -22,7 +26,7 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'Lấy thông tin của tôi' })
-  @Get('profile/me')
+  @Get('me')
   async getProfileMe(@ReqUser() user) {
     // console.log('Full user object:', user);
     return this.usersService.getOne({
@@ -41,7 +45,7 @@ export class UsersController {
     });
   }
   @ApiOperation({ summary: 'Cập nhật thông tin của tôi' })
-  @Put('profile/me')
+  @Put('me')
   async updateUserProfile(
     @ReqUser() user,
     @Body() updateUserProfileDto: UpdateUserProfileDto,
@@ -58,12 +62,12 @@ export class UsersController {
     return this.usersService.updatePassword(user.id, updateUserPasswordDto);
   }
 
-  @ApiOperation({ summary: 'Cập nhật avatar của tôi' })
-  @Put('avatar/me')
-  async updateAvatar(
-    @ReqUser() user,
-    @Body() updateUserAvatar: UpdateUserAvatar,
+  @ApiOperation({ summary: 'Lấy danh sách người dùng' })
+  @Get('page')
+  async getDanhSachNguoiDung(
+    @Query('search') search: string,
+    @RequestQuery() query: QueryOption,
   ) {
-    return this.usersService.updateUserAvatar(user.id, updateUserAvatar.avatar);
+    return this.usersService.getDanhSachNguoiDung(search, query);
   }
 }

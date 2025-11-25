@@ -26,7 +26,10 @@ export class TenantChoThueService extends BaseService<Tenant> {
       throw ApiError.NotFound('Đơn vị cho thuê không tồn tại');
     }
     if (unit.trangThaiThue !== UnitTrangThaiThue.TRONG) {
-      throw ApiError.BadRequest('Đơn vị đã có người thuê');
+      throw ApiError.BadRequest('Đơn vị đã có người thuê hoặc đang bảo trì');
+    }
+    if (user.id === createYeuCauChoThueDto.khachHangUserId) {
+      throw ApiError.BadRequest('Bạn không thể yêu cầu cho thuê đơn vị này');
     }
     return this.tenantRepository.create(createYeuCauChoThueDto);
   }
