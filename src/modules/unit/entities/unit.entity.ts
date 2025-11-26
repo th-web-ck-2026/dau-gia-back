@@ -9,6 +9,8 @@ export class Unit implements BaseEntity {
   @IsString()
   code: string;
   @IsString()
+  userId: string;
+  @IsString()
   propertieId: string;
   @IsString()
   ten: string;

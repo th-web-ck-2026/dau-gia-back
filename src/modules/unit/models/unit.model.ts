@@ -10,6 +10,7 @@ import { EntityTable } from '@Common/constants/entity.constant';
 import { StrObjectId } from '@Common/constants/base.constant';
 import { UnitTrangThaiThue, UnitType } from '../common/constant';
 import { PropertieModel } from '@/modules/propertie/models/propertie.model';
+import { UserModel } from '@/modules/user/models/user.model';
 
 @Table({
   tableName: EntityTable.UNIT,
@@ -30,6 +31,9 @@ export class UnitModel extends Model implements Unit {
   code: string;
   @StrObjectId()
   _id: string;
+  @Column
+  @ForeignKey(() => UserModel)
+  userId: string;
   @Column
   @ForeignKey(() => PropertieModel)
   propertieId: string;
