@@ -13,6 +13,7 @@ import { HopDongTrangThai } from '../common/constant';
 import { QueryOption } from '@/common/pipe/query-option.interface';
 import { UnitModel } from '@/modules/unit/models/unit.model';
 import { Sequelize } from 'sequelize-typescript';
+import { UserModel } from '@/modules/user/models/user.model';
 
 @Injectable()
 export class HopDongThueService extends BaseService<HopDongThue> {

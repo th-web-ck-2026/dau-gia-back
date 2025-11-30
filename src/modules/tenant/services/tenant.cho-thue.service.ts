@@ -8,11 +8,15 @@ import { AuthUser } from '@/common/interfaces/auth-user.interface';
 import { ApiError } from '@/common/exceptions/api-error';
 import { UnitTrangThaiThue } from '@/modules/unit/common/constant';
 import { Transaction } from 'sequelize';
+import { QueryOption } from '@/common/pipe/query-option.interface';
+import { HopDongThueService } from '@/modules/hop-dong-thue/services/hop-dong-thue.service';
+import { UnitModel } from '@/modules/unit/models/unit.model';
+import { HopDongThueModel } from '@/modules/hop-dong-thue/models/hop-dong-thue.model';
+import { UserModel } from '@/modules/user/models/user.model';
 @Injectable()
 export class TenantChoThueService extends BaseService<Tenant> {
   constructor(
     private readonly tenantRepository: TenantRepository,
-    private readonly unitService: UnitService,
   ) {
     super(tenantRepository);
   }
@@ -27,5 +31,19 @@ export class TenantChoThueService extends BaseService<Tenant> {
     return this.tenantRepository.create(createYeuCauChoThueDto, {
       transaction: options?.transaction,
     });
+  }
+  async getDanhSachNguoiThuePage(user: AuthUser, query: QueryOption) {
+    return this.getPage(
+      {
+        include: [
+          {
+            model: HopDongThueModel,
+            where: { userId: user.id },
+            required: true,
+          },
+        ],
+      },
+      query,
+    );
   }
 }

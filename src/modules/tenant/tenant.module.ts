@@ -6,9 +6,14 @@ import { TenantNguoiThueController } from './controllers/tenant.nguoi-thue.contr
 import { TenantNguoiThueService } from './services/tenant.nguoi-thue.service';
 import { UnitModule } from '../unit/unit.module';
 import { HopDongThueModule } from '../hop-dong-thue/hop-dong-thue.module';
+import { UsersModule } from '../user/user.module';
 
 @Module({
-  imports: [forwardRef(() => UnitModule), forwardRef(() => HopDongThueModule)],
+  imports: [
+    forwardRef(() => UnitModule),
+    forwardRef(() => UsersModule),
+    forwardRef(() => HopDongThueModule),
+  ],
   controllers: [TenantChoThueController, TenantNguoiThueController],
   providers: [TenantChoThueService, TenantNguoiThueService, TenantRepository],
   exports: [TenantChoThueService, TenantNguoiThueService, TenantRepository],
