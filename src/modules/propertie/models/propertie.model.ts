@@ -12,7 +12,9 @@ export class PropertieModel extends Model implements Propertie {
   @Column
   @ForeignKey(() => UserModel)
   userId: string;
-  @Column
+  @Column({
+    unique: true,
+  })
   code: string;
   @Column
   ten: string;
