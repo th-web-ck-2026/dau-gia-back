@@ -8,11 +8,15 @@ import { ApiError } from '@/common/exceptions/api-error';
 import { TenantTrangThai, TenantTrangThaiPhanHoi } from '../common/constant';
 import { Sequelize } from 'sequelize-typescript';
 import { QueryOption } from '@/common/pipe/query-option.interface';
+import { HopDongThueModel } from '@/modules/hop-dong-thue/models/hop-dong-thue.model';
+import { UnitModel } from '@/modules/unit/models/unit.model';
+import { HopDongThueService } from '@/modules/hop-dong-thue/services/hop-dong-thue.service';
 
 @Injectable()
 export class TenantNguoiThueService extends BaseService<Tenant> {
   constructor(
     private readonly tenantRepository: TenantRepository,
+    private readonly hopDongThueService: HopDongThueService,
     private readonly sequelize: Sequelize,
   ) {
     super(tenantRepository);
@@ -26,6 +30,16 @@ export class TenantNguoiThueService extends BaseService<Tenant> {
         where: {
           khachHangUserId: user.id,
         },
+        include: [
+          {
+            model: HopDongThueModel,
+            include: [
+              {
+                model: UnitModel,
+              },
+            ],
+          },
+        ],
       },
       query,
     );
@@ -33,6 +47,16 @@ export class TenantNguoiThueService extends BaseService<Tenant> {
   async getYeuCauChoThueMeById(user: AuthUser, id: string): Promise<Tenant> {
     return this.getOne({
       where: { _id: id, khachHangUserId: user.id },
+      include: [
+        {
+          model: HopDongThueModel,
+          include: [
+            {
+              model: UnitModel,
+            },
+          ],
+        },
+      ],
     });
   }
   async phanHoiYeuCauChoThue(
@@ -51,12 +75,17 @@ export class TenantNguoiThueService extends BaseService<Tenant> {
       }
       tenant.trangThai =
         trangThai === TenantTrangThaiPhanHoi.XAC_NHAN_THUE
-          ? TenantTrangThai.DANG_THUE
-          : TenantTrangThai.DA_HUY;
+          ? TenantTrangThai.XAC_NHAN_THUE
+          : TenantTrangThai.TU_CHOI_THUE;
       const res = await this.tenantRepository.updateOne(tenant, {
         where: { _id: tenantId },
         transaction,
       });
+      if (trangThai === TenantTrangThaiPhanHoi.XAC_NHAN_THUE) {
+        await this.hopDongThueService.kichHoatHopDongThue(user, tenant.hopDongThueId);
+      } else {
+        await this.hopDongThueService.huyHopDongThue(user, tenant.hopDongThueId);
+      }
       await transaction.commit();
       return res;
     } catch (error) {

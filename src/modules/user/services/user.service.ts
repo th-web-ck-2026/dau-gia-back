@@ -75,8 +75,8 @@ export class UsersService extends BaseService<User> {
       throw ApiError.BadRequest('Số lượng người dùng tối đa là 10');
     }
     // bắt buộc phải có condition
-    if (!search || search.trim() === '' || search.trim().length < 5) {
-      throw ApiError.BadRequest('Tìm kiếm phải có ít nhất 5 ký tự');
+    if (!search || search.trim() === '' || search.trim().length < 3) {
+      throw ApiError.BadRequest('Tìm kiếm phải có ít nhất 3 ký tự');
     }
     return this.userRepository.getPage(
       {

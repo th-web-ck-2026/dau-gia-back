@@ -7,6 +7,7 @@ import { UnitService } from '@/modules/unit/services/unit.service';
 import { AuthUser } from '@/common/interfaces/auth-user.interface';
 import { ApiError } from '@/common/exceptions/api-error';
 import { UnitTrangThaiThue } from '@/modules/unit/common/constant';
+import { Transaction } from 'sequelize';
 @Injectable()
 export class TenantChoThueService extends BaseService<Tenant> {
   constructor(
@@ -18,19 +19,13 @@ export class TenantChoThueService extends BaseService<Tenant> {
   async createYeuCauChoThue(
     user: AuthUser,
     createYeuCauChoThueDto: CreateYeuCauChoThueDto,
+    options?: { transaction?: Transaction },
   ) {
-    const unit = await this.unitService.getOne({
-      where: { _id: createYeuCauChoThueDto.unitId, userId: user.id },
-    });
-    if (!unit) {
-      throw ApiError.NotFound('Đơn vị cho thuê không tồn tại');
-    }
-    if (unit.trangThaiThue !== UnitTrangThaiThue.TRONG) {
-      throw ApiError.BadRequest('Đơn vị đã có người thuê hoặc đang bảo trì');
-    }
     if (user.id === createYeuCauChoThueDto.khachHangUserId) {
       throw ApiError.BadRequest('Bạn không thể yêu cầu cho thuê đơn vị này');
     }
-    return this.tenantRepository.create(createYeuCauChoThueDto);
+    return this.tenantRepository.create(createYeuCauChoThueDto, {
+      transaction: options?.transaction,
+    });
   }
 }

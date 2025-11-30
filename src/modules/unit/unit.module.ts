@@ -6,7 +6,7 @@ import { UnitService } from './services/unit.service';
 import { UnitRepository } from './repositories/unit.repository';
 
 @Module({
-  imports: [SequelizeModule.forFeature([UnitModel])],
+  imports: [],
   controllers: [UnitController],
   providers: [UnitService, UnitRepository],
   exports: [UnitService, UnitRepository],

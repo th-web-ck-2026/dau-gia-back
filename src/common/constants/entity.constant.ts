@@ -6,4 +6,5 @@ export const EntityTable = {
   PROPERTIE: 'propertie',
   UNIT: 'unit',
   TENANT: 'tenant',
+  HOP_DONG_THUE: 'hop_dong_thue',
 } as const;

@@ -21,15 +21,4 @@ import { ApiTags } from '@nestjs/swagger';
 @ApiTags('Tenant Cho Thue')
 export class TenantChoThueController {
   constructor(private readonly tenantChoThueService: TenantChoThueService) {}
-
-  @Post('yeu-cau-cho-thue')
-  async createYeuCauChoThue(
-    @ReqUser() user: AuthUser,
-    @Body() createYeuCauChoThueDto: CreateYeuCauChoThueDto,
-  ) {
-    return this.tenantChoThueService.createYeuCauChoThue(
-      user,
-      createYeuCauChoThueDto,
-    );
-  }
 }

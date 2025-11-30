@@ -10,9 +10,9 @@ export class Tenant implements BaseEntity {
   @IsString()
   code: string;
   @IsString()
-  unitId: string;
-  @IsString()
   khachHangUserId: string;
+  @IsString()
+  hopDongThueId: string;
   @IsEnum(TenantTrangThai)
   trangThai: TenantTrangThai;
 

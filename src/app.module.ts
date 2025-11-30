@@ -18,6 +18,8 @@ import { RecaptchaModule } from './modules/recaptcha/recaptcha.module';
 import { PropertieModule } from './modules/propertie/propertie.module';
 import { UnitModule } from './modules/unit/unit.module';
 import { TenantModule } from './modules/tenant/tenant.module';
+import { HopDongThueModule } from './modules/hop-dong-thue/hop-dong-thue.module';
+import { RepositoryModule } from './modules/repository/repository.module';
 
 @Module({
   imports: [
@@ -35,6 +37,7 @@ import { TenantModule } from './modules/tenant/tenant.module';
       ],
     }),
     DatabaseModule,
+    RepositoryModule,
     UsersModule,
     NotificationModule,
     FileModule,
@@ -44,6 +47,7 @@ import { TenantModule } from './modules/tenant/tenant.module';
     PropertieModule,
     UnitModule,
     TenantModule,
+    HopDongThueModule,
   ],
   controllers: [AppController],
   providers: [
