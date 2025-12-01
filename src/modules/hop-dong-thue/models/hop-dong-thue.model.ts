@@ -54,6 +54,10 @@ export class HopDongThueModel extends Model implements HopDongThue {
     defaultValue: HopDongTrangThai.CHO_XAC_NHAN,
   })
   trangThai: HopDongTrangThai;
+  @Column({
+    type: DataType.TEXT,
+  })
+  dieuKhoanDichVu?: string;
   @StrObjectId()
   _id: string;
 }

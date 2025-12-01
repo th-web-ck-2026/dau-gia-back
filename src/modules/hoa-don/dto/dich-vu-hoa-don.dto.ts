@@ -1,4 +1,4 @@
-import { IsString, IsNumber } from "class-validator";
+import { IsString, IsNumber, IsOptional } from "class-validator";
 
 export class DichVuHoaDon {
   @IsString()
@@ -12,5 +12,12 @@ export class DichVuHoaDon {
 
   @IsNumber()
   thanhTien: number;
+
+  @IsString()
+  donViTinh: string;
+
+  @IsString()
+  @IsOptional()
+  ghiChu?: string;
 }
 
