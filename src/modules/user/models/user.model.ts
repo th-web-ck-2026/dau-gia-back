@@ -52,6 +52,13 @@ export class UserModel extends Model implements User {
   })
   userStatus?: UserStatus;
 
+  @Column
+  soCccd?: string;
+  @Column
+  ngayCapCccd?: string;
+  @Column
+  noiCapCccd?: string;
+
   @Column({
     allowNull: true,
   })

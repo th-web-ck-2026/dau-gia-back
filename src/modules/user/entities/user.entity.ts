@@ -40,5 +40,19 @@ export class User implements BaseEntity {
   userStatus?: UserStatus;
 
   @IsOptional()
+  @IsString()
+  soCccd?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsOptional()
+  ngayCapCccd?: string;
+
+  @IsOptional()
+  @IsString()
+  noiCapCccd?: string;
+
+  @IsString()
+  @IsOptional()
   refreshToken?: string;
 }
