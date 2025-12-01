@@ -1,0 +1,16 @@
+export enum HoaDonType {
+  TIEN_NHA = 'Hoá đơn tiền nhà',
+  KHAC = 'Khác',
+}
+
+export enum HoaDonTrangThai {
+  CHO_THANH_TOAN = 'Chờ thanh toán',
+  DA_THANH_TOAN = 'Đã thanh toán',
+  QUA_HAN = 'Quá hạn',
+  DA_HUY = 'Đã hủy',
+}
+
+export enum HoaDonTrangThaiKhachHangThanhToan {
+  DA_THANH_TOAN = 'Đã thanh toán',
+  CHO_THANH_TOAN = 'Chờ thanh toán',
+}

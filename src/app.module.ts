@@ -20,6 +20,8 @@ import { UnitModule } from './modules/unit/unit.module';
 import { TenantModule } from './modules/tenant/tenant.module';
 import { HopDongThueModule } from './modules/hop-dong-thue/hop-dong-thue.module';
 import { RepositoryModule } from './modules/repository/repository.module';
+import { HoaDonModule } from './modules/hoa-don/hoa-don.module';
+import { ThongTinThanhToanModule } from './modules/thong-tin-thanh-toan/thong-tin-thanh-toan.module';
 
 @Module({
   imports: [
@@ -48,6 +50,8 @@ import { RepositoryModule } from './modules/repository/repository.module';
     UnitModule,
     TenantModule,
     HopDongThueModule,
+    HoaDonModule,
+    ThongTinThanhToanModule,
   ],
   controllers: [AppController],
   providers: [

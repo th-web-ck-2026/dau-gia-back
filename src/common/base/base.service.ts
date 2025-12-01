@@ -20,7 +20,10 @@ export abstract class BaseService<T extends BaseEntity> {
   async getOne(condition: any): Promise<T | null> {
     return this.repository.getOne(condition);
   }
-  async getPage(condition?: FindOptions, options?: QueryOption): Promise<PageableDto<T>> {
+  async getPage(
+    condition?: FindOptions,
+    options?: QueryOption,
+  ): Promise<PageableDto<T>> {
     return this.repository.getPage(condition, options);
   }
   async getById(id: string): Promise<T | null> {
@@ -31,9 +34,18 @@ export abstract class BaseService<T extends BaseEntity> {
     return this.repository.create(createDto);
   }
 
-  async updateOne(updateDto: any, condition?: UpdateOptions): Promise<T | null> {
+  async updateOne(
+    updateDto: any,
+    condition?: UpdateOptions,
+  ): Promise<T | null> {
     await this.repository.updateOne(updateDto, condition);
     return this.repository.getOne(condition);
+  }
+  async updateMany(
+    updateDto: any,
+    condition?: UpdateOptions,
+  ): Promise<{ n: number }> {
+    return this.repository.updateMany(updateDto, condition);
   }
 
   async deleteOne(condition: DestroyOptions): Promise<T | null> {
@@ -42,5 +54,4 @@ export abstract class BaseService<T extends BaseEntity> {
   async count(condition?: any): Promise<number> {
     return this.repository.count(condition);
   }
-
 }
