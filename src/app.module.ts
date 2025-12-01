@@ -22,6 +22,8 @@ import { HopDongThueModule } from './modules/hop-dong-thue/hop-dong-thue.module'
 import { RepositoryModule } from './modules/repository/repository.module';
 import { HoaDonModule } from './modules/hoa-don/hoa-don.module';
 import { ThongTinThanhToanModule } from './modules/thong-tin-thanh-toan/thong-tin-thanh-toan.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { CronJobModule } from './modules/cron-job/cron-job.module';
 
 @Module({
   imports: [
@@ -38,6 +40,8 @@ import { ThongTinThanhToanModule } from './modules/thong-tin-thanh-toan/thong-ti
         },
       ],
     }),
+    ScheduleModule.forRoot(),
+    CronJobModule,
     DatabaseModule,
     RepositoryModule,
     UsersModule,

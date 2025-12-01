@@ -1,11 +1,12 @@
 import { Global, Module } from '@nestjs/common';
-import { CronJobService } from './cron-job.service';
+import { HoaDonCronJobService } from './hoa-don.cron-job.service';
+import { HoaDonModule } from '../hoa-don/hoa-don.module';
 
 @Global()
 @Module({
-  imports: [],
+  imports: [HoaDonModule],
   controllers: [],
-  providers: [CronJobService],
-  exports: [CronJobService],
+  providers: [HoaDonCronJobService],
+  exports: [HoaDonCronJobService],
 })
 export class CronJobModule {}
