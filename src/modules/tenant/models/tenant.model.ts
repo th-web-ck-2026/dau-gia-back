@@ -27,7 +27,10 @@ export class TenantModel extends Model implements Tenant {
   @Column
   @ForeignKey(() => UserModel)
   khachHangUserId: string;
-  @BelongsTo(() => UserModel)
+  @BelongsTo(() => UserModel, {
+    foreignKey: 'khachHangUserId',
+    onDelete: 'CASCADE',
+  })
   khachHangUser: User;
   @Column({
     type: DataType.ENUM(...Object.values(TenantTrangThai)),
