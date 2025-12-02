@@ -14,6 +14,7 @@ import { QueryOption } from '@/common/pipe/query-option.interface';
 import { UnitModel } from '@/modules/unit/models/unit.model';
 import { Sequelize } from 'sequelize-typescript';
 import { UserModel } from '@/modules/user/models/user.model';
+import { ConditionHopDongThueDto } from '../dto/condition-hop-dong-thue.dto';
 
 @Injectable()
 export class HopDongThueService extends BaseService<HopDongThue> {
@@ -44,36 +45,38 @@ export class HopDongThueService extends BaseService<HopDongThue> {
       if (user.id === createHopDongThueDto.khachHangUserId) {
         throw ApiError.BadRequest('Bạn không thể tạo hợp đồng thuê đơn vị này');
       }
-      const khachHangUser = await this.usersService.getOne(
-        {
-          where: { _id: createHopDongThueDto.khachHangUserId },
-          transaction,
-        },
-      );
+      const khachHangUser = await this.usersService.getOne({
+        where: { _id: createHopDongThueDto.khachHangUserId },
+        transaction,
+      });
       if (!khachHangUser) {
         throw ApiError.NotFound('Khách hàng không tồn tại');
       }
-    const hopDongThue = await this.hopDongThueRepository.create(
-      {
-        ...createHopDongThueDto,
-        userId: user.id,
-        unitId: unit._id,
-        khachHangUserId: khachHangUser._id,
-      },
-      { transaction },
-    );
-    if (!hopDongThue) {
-      throw ApiError.BadRequest('Lỗi khi tạo hợp đồng thuê');
-    }
-    const tenant = await this.tenantChoThueService.createYeuCauChoThue(user, {
-      khachHangUserId: khachHangUser._id,
-      hopDongThueId: hopDongThue._id,
-    }, { transaction });
-    if (!tenant) {
-      throw ApiError.BadRequest('Lỗi khi tạo yêu cầu cho thuê');
-    }
-    await transaction.commit();
-    return hopDongThue;
+      const hopDongThue = await this.hopDongThueRepository.create(
+        {
+          ...createHopDongThueDto,
+          userId: user.id,
+          unitId: unit._id,
+          khachHangUserId: khachHangUser._id,
+        },
+        { transaction },
+      );
+      if (!hopDongThue) {
+        throw ApiError.BadRequest('Lỗi khi tạo hợp đồng thuê');
+      }
+      const tenant = await this.tenantChoThueService.createYeuCauChoThue(
+        user,
+        {
+          khachHangUserId: khachHangUser._id,
+          hopDongThueId: hopDongThue._id,
+        },
+        { transaction },
+      );
+      if (!tenant) {
+        throw ApiError.BadRequest('Lỗi khi tạo yêu cầu cho thuê');
+      }
+      await transaction.commit();
+      return hopDongThue;
     } catch (error) {
       await transaction.rollback();
       throw error;
@@ -82,17 +85,17 @@ export class HopDongThueService extends BaseService<HopDongThue> {
   async kichHoatHopDongThue(user: AuthUser, hopDongThueId: string) {
     const transaction = await this.sequelize.transaction();
     try {
-    const hopDongThue = await this.hopDongThueRepository.getOne({
-      where: { _id: hopDongThueId, khachHangUserId: user.id },
-      transaction,
-    });
-    if (!hopDongThue) {
-      throw ApiError.NotFound('Hợp đồng thuê không tồn tại');
-    }
-    if (hopDongThue.trangThai !== HopDongTrangThai.CHO_XAC_NHAN) {
-      throw ApiError.BadRequest('Hợp đồng thuê không thể được kích hoạt');
-    }
-    hopDongThue.trangThai = HopDongTrangThai.DANG_THUE;
+      const hopDongThue = await this.hopDongThueRepository.getOne({
+        where: { _id: hopDongThueId, khachHangUserId: user.id },
+        transaction,
+      });
+      if (!hopDongThue) {
+        throw ApiError.NotFound('Hợp đồng thuê không tồn tại');
+      }
+      if (hopDongThue.trangThai !== HopDongTrangThai.CHO_XAC_NHAN) {
+        throw ApiError.BadRequest('Hợp đồng thuê không thể được kích hoạt');
+      }
+      hopDongThue.trangThai = HopDongTrangThai.DANG_THUE;
       await this.hopDongThueRepository.updateOne(hopDongThue, {
         where: { _id: hopDongThueId },
         transaction,
@@ -126,10 +129,17 @@ export class HopDongThueService extends BaseService<HopDongThue> {
       throw error;
     }
   }
-  async nguoiChoThueGetPage(user: AuthUser, query: QueryOption) {
+  async nguoiChoThueGetPage(
+    user: AuthUser,
+    condition?: ConditionHopDongThueDto,
+    query?: QueryOption,
+  ) {
     return this.getPage(
       {
-        where: { userId: user.id },
+        where: {
+          ...condition,
+          userId: user.id,
+        },
         include: [
           {
             model: UnitModel,
