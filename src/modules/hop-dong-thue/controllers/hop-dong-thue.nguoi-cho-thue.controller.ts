@@ -26,6 +26,7 @@ import { UserRoles } from '@/modules/user/common/constant';
 import { UserModel } from '@/modules/user/models/user.model';
 import { ConditionHopDongThueDto } from '../dto/condition-hop-dong-thue.dto';
 import { RequestCondition } from '@/common/decorators/request-condition.decotator';
+import { PropertieModel } from '@/modules/propertie/models/propertie.model';
 @Auth(UserRoles.USER)
 @Controller('hop-dong-thue/nguoi-cho-thue')
 @ApiTags('HopDongThue Nguoi Cho Thue')
@@ -53,6 +54,11 @@ export class HopDongThueNguoiChoThueController {
           model: UnitModel,
           where: { userId: user.id },
           required: true,
+          include: [
+            {
+              model: PropertieModel,
+            },
+          ],
         },
         {
           model: UserModel,
