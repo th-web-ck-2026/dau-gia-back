@@ -41,6 +41,12 @@ export class TenantChoThueService extends BaseService<Tenant> {
             where: { userId: user.id },
             required: true,
           },
+          {
+            model: UserModel,
+            as: 'khachHangUser',
+            required: true,
+            attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'],
+          },
         ],
       },
       query,
