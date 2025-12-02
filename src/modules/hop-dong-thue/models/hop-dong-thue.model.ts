@@ -11,8 +11,34 @@ import { Unit } from '@/modules/unit/entities/unit.entity';
 
 @Table({
   tableName: EntityTable.HOP_DONG_THUE,
+  indexes: [
+    {
+      fields: ['code'],
+      unique: true,
+    },
+    {
+      fields: ['userId'],
+    },
+    {
+      fields: ['unitId'],
+    },
+    {
+      fields: ['khachHangUserId'],
+    },
+  ],
 })
 export class HopDongThueModel extends Model implements HopDongThue {
+  @Column
+  code: string;
+  @Column({
+    allowNull: true,
+  })
+  tienDatCoc?: number;
+  @Column({
+    type: DataType.ARRAY(DataType.STRING),
+    allowNull: true,
+  })
+  hinhAnh?: string[];
   @ForeignKey(() => UserModel)
   @Column
   userId: string;

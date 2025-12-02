@@ -9,6 +9,8 @@ export class HopDongThue implements BaseEntity {
   @StrObjectId()
   _id: string;
   @IsString()
+  code: string;
+  @IsString()
   unitId: string;
   @IsString()
   userId: string;
