@@ -134,6 +134,11 @@ export class HopDongThueService extends BaseService<HopDongThue> {
           {
             model: UnitModel,
           },
+          {
+            model: UserModel,
+            as: 'khachHangUser',
+            attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'],
+          },
         ],
       },
       query,
@@ -145,6 +150,11 @@ export class HopDongThueService extends BaseService<HopDongThue> {
       include: [
         {
           model: UnitModel,
+        },
+        {
+          model: UserModel,
+          as: 'khachHangUser',
+          attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'],
         },
       ],
     });
@@ -158,6 +168,11 @@ export class HopDongThueService extends BaseService<HopDongThue> {
           {
             model: UnitModel,
           },
+          {
+            model: UserModel,
+            as: 'khachHangUser',
+            attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'],
+          },
         ],
       },
       query,
@@ -169,6 +184,11 @@ export class HopDongThueService extends BaseService<HopDongThue> {
       include: [
         {
           model: UnitModel,
+        },
+        {
+          model: UserModel,
+          as: 'khachHangUser',
+          attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'],
         },
       ],
     });

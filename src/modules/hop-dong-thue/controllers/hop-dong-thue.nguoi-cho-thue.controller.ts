@@ -21,6 +21,7 @@ import { RequestQuery } from '@/common/decorators/request-query.decorator';
 import { QueryOption } from '@/common/pipe/query-option.interface';
 import { UnitModel } from '@/modules/unit/models/unit.model';
 import { UserRoles } from '@/modules/user/common/constant';
+import { UserModel } from '@/modules/user/models/user.model';
 @Auth(UserRoles.USER)
 @Controller('hop-dong-thue/nguoi-cho-thue')
 @ApiTags('HopDongThue Nguoi Cho Thue')
@@ -46,6 +47,12 @@ export class HopDongThueNguoiChoThueController {
           model: UnitModel,
           where: { userId: user.id },
           required: true,
+        },
+        {
+          model: UserModel,
+          as: 'khachHangUser',
+          required: true,
+          attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'],
         },
       ],
     });
