@@ -65,9 +65,10 @@ export class UsersController {
   @ApiOperation({ summary: 'Lấy danh sách người dùng' })
   @Get('page')
   async getDanhSachNguoiDung(
+    @ReqUser() user,
     @Query('search') search: string,
     @RequestQuery() query: QueryOption,
   ) {
-    return this.usersService.getDanhSachNguoiDung(search, query);
+    return this.usersService.getDanhSachNguoiDung(user, search, query);
   }
 }

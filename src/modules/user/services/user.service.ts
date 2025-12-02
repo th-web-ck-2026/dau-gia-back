@@ -67,7 +67,8 @@ export class UsersService extends BaseService<User> {
     return { updated: true };
   }
   async getDanhSachNguoiDung(
-    search?: string,
+    user: AuthUser,
+    search: string,
     query?: QueryOption,
   ): Promise<PageableDto<User>> {
     // Chống cào dữ liệu
@@ -81,6 +82,7 @@ export class UsersService extends BaseService<User> {
     return this.userRepository.getPage(
       {
         where: {
+          _id: { [Op.ne]: user.id },
           [Op.or]: [
             { fullname: { [Op.iLike]: `%${search}%` } },
             { email: { [Op.eq]: search } },
