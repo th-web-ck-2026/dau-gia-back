@@ -7,6 +7,8 @@ import {
   Param,
   Post,
   Body,
+  Put,
+  Delete,
 } from '@nestjs/common';
 import { HopDongThueService } from '../services/hop-dong-thue.service';
 import { CreateHopDongThueDto } from '../dto/create-hop-dong-thue.dto';
@@ -70,5 +72,26 @@ export class HopDongThueNguoiChoThueController {
       user,
       createHopDongThueDto,
     );
+  }
+  @Put('me/:id')
+  async nguoiChoThueUpdate(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() updateHopDongThueDto: UpdateHopDongThueDto,
+  ) {
+    return this.hopDongThueService.updateOne(updateHopDongThueDto, {
+      where: { _id: id, userId: user.id },
+    });
+  }
+  @Delete('me/:id')
+  async nguoiChoThueDelete(@ReqUser() user: AuthUser, @Param('id') id: string) {
+    return this.hopDongThueService.nguoiChoThueDeleteOne(user, id);
+  }
+  @Put('me/:id/huy-hop-dong')
+  async nguoiChoThueHuyHopDong(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+  ) {
+    return this.hopDongThueService.huyHopDongThue(user, id);
   }
 }

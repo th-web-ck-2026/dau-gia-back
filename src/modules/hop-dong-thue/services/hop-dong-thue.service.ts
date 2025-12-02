@@ -15,6 +15,8 @@ import { UnitModel } from '@/modules/unit/models/unit.model';
 import { Sequelize } from 'sequelize-typescript';
 import { UserModel } from '@/modules/user/models/user.model';
 import { ConditionHopDongThueDto } from '../dto/condition-hop-dong-thue.dto';
+import { UpdateHopDongThueDto } from '../dto/update-hop-dong-thue.dto';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class HopDongThueService extends BaseService<HopDongThue> {
@@ -167,6 +169,26 @@ export class HopDongThueService extends BaseService<HopDongThue> {
           attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'],
         },
       ],
+    });
+  }
+  async nguoiChoThueUpdateOne(
+    user: AuthUser,
+    hopDongThueId: string,
+    updateHopDongThueDto: UpdateHopDongThueDto,
+  ) {
+    return this.updateOne(updateHopDongThueDto, {
+      where: { _id: hopDongThueId, userId: user.id, trangThai: HopDongTrangThai.CHO_XAC_NHAN },
+    });
+  }
+  async nguoiChoThueDeleteOne(user: AuthUser, hopDongThueId: string) {
+    return this.deleteOne({
+      where: {
+        _id: hopDongThueId,
+        trangThai: {
+          [Op.in]: [HopDongTrangThai.CHO_XAC_NHAN, HopDongTrangThai.DA_HUY],
+        },
+        userId: user.id,
+      },
     });
   }
   // nguoi thue
