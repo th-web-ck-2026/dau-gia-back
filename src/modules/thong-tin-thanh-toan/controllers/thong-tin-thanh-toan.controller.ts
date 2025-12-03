@@ -38,12 +38,6 @@ export class ThongTinThanhToanController {
       userId: user.id,
     });
   }
-  @Get('me/:id')
-  async getThongTinThanhToanById(@ReqUser() user: AuthUser, @Param('id') id: string) {
-    return this.thongTinThanhToanService.getOne({
-      where: { _id: id, userId: user.id },
-    });
-  }
   @Put('me/:id')
   async updateThongTinThanhToan(
     @ReqUser() user: AuthUser,
@@ -66,5 +60,14 @@ export class ThongTinThanhToanController {
       },
       query,
     );
+  }
+  @Get('me/:id')
+  async getThongTinThanhToanById(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+  ) {
+    return this.thongTinThanhToanService.getOne({
+      where: { _id: id, userId: user.id },
+    });
   }
 }
