@@ -64,4 +64,11 @@ export class HoaDonNguoiThueController {
       id,
     );
   }
+  @Post('me/:id/xac-nhan-noi-dung')
+  async xacNhanNoiDungHoaDonNguoiThueMe(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+  ) {
+    return this.hoaDonNguoiThueService.nguoiThueXacNhanNoiDungHoaDon(user, id);
+  }
 }

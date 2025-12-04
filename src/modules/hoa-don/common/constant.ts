@@ -4,6 +4,7 @@ export enum HoaDonType {
 }
 
 export enum HoaDonTrangThai {
+  CHO_XAC_NHAN = 'Chờ xác nhận',
   CHO_THANH_TOAN = 'Chờ thanh toán',
   DA_THANH_TOAN = 'Đã thanh toán',
   QUA_HAN = 'Quá hạn',
