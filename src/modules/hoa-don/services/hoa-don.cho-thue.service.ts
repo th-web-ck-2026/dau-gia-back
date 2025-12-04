@@ -35,8 +35,11 @@ export class HoaDonChoThueService extends BaseService<HoaDon> {
     }
 
     let trangThai: HoaDonTrangThai;
+    const dichVusKhongPhaiTienThueNha = createHoaDonChoThueDto.dichVus.filter(
+      (dichVu) => dichVu.tenDichVu !== 'Tiền thuê nhà',
+    );
     if (
-      createHoaDonChoThueDto.dichVus.some(
+      dichVusKhongPhaiTienThueNha.some(
         (dichVu) =>
           !hopDongThue.dichVuThues.some(
             (dichVuHopDong) => dichVuHopDong.tenDichVu === dichVu.tenDichVu,
