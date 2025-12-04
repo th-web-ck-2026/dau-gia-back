@@ -27,7 +27,14 @@ export class NotificationService extends BaseService<Notification> {
     const totalUnread = await this.notificationRepository.count({
       where: {
         userIds: { [Op.contains]: [userId] },
-        userReadIds: { [Op.notIn]: [userId] },
+        [Op.or]: [
+          { userReadIds: null },
+          {
+            [Op.not]: {
+              userReadIds: { [Op.contains]: [userId] },
+            },
+          },
+        ],
       },
     });
     const pageable = (await this.getPage(
