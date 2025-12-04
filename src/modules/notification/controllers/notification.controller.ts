@@ -4,7 +4,10 @@ import { ReqUser } from '@/common/decorators/user.decorator';
 import { RequestQuery } from '@/common/decorators/request-query.decorator';
 import { QueryOption } from '@/common/pipe/query-option.interface';
 import { ApiOperation } from '@nestjs/swagger';
+import { Auth } from '@/common/decorators/auth.decorator';
+import { UserRoles } from '@/modules/user/common/constant';
 
+@Auth(UserRoles.USER)
 @Controller('notification')
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}

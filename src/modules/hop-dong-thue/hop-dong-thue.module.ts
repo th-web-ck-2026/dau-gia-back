@@ -7,18 +7,25 @@ import { UsersModule } from '../user/user.module';
 import { TenantModule } from '../tenant/tenant.module';
 import { HopDongThueNguoiChoThueController } from './controllers/hop-dong-thue.nguoi-cho-thue.controller';
 import { HopDongThueNguoiThueController } from './controllers/hop-dong-thue.nguoi-thue.controller';
+import { HopDongThueNotificationService } from './services/hop-dong-thue.notification.service';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   imports: [
     forwardRef(() => UnitModule),
     forwardRef(() => UsersModule),
     forwardRef(() => TenantModule),
+    NotificationModule,
   ],
   controllers: [
     HopDongThueNguoiThueController,
     HopDongThueNguoiChoThueController,
   ],
-  providers: [HopDongThueService, HopDongThueRepository],
+  providers: [
+    HopDongThueService,
+    HopDongThueRepository,
+    HopDongThueNotificationService,
+  ],
   exports: [HopDongThueService, HopDongThueRepository],
 })
 export class HopDongThueModule {}

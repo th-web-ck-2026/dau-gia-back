@@ -8,8 +8,10 @@ import { NotificationType } from '../common/constant';
   tableName: EntityTable.NOTIFICATION,
 })
 export class NotificationModel extends Model implements Notification {
-  @Column
-  user_id: string;
+  @Column({
+    type: DataType.ARRAY(DataType.STRING),
+  })
+  userIds: string[];
   @Column({
     type: DataType.ENUM(...Object.values(NotificationType)),
   })
@@ -19,9 +21,14 @@ export class NotificationModel extends Model implements Notification {
   @Column
   content: string;
   @Column({
-    defaultValue: false,
+    type: DataType.ARRAY(DataType.STRING),
   })
-  is_read: boolean;
+  userReadIds: string[];
   @StrObjectId()
   _id: string;
+  @Column({
+    type: DataType.JSONB,
+    allowNull: true,
+  })
+  metadata?: Record<string, any>;
 }

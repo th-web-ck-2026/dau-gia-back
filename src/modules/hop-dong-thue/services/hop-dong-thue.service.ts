@@ -17,6 +17,7 @@ import { UserModel } from '@/modules/user/models/user.model';
 import { ConditionHopDongThueDto } from '../dto/condition-hop-dong-thue.dto';
 import { UpdateHopDongThueDto } from '../dto/update-hop-dong-thue.dto';
 import { Op } from 'sequelize';
+import { HopDongThueNotificationService } from './hop-dong-thue.notification.service';
 
 @Injectable()
 export class HopDongThueService extends BaseService<HopDongThue> {
@@ -26,6 +27,7 @@ export class HopDongThueService extends BaseService<HopDongThue> {
     private readonly usersService: UsersService,
     private readonly tenantChoThueService: TenantChoThueService,
     private readonly sequelize: Sequelize,
+    private readonly hopDongThueNotificationService: HopDongThueNotificationService,
   ) {
     super(hopDongThueRepository);
   }
@@ -112,6 +114,9 @@ export class HopDongThueService extends BaseService<HopDongThue> {
         },
       );
       await transaction.commit();
+      await this.hopDongThueNotificationService.hopDongThueDuocKichHoat(
+        hopDongThue,
+      );
       return hopDongThue;
     } catch (error) {
       await transaction.rollback();
@@ -134,6 +139,7 @@ export class HopDongThueService extends BaseService<HopDongThue> {
         transaction,
       });
       await transaction.commit();
+      await this.hopDongThueNotificationService.hopDongThueDuocHuy(hopDongThue);
       return hopDongThue;
     } catch (error) {
       await transaction.rollback();
