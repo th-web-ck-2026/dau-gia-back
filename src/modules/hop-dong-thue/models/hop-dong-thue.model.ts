@@ -42,6 +42,11 @@ export class HopDongThueModel extends Model implements HopDongThue {
   @ForeignKey(() => UserModel)
   @Column
   userId: string;
+  @BelongsTo(() => UserModel, {
+    foreignKey: 'userId',
+    onDelete: 'CASCADE',
+  })
+  user: User;
   @Column
   @ForeignKey(() => UnitModel)
   unitId: string;

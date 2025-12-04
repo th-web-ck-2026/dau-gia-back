@@ -239,11 +239,6 @@ export class HopDongThueService extends BaseService<HopDongThue> {
         include: [
           {
             model: UnitModel,
-            include: [
-              {
-                model: PropertieModel,
-              },
-            ],
           },
           {
             model: UserModel,
@@ -266,11 +261,7 @@ export class HopDongThueService extends BaseService<HopDongThue> {
       include: [
         {
           model: UnitModel,
-          include: [
-            {
-              model: PropertieModel,
-            },
-          ],
+
         },
         {
           model: UserModel,
