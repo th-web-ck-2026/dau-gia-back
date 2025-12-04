@@ -13,6 +13,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { DichVuThue } from '../dto/dich-vu-thue.dto';
+import { Unit } from '@/modules/unit/entities/unit.entity';
 
 export class HopDongThue implements BaseEntity {
   @StrObjectId()
@@ -71,4 +72,5 @@ export class HopDongThue implements BaseEntity {
   ghiChu?: string;
   @IsEnum(HopDongTrangThai)
   trangThai: HopDongTrangThai;
+  unit?: Unit;
 }

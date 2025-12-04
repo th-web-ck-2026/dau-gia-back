@@ -102,6 +102,15 @@ export class HopDongThueService extends BaseService<HopDongThue> {
         where: { _id: hopDongThueId },
         transaction,
       });
+      await this.unitService.updateOne(
+        {
+          trangThaiThue: UnitTrangThaiThue.DA_THUE,
+        },
+        {
+          where: { _id: hopDongThue.unitId },
+          transaction,
+        },
+      );
       await transaction.commit();
       return hopDongThue;
     } catch (error) {
@@ -177,7 +186,11 @@ export class HopDongThueService extends BaseService<HopDongThue> {
     updateHopDongThueDto: UpdateHopDongThueDto,
   ) {
     return this.updateOne(updateHopDongThueDto, {
-      where: { _id: hopDongThueId, userId: user.id, trangThai: HopDongTrangThai.CHO_XAC_NHAN },
+      where: {
+        _id: hopDongThueId,
+        userId: user.id,
+        trangThai: HopDongTrangThai.CHO_XAC_NHAN,
+      },
     });
   }
   async nguoiChoThueDeleteOne(user: AuthUser, hopDongThueId: string) {
@@ -224,5 +237,28 @@ export class HopDongThueService extends BaseService<HopDongThue> {
         },
       ],
     });
+  }
+  async nguoiThueGetPageUnitThue(user: AuthUser, query: QueryOption) {
+    const hopDongPage = await this.getPage(
+      {
+        where: {
+          khachHangUserId: user.id,
+          trangThai: HopDongTrangThai.DANG_THUE,
+        },
+        include: [
+          {
+            model: UnitModel,
+            attributes: ['_id', 'ten', 'moTa', 'code'],
+          },
+        ],
+        attributes: ['_id'],
+      },
+      query,
+    );
+    hopDongPage.result = hopDongPage.result.map(
+      (hopDong) => hopDong.unit,
+    ) as any[];
+
+    return hopDongPage;
   }
 }

@@ -41,4 +41,11 @@ export class HopDongThueNguoiThueController {
   ) {
     return this.hopDongThueService.nguoiThueGetOne(user, id);
   }
+  @Get('me/page/unit-thue')
+  async nguoiThueGetPageUnitThue(
+    @ReqUser() user: AuthUser,
+    @RequestQuery() query: QueryOption,
+  ) {
+    return this.hopDongThueService.nguoiThueGetPageUnitThue(user, query);
+  }
 }
