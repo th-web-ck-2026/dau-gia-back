@@ -3,6 +3,7 @@ import { Notification } from '../entities/notification.entity';
 import { EntityTable } from '@Common/constants/entity.constant';
 import { StrObjectId } from '@Common/constants/base.constant';
 import { NotificationType } from '../common/constant';
+import { MetadataNotificationDto } from '../dto/metadata-notification.dto';
 
 @Table({
   tableName: EntityTable.NOTIFICATION,
@@ -30,5 +31,5 @@ export class NotificationModel extends Model implements Notification {
     type: DataType.JSONB,
     allowNull: true,
   })
-  metadata?: Record<string, any>;
+  metadata?: MetadataNotificationDto;
 }

@@ -6,8 +6,11 @@ import {
   IsObject,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
 import { NotificationType } from '../common/constant';
+import { MetadataNotificationDto } from '../dto/metadata-notification.dto';
+import { Type } from 'class-transformer';
 
 export class Notification implements BaseEntity {
   @StrObjectId()
@@ -24,7 +27,8 @@ export class Notification implements BaseEntity {
   @IsString({ each: true })
   userReadIds: string[];
 
-  @IsObject()
+  @ValidateNested()
+  @Type(() => MetadataNotificationDto)
   @IsOptional()
-  metadata?: Record<string, any>;
+  metadata?: MetadataNotificationDto;
 }
