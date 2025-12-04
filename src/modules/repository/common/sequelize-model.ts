@@ -8,6 +8,7 @@ import { MailConfigModel } from "@/modules/mail-config/models/mail-config.model"
 import { Model, ModelCtor } from "sequelize-typescript";
 import { HoaDonModel } from "@/modules/hoa-don/models/hoa-don.model";
 import { ThongTinThanhToanModel } from "@/modules/thong-tin-thanh-toan/models/thong-tin-thanh-toan.model";
+import { YeuCauBaoTriBaoDuongModel } from "@/modules/yeu-cau-bao-tri-bao-duong/models/yeu-cau-bao-tri-bao-duong.model";
 
 
 export const SequelizeModel: ModelCtor<Model>[] = [
@@ -20,4 +21,5 @@ export const SequelizeModel: ModelCtor<Model>[] = [
     MailConfigModel,
     HoaDonModel,
     ThongTinThanhToanModel,
+    YeuCauBaoTriBaoDuongModel,
 ];
