@@ -58,4 +58,19 @@ export class HoaDonNguoiThueService extends BaseService<HoaDon> {
       where: { _id: hoaDonId },
     });
   }
+  async nguoiThueXacNhanNoiDungHoaDon(user: AuthUser, hoaDonId: string) {
+    const hoaDon = await this.hoaDonRepository.getOne({
+      where: { _id: hoaDonId, khachHangUserId: user.id },
+    });
+    if (!hoaDon) {
+      throw ApiError.NotFound('Hợp đồng thuê không tồn tại');
+    }
+    if (hoaDon.trangThai !== HoaDonTrangThai.CHO_XAC_NHAN) {
+      throw ApiError.BadRequest('Hợp đồng thuê không thể xác nhận nội dung');
+    }
+    hoaDon.trangThai = HoaDonTrangThai.CHO_THANH_TOAN;
+    return this.hoaDonRepository.updateOne(hoaDon, {
+      where: { _id: hoaDonId },
+    });
+  }
 }

@@ -33,8 +33,23 @@ export class HoaDonChoThueService extends BaseService<HoaDon> {
     if (!hopDongThue) {
       throw ApiError.NotFound('Hợp đồng thuê không tồn tại');
     }
+
+    let trangThai: HoaDonTrangThai;
+    if (
+      createHoaDonChoThueDto.dichVus.some(
+        (dichVu) =>
+          !hopDongThue.dichVuThues.some(
+            (dichVuHopDong) => dichVuHopDong.tenDichVu === dichVu.tenDichVu,
+          ),
+      )
+    ) {
+      trangThai = HoaDonTrangThai.CHO_XAC_NHAN;
+    } else {
+      trangThai = HoaDonTrangThai.CHO_THANH_TOAN;
+    }
     return this.hoaDonRepository.create({
       ...createHoaDonChoThueDto,
+      trangThai,
       userId: user.id,
       hopDongThueId: hopDongThue._id,
       khachHangUserId: hopDongThue.khachHangUserId,
@@ -83,5 +98,4 @@ export class HoaDonChoThueService extends BaseService<HoaDon> {
       where: { _id: hoaDonId },
     });
   }
-
 }
