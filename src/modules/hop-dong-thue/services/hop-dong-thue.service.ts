@@ -18,6 +18,7 @@ import { ConditionHopDongThueDto } from '../dto/condition-hop-dong-thue.dto';
 import { UpdateHopDongThueDto } from '../dto/update-hop-dong-thue.dto';
 import { Op } from 'sequelize';
 import { HopDongThueNotificationService } from './hop-dong-thue.notification.service';
+import { PropertieModel } from '@/modules/propertie/models/propertie.model';
 
 @Injectable()
 export class HopDongThueService extends BaseService<HopDongThue> {
@@ -160,6 +161,11 @@ export class HopDongThueService extends BaseService<HopDongThue> {
         include: [
           {
             model: UnitModel,
+            include: [
+              {
+                model: PropertieModel,
+              },
+            ],
           },
           {
             model: UserModel,
@@ -182,6 +188,11 @@ export class HopDongThueService extends BaseService<HopDongThue> {
       include: [
         {
           model: UnitModel,
+          include: [
+            {
+              model: PropertieModel,
+            },
+          ],
         },
         {
           model: UserModel,
@@ -228,6 +239,11 @@ export class HopDongThueService extends BaseService<HopDongThue> {
         include: [
           {
             model: UnitModel,
+            include: [
+              {
+                model: PropertieModel,
+              },
+            ],
           },
           {
             model: UserModel,
@@ -250,6 +266,11 @@ export class HopDongThueService extends BaseService<HopDongThue> {
       include: [
         {
           model: UnitModel,
+          include: [
+            {
+              model: PropertieModel,
+            },
+          ],
         },
         {
           model: UserModel,
