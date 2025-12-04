@@ -87,4 +87,8 @@ export class HoaDon implements BaseEntity {
   @IsString()
   @IsOptional()
   userId?: string;
+
+  @IsString()
+  @IsOptional()
+  khachHangGhiChu?: string;
 }

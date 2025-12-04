@@ -13,7 +13,9 @@ import { ConditionHoaDonDto } from '../dto/condition-hoa-don.dto';
 import {
   HoaDonTrangThai,
   HoaDonTrangThaiKhachHangThanhToan,
+  TrangThaiXacNhanNoiDungHoaDon,
 } from '../common/constant';
+import { XacNhanNoiDungHoaDonDto } from '../dto/xac-nhan-noi-dung-hoa-don.dto';
 
 @Injectable()
 export class HoaDonNguoiThueService extends BaseService<HoaDon> {
@@ -58,7 +60,11 @@ export class HoaDonNguoiThueService extends BaseService<HoaDon> {
       where: { _id: hoaDonId },
     });
   }
-  async nguoiThueXacNhanNoiDungHoaDon(user: AuthUser, hoaDonId: string) {
+  async nguoiThueXacNhanNoiDungHoaDon(
+    user: AuthUser,
+    hoaDonId: string,
+    xacNhanNoiDungHoaDonDto: XacNhanNoiDungHoaDonDto,
+  ) {
     const hoaDon = await this.hoaDonRepository.getOne({
       where: { _id: hoaDonId, khachHangUserId: user.id },
     });
@@ -68,7 +74,12 @@ export class HoaDonNguoiThueService extends BaseService<HoaDon> {
     if (hoaDon.trangThai !== HoaDonTrangThai.CHO_XAC_NHAN) {
       throw ApiError.BadRequest('Hợp đồng thuê không thể xác nhận nội dung');
     }
-    hoaDon.trangThai = HoaDonTrangThai.CHO_THANH_TOAN;
+    hoaDon.trangThai =
+      xacNhanNoiDungHoaDonDto.trangThaiXacNhan ===
+      TrangThaiXacNhanNoiDungHoaDon.XAC_NHAN
+        ? HoaDonTrangThai.CHO_THANH_TOAN
+        : HoaDonTrangThai.DA_HUY;
+    hoaDon.khachHangGhiChu = xacNhanNoiDungHoaDonDto.ghiChu;
     return this.hoaDonRepository.updateOne(hoaDon, {
       where: { _id: hoaDonId },
     });

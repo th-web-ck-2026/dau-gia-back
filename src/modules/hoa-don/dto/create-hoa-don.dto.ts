@@ -6,4 +6,5 @@ export class CreateHoaDonDto extends OmitType(HoaDon, [
   'userId',
   'khachHangUserId',
   'trangThai',
+  'khachHangGhiChu',
 ]) {}

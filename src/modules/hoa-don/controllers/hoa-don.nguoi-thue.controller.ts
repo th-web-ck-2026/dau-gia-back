@@ -20,6 +20,7 @@ import { HopDongThueModel } from '@/modules/hop-dong-thue/models/hop-dong-thue.m
 import { HoaDonNguoiThueService } from '../services/hoa-don.nguoi-thue.service';
 import { Auth } from '@Decorators/auth.decorator';
 import { UserRoles } from '@/modules/user/common/constant';
+import { XacNhanNoiDungHoaDonDto } from '../dto/xac-nhan-noi-dung-hoa-don.dto';
 
 @Auth(UserRoles.USER)
 @Controller('hoa-don/nguoi-thue')
@@ -68,7 +69,12 @@ export class HoaDonNguoiThueController {
   async xacNhanNoiDungHoaDonNguoiThueMe(
     @ReqUser() user: AuthUser,
     @Param('id') id: string,
+    @Body() xacNhanNoiDungHoaDonDto: XacNhanNoiDungHoaDonDto,
   ) {
-    return this.hoaDonNguoiThueService.nguoiThueXacNhanNoiDungHoaDon(user, id);
+    return this.hoaDonNguoiThueService.nguoiThueXacNhanNoiDungHoaDon(
+      user,
+      id,
+      xacNhanNoiDungHoaDonDto,
+    );
   }
 }

@@ -15,3 +15,8 @@ export enum HoaDonTrangThaiKhachHangThanhToan {
   DA_THANH_TOAN = 'Đã thanh toán',
   CHO_THANH_TOAN = 'Chờ thanh toán',
 }
+
+export enum TrangThaiXacNhanNoiDungHoaDon {
+  XAC_NHAN = 'Xác nhận',
+  TU_CHOI = 'Từ chối',
+}
