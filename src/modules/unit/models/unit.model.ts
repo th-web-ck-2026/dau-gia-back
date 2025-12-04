@@ -4,6 +4,7 @@ import {
   Column,
   DataType,
   ForeignKey,
+  BelongsTo,
 } from 'sequelize-typescript';
 import { Unit } from '../entities/unit.entity';
 import { EntityTable } from '@Common/constants/entity.constant';
@@ -11,6 +12,7 @@ import { StrObjectId } from '@Common/constants/base.constant';
 import { UnitTrangThaiThue, UnitType } from '../common/constant';
 import { PropertieModel } from '@/modules/propertie/models/propertie.model';
 import { UserModel } from '@/modules/user/models/user.model';
+import { Propertie } from '@/modules/propertie/entities/propertie.entity';
 
 @Table({
   tableName: EntityTable.UNIT,
@@ -37,6 +39,11 @@ export class UnitModel extends Model implements Unit {
   @Column
   @ForeignKey(() => PropertieModel)
   propertieId: string;
+  @BelongsTo(() => PropertieModel, {
+    foreignKey: 'propertieId',
+    onDelete: 'CASCADE',
+  })
+  propertie: Propertie;
   @Column
   ten: string;
   @Column
