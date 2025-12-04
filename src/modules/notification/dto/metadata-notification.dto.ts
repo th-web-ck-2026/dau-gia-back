@@ -3,7 +3,8 @@ import { ModuleNotification, PhanHeNotification } from "../common/constant";
 
 export class MetadataNotificationDto {
   @IsEnum(PhanHeNotification)
-  phanHe: PhanHeNotification;
+  @IsOptional()
+  phanHe?: PhanHeNotification;
 
   @IsEnum(ModuleNotification)
   @IsOptional()

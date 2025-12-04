@@ -1,4 +1,4 @@
-import { NotificationType } from '@/modules/notification/common/constant';
+import { ModuleNotification, NotificationType, PhanHeNotification } from '@/modules/notification/common/constant';
 import { NotificationService } from '@/modules/notification/services/notification.service';
 import { Injectable } from '@nestjs/common';
 import { Tenant } from '../entities/tenant.entity';
@@ -12,6 +12,11 @@ export class TenantNotificationService {
       type: NotificationType.HE_THONG,
       title: 'Bạn có 1 yêu cầu cho thuê đơn vị này cần xử lý',
       content: 'Bạn có 1 yêu cầu cho thuê đơn vị này cần xử lý',
+      metadata: {
+        phanHe: PhanHeNotification.TENANT,
+        module: ModuleNotification.TENANT,
+        targetId: tenant._id,
+      },
     });
   }
 }

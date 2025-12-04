@@ -5,4 +5,5 @@ export class CreateNotificationDto extends PickType(NotificationEntity, [
   'type',
   'title',
   'content',
+  'metadata',
 ]) {}
