@@ -19,6 +19,14 @@ export class NotificationController {
   ) {
     return this.notificationService.getMyNotifications(user.id, query);
   }
+  @ApiOperation({ summary: 'Lấy thông báo của tôi' })
+  @Get('me/:notificationId')
+  async getMeById(
+    @ReqUser() user,
+    @Param('notificationId') notificationId: string,
+  ) {
+    return this.notificationService.getMeById(user, notificationId);
+  }
   @ApiOperation({ summary: 'Đánh dấu tất cả thông báo đã đọc' })
   @Post('read/all')
   async markAllAsRead(@ReqUser() user) {

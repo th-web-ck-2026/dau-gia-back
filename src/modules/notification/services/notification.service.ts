@@ -7,6 +7,7 @@ import { PageableDto } from '@Common/dto/pageable.dto';
 import { QueryOption } from '@Common/pipe/query-option.interface';
 import { ApiError } from '@Common/exceptions/api-error';
 import { Op } from 'sequelize';
+import { AuthUser } from '@/common/interfaces/auth-user.interface';
 
 @Injectable()
 export class NotificationService extends BaseService<Notification> {
@@ -22,12 +23,32 @@ export class NotificationService extends BaseService<Notification> {
     userId: string,
     query: QueryOption,
   ): Promise<PageableDto<Notification>> {
-    return this.getPage(
+    // add total unread notifications
+    const totalUnread = await this.notificationRepository.count({
+      where: {
+        userIds: { [Op.contains]: [userId] },
+        userReadIds: { [Op.notIn]: [userId] },
+      },
+    });
+    const pageable = (await this.getPage(
       {
         where: { userIds: { [Op.contains]: [userId] } },
       },
       query,
-    );
+    )) as unknown as PageableDto<Notification & { totalUnread: number }>;
+    (pageable as any).totalUnread = totalUnread;
+    return pageable;
+  }
+  async getMeById(
+    user: AuthUser,
+    notificationId: string,
+  ): Promise<Notification> {
+    return this.notificationRepository.getOne({
+      where: {
+        _id: notificationId,
+        userIds: { [Op.contains]: [user.id] },
+      },
+    });
   }
   async markAsRead(
     userId: string,
