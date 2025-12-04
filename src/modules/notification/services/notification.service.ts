@@ -50,11 +50,18 @@ export class NotificationService extends BaseService<Notification> {
     user: AuthUser,
     notificationId: string,
   ): Promise<Notification> {
-    return this.notificationRepository.getOne({
+    const notification = await this.notificationRepository.getOne({
       where: {
         _id: notificationId,
         userIds: { [Op.contains]: [user.id] },
       },
+    });
+    if (!notification) {
+      throw ApiError.NotFound('Thông báo không tồn tại');
+    } 
+    notification.userReadIds = [...(notification.userReadIds || []), user.id];
+    return this.notificationRepository.updateOne(notification, {
+      where: { _id: notificationId },
     });
   }
   async markAsRead(
