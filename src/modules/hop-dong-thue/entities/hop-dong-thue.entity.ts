@@ -2,7 +2,16 @@ import { BaseEntity } from '@Common/interfaces/base-entity.interface';
 import { StrObjectId } from '@/common/constants/base.constant';
 import { DongThueTheo, HopDongTrangThai } from '../common/constant';
 import { Type } from 'class-transformer';
-import { IsArray, IsDate, IsDateString, IsEnum, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsDate,
+  IsDateString,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { DichVuThue } from '../dto/dich-vu-thue.dto';
 
 export class HopDongThue implements BaseEntity {
@@ -44,6 +53,18 @@ export class HopDongThue implements BaseEntity {
   @IsString({ each: true })
   @IsOptional()
   hinhAnh?: string[];
+
+  @IsString()
+  @IsOptional()
+  cccdKhachHang?: string;
+
+  @IsString()
+  @IsOptional()
+  anhCccdKhachHangTruoc?: string;
+
+  @IsString()
+  @IsOptional()
+  anhCccdKhachHangSau?: string;
 
   @IsString()
   @IsOptional()

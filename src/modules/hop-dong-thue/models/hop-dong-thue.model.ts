@@ -87,6 +87,19 @@ export class HopDongThueModel extends Model implements HopDongThue {
     type: DataType.TEXT,
   })
   dieuKhoanDichVu?: string;
+  @Column({
+    allowNull: true,
+  })
+  cccdKhachHang?: string;
+  @Column({
+    allowNull: true,
+  })
+  anhCccdKhachHangTruoc?: string;
+
+  @Column({
+    allowNull: true,
+  })
+  anhCccdKhachHangSau?: string;
   @StrObjectId()
   _id: string;
 }
