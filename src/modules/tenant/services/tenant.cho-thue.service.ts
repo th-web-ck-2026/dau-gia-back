@@ -13,10 +13,12 @@ import { HopDongThueService } from '@/modules/hop-dong-thue/services/hop-dong-th
 import { UnitModel } from '@/modules/unit/models/unit.model';
 import { HopDongThueModel } from '@/modules/hop-dong-thue/models/hop-dong-thue.model';
 import { UserModel } from '@/modules/user/models/user.model';
+import { TenantNotificationService } from './tenant.notification.service';
 @Injectable()
 export class TenantChoThueService extends BaseService<Tenant> {
   constructor(
     private readonly tenantRepository: TenantRepository,
+    private readonly tenantNotificationService: TenantNotificationService,
   ) {
     super(tenantRepository);
   }
@@ -28,9 +30,15 @@ export class TenantChoThueService extends BaseService<Tenant> {
     if (user.id === createYeuCauChoThueDto.khachHangUserId) {
       throw ApiError.BadRequest('Bạn không thể yêu cầu cho thuê đơn vị này');
     }
-    return this.tenantRepository.create(createYeuCauChoThueDto, {
+    
+    const tenant = await this.tenantRepository.create(createYeuCauChoThueDto, {
       transaction: options?.transaction,
     });
+    if (!tenant) {
+      throw ApiError.BadRequest('Lỗi khi tạo yêu cầu cho thuê');
+    }
+    await this.tenantNotificationService.taoYeuCauChoThue(tenant);
+    return tenant;
   }
   async getDanhSachNguoiThuePage(user: AuthUser, query: QueryOption) {
     return this.getPage(

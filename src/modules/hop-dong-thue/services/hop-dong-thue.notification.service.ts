@@ -8,7 +8,7 @@ export class HopDongThueNotificationService {
   constructor(private readonly notificationService: NotificationService) {}
   async hopDongThueDuocKichHoat(hopDongThue: HopDongThue) {
     await this.notificationService.createNotification({
-      userIds: [hopDongThue.khachHangUserId],
+      userIds: [hopDongThue.khachHangUserId, hopDongThue.userId],
       type: NotificationType.HE_THONG,
       title: 'Hợp đồng thuê đã được kích hoạt',
       content: 'Hợp đồng thuê đã được kích hoạt',
@@ -16,7 +16,7 @@ export class HopDongThueNotificationService {
   }
   async hopDongThueDuocHuy(hopDongThue: HopDongThue) {
     await this.notificationService.createNotification({
-      userIds: [hopDongThue.khachHangUserId],
+      userIds: [hopDongThue.khachHangUserId, hopDongThue.userId],
       type: NotificationType.HE_THONG,
       title: 'Hợp đồng thuê đã được hủy',
       content: 'Hợp đồng thuê đã được hủy',

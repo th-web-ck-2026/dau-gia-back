@@ -7,15 +7,23 @@ import { TenantNguoiThueService } from './services/tenant.nguoi-thue.service';
 import { UnitModule } from '../unit/unit.module';
 import { HopDongThueModule } from '../hop-dong-thue/hop-dong-thue.module';
 import { UsersModule } from '../user/user.module';
+import { NotificationModule } from '../notification/notification.module';
+import { TenantNotificationService } from './services/tenant.notification.service';
 
 @Module({
   imports: [
     forwardRef(() => UnitModule),
     forwardRef(() => UsersModule),
     forwardRef(() => HopDongThueModule),
+    NotificationModule,
   ],
   controllers: [TenantChoThueController, TenantNguoiThueController],
-  providers: [TenantChoThueService, TenantNguoiThueService, TenantRepository],
+  providers: [
+    TenantChoThueService,
+    TenantNguoiThueService,
+    TenantRepository,
+    TenantNotificationService,
+  ],
   exports: [TenantChoThueService, TenantNguoiThueService, TenantRepository],
 })
 export class TenantModule {}
