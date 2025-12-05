@@ -92,17 +92,15 @@ export class AuthService {
   private async issueTokens(user: User) {
     const payload = this.buildJwtPayload(user);
     const accessToken = this.jwtService.sign(payload);
-    const refreshToken = await this.generateRefreshToken(user._id);
-    return { accessToken, refreshToken };
+    return { accessToken };
   }
 
   private buildAuthResponse(
     user: User,
-    tokens: { accessToken: string; refreshToken: string },
+    tokens: { accessToken: string },
   ) {
     return {
       accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
       user: {
         id: user._id,
         email: user.email,
