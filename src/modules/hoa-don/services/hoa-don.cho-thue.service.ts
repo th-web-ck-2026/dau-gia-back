@@ -14,12 +14,14 @@ import {
   HoaDonTrangThai,
   HoaDonTrangThaiKhachHangThanhToan,
 } from '../common/constant';
+import { HoaDonNotificationService } from './hoa-don.notification.service';
 
 @Injectable()
 export class HoaDonChoThueService extends BaseService<HoaDon> {
   constructor(
     private readonly hoaDonRepository: HoaDonRepository,
     private readonly hopDongThueService: HopDongThueService,
+    private readonly hoaDonNotificationService: HoaDonNotificationService,
   ) {
     super(hoaDonRepository);
   }
@@ -50,13 +52,15 @@ export class HoaDonChoThueService extends BaseService<HoaDon> {
     } else {
       trangThai = HoaDonTrangThai.CHO_THANH_TOAN;
     }
-    return this.hoaDonRepository.create({
+    const hoaDon = await this.hoaDonRepository.create({
       ...createHoaDonChoThueDto,
       trangThai,
       userId: user.id,
       hopDongThueId: hopDongThue._id,
       khachHangUserId: hopDongThue.khachHangUserId,
     });
+    await this.hoaDonNotificationService.hoaDonDuocTao(hoaDon);
+    return hoaDon;
   }
 
   async getHoaDonChoThuePageMe(
@@ -92,6 +96,7 @@ export class HoaDonChoThueService extends BaseService<HoaDon> {
       hoaDon.trangThaiKhachHangThanhToan =
         HoaDonTrangThaiKhachHangThanhToan.DA_THANH_TOAN;
       hoaDon.ngayXacNhanThanhToan = new Date();
+      await this.hoaDonNotificationService.hoaDonDaXacNhanThanhToan(hoaDon);
     } else {
       hoaDon.trangThaiKhachHangThanhToan =
         HoaDonTrangThaiKhachHangThanhToan.CHO_THANH_TOAN;

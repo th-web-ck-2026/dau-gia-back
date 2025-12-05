@@ -16,12 +16,14 @@ import {
   TrangThaiXacNhanNoiDungHoaDon,
 } from '../common/constant';
 import { XacNhanNoiDungHoaDonDto } from '../dto/xac-nhan-noi-dung-hoa-don.dto';
+import { HoaDonNotificationService } from './hoa-don.notification.service';
 
 @Injectable()
 export class HoaDonNguoiThueService extends BaseService<HoaDon> {
   constructor(
     private readonly hoaDonRepository: HoaDonRepository,
     private readonly hopDongThueService: HopDongThueService,
+    private readonly hoaDonNotificationService: HoaDonNotificationService,
   ) {
     super(hoaDonRepository);
   }
@@ -56,6 +58,9 @@ export class HoaDonNguoiThueService extends BaseService<HoaDon> {
     hoaDon.trangThaiKhachHangThanhToan =
       HoaDonTrangThaiKhachHangThanhToan.DA_THANH_TOAN;
     hoaDon.ngayXacNhanThanhToan = new Date();
+    await this.hoaDonNotificationService.hoaDonDuocKhachHangXacNhanThanhToan(
+      hoaDon,
+    );
     return this.hoaDonRepository.updateOne(hoaDon, {
       where: { _id: hoaDonId },
     });
@@ -80,6 +85,11 @@ export class HoaDonNguoiThueService extends BaseService<HoaDon> {
         ? HoaDonTrangThai.CHO_THANH_TOAN
         : HoaDonTrangThai.DA_HUY;
     hoaDon.khachHangGhiChu = xacNhanNoiDungHoaDonDto.ghiChu;
+    this.hoaDonNotificationService.hoaDonDuocKhachHangXacNhanNoiDung(
+      hoaDon,
+      xacNhanNoiDungHoaDonDto.trangThaiXacNhan,
+      xacNhanNoiDungHoaDonDto.ghiChu,
+    );
     return this.hoaDonRepository.updateOne(hoaDon, {
       where: { _id: hoaDonId },
     });
