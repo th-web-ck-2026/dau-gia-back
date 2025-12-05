@@ -85,13 +85,17 @@ export class AuthService {
 
   async refreshTokens(refreshToken: string): Promise<any> {
     const user = await this.validateRefreshToken(refreshToken);
-    const tokens = await this.issueTokens(user);
+    const tokens = await this.issueTokens(user, false);
     return this.buildAuthResponse(user, tokens);
   }
 
-  private async issueTokens(user: User) {
+  private async issueTokens(user: User, isRefreshToken: boolean = true) {
     const payload = this.buildJwtPayload(user);
     const accessToken = this.jwtService.sign(payload);
+    if (isRefreshToken) {
+      const refreshToken = await this.generateRefreshToken(user._id);
+      return { accessToken, refreshToken };
+    }
     return { accessToken };
   }
 
