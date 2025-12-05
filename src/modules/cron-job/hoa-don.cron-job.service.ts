@@ -3,29 +3,51 @@ import { HoaDonChoThueService } from '../hoa-don/services/hoa-don.cho-thue.servi
 import { HoaDonTrangThai } from '../hoa-don/common/constant';
 import { Op } from 'sequelize';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { HoaDonNotificationService } from '../hoa-don/services/hoa-don.notification.service';
 
 @Injectable()
 export class HoaDonCronJobService {
-  constructor(private readonly hoaDonChoThueService: HoaDonChoThueService) {}
+  constructor(
+    private readonly hoaDonChoThueService: HoaDonChoThueService,
+    private readonly hoaDonNotificationService: HoaDonNotificationService,
+  ) {}
   @Cron(CronExpression.EVERY_12_HOURS)
   async checkHanThanhToan() {
     const today = new Date();
-    const tomorrow = new Date(today.setDate(today.getDate() + 1));
+    const twoDaysFromNow = new Date(today.setDate(today.getDate() + 2));
     const hoaDonChoThue = await this.hoaDonChoThueService.getMany({
       where: {
         trangThai: HoaDonTrangThai.CHO_THANH_TOAN,
-        hanThanhToan: {
-          [Op.lt]: tomorrow,
-        },
       },
+      attributes: [
+        '_id',
+        'hanThanhToan',
+        'maHoaDon',
+        'khachHangUserId',
+        'userId',
+        'tongTien',
+        'hopDongThueId',
+      ],
     });
+    for (const hoaDon of hoaDonChoThue) {
+      if (hoaDon.hanThanhToan && hoaDon.hanThanhToan < twoDaysFromNow) {
+        this.hoaDonNotificationService.nhacNhoThanhToanHoaDon(hoaDon);
+      } else if (hoaDon.hanThanhToan && hoaDon.hanThanhToan < today) {
+        this.hoaDonNotificationService.hoaDonQuaHanThanhToan(hoaDon);
+      }
+    }
     await this.hoaDonChoThueService.updateMany(
       {
         trangThai: HoaDonTrangThai.QUA_HAN,
         trangThaiQuaHan: true,
       },
       {
-        where: { _id: { [Op.in]: hoaDonChoThue.map((item) => item._id) } },
+        where: {
+          trangThai: HoaDonTrangThai.CHO_THANH_TOAN,
+          hanThanhToan: {
+            [Op.lt]: today,
+          },
+        },
       },
     );
   }

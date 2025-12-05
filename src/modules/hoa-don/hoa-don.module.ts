@@ -19,6 +19,11 @@ import { NotificationModule } from '../notification/notification.module';
     HoaDonRepository,
     HoaDonNotificationService,
   ],
-  exports: [HoaDonChoThueService, HoaDonNguoiThueService, HoaDonRepository],
+  exports: [
+    HoaDonChoThueService,
+    HoaDonNguoiThueService,
+    HoaDonRepository,
+    HoaDonNotificationService,
+  ],
 })
 export class HoaDonModule {}

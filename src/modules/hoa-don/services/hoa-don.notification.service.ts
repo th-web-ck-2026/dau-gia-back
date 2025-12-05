@@ -69,7 +69,7 @@ export class HoaDonNotificationService {
       userIds: [hoaDon.userId],
       type: NotificationType.HE_THONG,
       title,
-      content,
+      content: `Hóa đơn #${hoaDon.maHoaDon ?? hoaDon._id} đã quá hạn thanh toán vào ngày ${formatDate(hoaDon.hanThanhToan)}.\n Tổng tiền còn nợ: ${formatMoney(hoaDon.tongTien)}.`,
       metadata: {
         phanHe: PhanHeNotification.OWNER,
         module: ModuleNotification.HOA_DON,
