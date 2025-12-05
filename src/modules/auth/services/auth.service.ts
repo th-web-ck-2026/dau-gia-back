@@ -96,15 +96,16 @@ export class AuthService {
       const refreshToken = await this.generateRefreshToken(user._id);
       return { accessToken, refreshToken };
     }
-    return { accessToken };
+    return { accessToken, refreshToken: undefined };
   }
 
   private buildAuthResponse(
     user: User,
-    tokens: { accessToken: string },
+    tokens: { accessToken: string; refreshToken?: string },
   ) {
     return {
       accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken ?? undefined,
       user: {
         id: user._id,
         email: user.email,
