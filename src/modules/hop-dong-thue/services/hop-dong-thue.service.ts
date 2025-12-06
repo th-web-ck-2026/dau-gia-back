@@ -262,10 +262,14 @@ export class HopDongThueService extends BaseService<HopDongThue> {
     });
   }
   // nguoi thue
-  async nguoiThueGetPage(user: AuthUser, query: QueryOption) {
+  async nguoiThueGetPage(
+    user: AuthUser,
+    condition: ConditionHopDongThueDto,
+    query: QueryOption,
+  ) {
     return this.getPage(
       {
-        where: { khachHangUserId: user.id },
+        where: { ...condition, khachHangUserId: user.id },
         include: [
           {
             model: UnitModel,

@@ -19,6 +19,8 @@ import { AuthUser } from '@/common/interfaces/auth-user.interface';
 import { ApiTags } from '@nestjs/swagger';
 import { RequestQuery } from '@/common/decorators/request-query.decorator';
 import { QueryOption } from '@/common/pipe/query-option.interface';
+import { RequestCondition } from '@/common/decorators/request-condition.decotator';
+import { ConditionTenantDto } from '../dto/condition-tenant.dto';
 @Auth(UserRoles.USER)
 @Controller('tenant/cho-thue')
 @ApiTags('Tenant Cho Thue')
@@ -28,8 +30,9 @@ export class TenantChoThueController {
   @Get('me/page')
   async getDanhSachNguoiThuePage(
     @ReqUser() user: AuthUser,
+    @RequestCondition(ConditionTenantDto) condition: ConditionTenantDto,
     @RequestQuery() query: QueryOption,
   ) {
-    return this.tenantChoThueService.getDanhSachNguoiThuePage(user, query);
+    return this.tenantChoThueService.getDanhSachNguoiThuePage(user, condition, query);
   }
 }

@@ -1,11 +1,11 @@
-import { 
-  Controller, 
+import {
+  Controller,
   Post,
   Body,
   Get,
   Param,
   Put,
-  Delete
+  Delete,
 } from '@nestjs/common';
 import { UnitService } from '../services/unit.service';
 import { CreateUnitDto } from '../dto/create-unit.dto';
@@ -16,6 +16,8 @@ import { ReqUser } from '@/common/decorators/user.decorator';
 import { AuthUser } from '@/common/interfaces/auth-user.interface';
 import { QueryOption } from '@/common/pipe/query-option.interface';
 import { RequestQuery } from '@/common/decorators/request-query.decorator';
+import { RequestCondition } from '@/common/decorators/request-condition.decotator';
+import { ConditionUnitDto } from '../dto/condition-unit.dto';
 
 @Auth(UserRoles.USER)
 @Controller('unit')
@@ -23,17 +25,24 @@ export class UnitController {
   constructor(private readonly unitService: UnitService) {}
 
   @Post('me')
-  async create(@ReqUser() user: AuthUser, @Body() createUnitDto: CreateUnitDto) {
+  async create(
+    @ReqUser() user: AuthUser,
+    @Body() createUnitDto: CreateUnitDto,
+  ) {
     return this.unitService.create({
       ...createUnitDto,
       userId: user.id,
     });
   }
   @Get('me/page')
-  async getPage(@ReqUser() user: AuthUser, @RequestQuery() query: QueryOption) {
+  async getPage(
+    @ReqUser() user: AuthUser,
+    @RequestCondition(ConditionUnitDto) condition: ConditionUnitDto,
+    @RequestQuery() query: QueryOption,
+  ) {
     return this.unitService.getPage(
       {
-        where: { userId: user.id },
+        where: { ...condition, userId: user.id },
       },
       query,
     );
@@ -45,7 +54,11 @@ export class UnitController {
     });
   }
   @Put('me/:id')
-  async update(@ReqUser() user: AuthUser, @Param('id') id: string, @Body() updateUnitDto: UpdateUnitDto) {
+  async update(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() updateUnitDto: UpdateUnitDto,
+  ) {
     return this.unitService.updateOne(updateUnitDto, {
       where: { _id: id, userId: user.id },
     });
