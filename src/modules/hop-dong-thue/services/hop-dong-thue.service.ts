@@ -19,6 +19,7 @@ import { UpdateHopDongThueDto } from '../dto/update-hop-dong-thue.dto';
 import { Op } from 'sequelize';
 import { HopDongThueNotificationService } from './hop-dong-thue.notification.service';
 import { PropertieModel } from '@/modules/propertie/models/propertie.model';
+import { KyThanhToanModel } from '../models/ky-thanh-toan.model';
 
 @Injectable()
 export class HopDongThueService extends BaseService<HopDongThue> {
@@ -57,9 +58,11 @@ export class HopDongThueService extends BaseService<HopDongThue> {
       if (!khachHangUser) {
         throw ApiError.NotFound('Khách hàng không tồn tại');
       }
+      // Tách kyThanhToans ra khỏi data để tạo riêng
+      const { kyThanhToans, ...hopDongThueData } = createHopDongThueDto;
       const hopDongThue = await this.hopDongThueRepository.create(
         {
-          ...createHopDongThueDto,
+          ...hopDongThueData,
           userId: user.id,
           unitId: unit._id,
           khachHangUserId: khachHangUser._id,
@@ -79,6 +82,14 @@ export class HopDongThueService extends BaseService<HopDongThue> {
       );
       if (!tenant) {
         throw ApiError.BadRequest('Lỗi khi tạo yêu cầu cho thuê');
+      }
+      // Tạo các kỳ thanh toán nếu có
+      if (kyThanhToans && kyThanhToans.length > 0) {
+        const kyThanhToanRecords = kyThanhToans.map((kyThanhToan) => ({
+          ...kyThanhToan,
+          hopDongThueId: hopDongThue._id,
+        }));
+        await KyThanhToanModel.bulkCreate(kyThanhToanRecords, { transaction });
       }
       await transaction.commit();
       return hopDongThue;
