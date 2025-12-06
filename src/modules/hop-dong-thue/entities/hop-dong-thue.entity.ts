@@ -14,6 +14,9 @@ import {
 } from 'class-validator';
 import { DichVuThue } from '../dto/dich-vu-thue.dto';
 import { Unit } from '@/modules/unit/entities/unit.entity';
+import { KyThanhToan } from './ky-thanh-toan.entity';
+import { KyThanhToanDto } from '../dto/ky-thanh-toan.dto';
+import { ApiHideProperty } from '@nestjs/swagger';
 
 export class HopDongThue implements BaseEntity {
   @StrObjectId()
@@ -72,5 +75,11 @@ export class HopDongThue implements BaseEntity {
   ghiChu?: string;
   @IsEnum(HopDongTrangThai)
   trangThai: HopDongTrangThai;
+
+  @ValidateNested({ each: true })
+  @Type(() => KyThanhToanDto)
+  kyThanhToans: KyThanhToanDto[];
+
+  @ApiHideProperty()
   unit?: Unit;
 }

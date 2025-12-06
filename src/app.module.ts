@@ -37,7 +37,7 @@ import { YeuCauBaoTriBaoDuongModule } from './modules/yeu-cau-bao-tri-bao-duong/
       throttlers: [
         {
           ttl: 10000,
-          limit: 10,
+          limit: 20,
         },
       ],
     }),

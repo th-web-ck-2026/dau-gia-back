@@ -139,6 +139,15 @@ export class HopDongThueService extends BaseService<HopDongThue> {
         where: { _id: hopDongThueId },
         transaction,
       });
+      await this.unitService.updateOne(
+        {
+          trangThaiThue: UnitTrangThaiThue.TRONG,
+        },
+        {
+          where: { _id: hopDongThue.unitId },
+          transaction,
+        },
+      );
       await transaction.commit();
       await this.hopDongThueNotificationService.hopDongThueDuocHuy(hopDongThue);
       return hopDongThue;
@@ -231,6 +240,16 @@ export class HopDongThueService extends BaseService<HopDongThue> {
       },
     });
   }
+  async nguoiChoThueHoanThanhHopDong(user: AuthUser, hopDongThueId: string) {
+    return this.updateOne({
+      where: {
+        _id: hopDongThueId,
+        userId: user.id,
+        trangThai: HopDongTrangThai.CHO_HOAN_THANH,
+      },
+      trangThai: HopDongTrangThai.CHO_HOAN_THANH,
+    });
+  }
   // nguoi thue
   async nguoiThueGetPage(user: AuthUser, query: QueryOption) {
     return this.getPage(
@@ -239,6 +258,11 @@ export class HopDongThueService extends BaseService<HopDongThue> {
         include: [
           {
             model: UnitModel,
+            include: [
+              {
+                model: PropertieModel,
+              },
+            ],
           },
           {
             model: UserModel,
@@ -261,7 +285,11 @@ export class HopDongThueService extends BaseService<HopDongThue> {
       include: [
         {
           model: UnitModel,
-
+          include: [
+            {
+              model: PropertieModel,
+            },
+          ],
         },
         {
           model: UserModel,

@@ -100,4 +100,11 @@ export class HopDongThueNguoiChoThueController {
   ) {
     return this.hopDongThueService.huyHopDongThue(user, id);
   }
+  @Put('me/:id/hoan-thanh-hop-dong')
+  async nguoiChoThueHoanThanhHopDong(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+  ) {
+    return this.hopDongThueService.nguoiChoThueHoanThanhHopDong(user, id);
+  }
 }
