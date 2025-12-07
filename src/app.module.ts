@@ -25,6 +25,7 @@ import { ThongTinThanhToanModule } from './modules/thong-tin-thanh-toan/thong-ti
 import { ScheduleModule } from '@nestjs/schedule';
 import { CronJobModule } from './modules/cron-job/cron-job.module';
 import { YeuCauBaoTriBaoDuongModule } from './modules/yeu-cau-bao-tri-bao-duong/yeu-cau-bao-tri-bao-duong.module';
+import { ThongKeModule } from './modules/thong-ke/thong-ke.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { YeuCauBaoTriBaoDuongModule } from './modules/yeu-cau-bao-tri-bao-duong/
     HoaDonModule,
     ThongTinThanhToanModule,
     YeuCauBaoTriBaoDuongModule,
+    ThongKeModule,
   ],
   controllers: [AppController],
   providers: [

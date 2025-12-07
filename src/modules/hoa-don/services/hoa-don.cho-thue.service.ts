@@ -65,8 +65,8 @@ export class HoaDonChoThueService extends BaseService<HoaDon> {
 
   async getHoaDonChoThuePageMe(
     user: AuthUser,
-    condition: ConditionHoaDonDto,
-    query: QueryOption,
+    condition?: ConditionHoaDonDto,
+    query?: QueryOption,
   ) {
     return this.hoaDonRepository.getPage(
       {
