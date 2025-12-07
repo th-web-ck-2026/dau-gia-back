@@ -21,24 +21,61 @@ export function RequestCondition(DtoClass: any): ParameterDecorator {
       } catch (e) {
         throw new BadRequestException('Invalid JSON in "condition" query param.');
       }
-      
-      const dto = plainToInstance(DtoClass, parsed);
-      const errors = validateSync(dto, { whitelist: true, forbidNonWhitelisted: true });
 
-      if (errors.length > 0) {
-        throw new BadRequestException('Condition object contains invalid fields.');
+      // Separate array and non-array fields
+      const arrayFields: Record<string, any[]> = {};
+      const nonArrayFields: Record<string, any> = {};
+
+      for (const key in parsed) {
+        if (Array.isArray(parsed[key])) {
+          arrayFields[key] = parsed[key];
+        } else {
+          nonArrayFields[key] = parsed[key];
+        }
+      }
+
+      if (Object.keys(nonArrayFields).length > 0) {
+        const dto = plainToInstance(DtoClass, nonArrayFields) as object;
+        const errors = validateSync(dto, { 
+          whitelist: true, 
+          forbidNonWhitelisted: true,
+          skipMissingProperties: true,
+        });
+
+        if (errors.length > 0) {
+          throw new BadRequestException('Condition object contains invalid fields.');
+        }
+      }
+
+      for (const key in arrayFields) {
+        const arrayValue = arrayFields[key];  
+        for (const element of arrayValue) {
+          const tempDto = plainToInstance(DtoClass, { [key]: element }) as object;
+          const errors = validateSync(tempDto, {
+            whitelist: true,
+            forbidNonWhitelisted: true,
+            skipMissingProperties: true,
+          });
+
+          if (errors.length > 0) {
+            const errorMessages = errors
+              .map(err => Object.values(err.constraints || {}).join(', '))
+              .join('; ');
+            throw new BadRequestException(
+              `Invalid value "${element}" in array for field "${key}". ${errorMessages}`
+            );
+          }
+        }
       }
 
       const where: Record<string, any> = {};
 
-      for (const key in dto) {
-        const value = parsed[key];
+      for (const key in nonArrayFields) {
+        where[key] = { [Op.eq]: nonArrayFields[key] };
+      }
 
-        if (Array.isArray(value)) {
-          where[key] = { [Op.in]: value };
-        } else {
-          where[key] = { [Op.eq]: value };
-        }
+      for (const key in arrayFields) {
+        where[key] = { [Op.in]: arrayFields[key] };
       }
 
       return where;
