@@ -9,16 +9,29 @@ import { UserRoles } from '@/modules/user/common/constant';
 @Controller('thong-ke')
 export class ThongKeController {
   constructor(private readonly thongKeService: ThongKeService) {}
-  @Get('don-vi-thue/:ngayBatDau/:ngayKetThuc')
+  @Get('don-vi-thue/:thangBatDau/:thangKetThuc')
   async thongKeTapDongTheoNgay(
     @ReqUser() user: AuthUser,
-    @Param('ngayBatDau') ngayBatDau: Date,
-    @Param('ngayKetThuc') ngayKetThuc: Date,
+    @Param('thangBatDau') thangBatDau: Date,
+    @Param('thangKetThuc') thangKetThuc: Date,
   ) {
     return this.thongKeService.thongKeTapDongTheoNgay(
       user,
-      ngayBatDau,
-      ngayKetThuc,
+      thangBatDau,
+      thangKetThuc,
+    );
+  }
+
+  @Get('doanh-thu-tai-san/:thangBatDau/:thangKetThuc')
+  async thongKeDoanhThuTaiSanTheoThang(
+    @ReqUser() user: AuthUser,
+    @Param('thangBatDau') thangBatDau: Date,
+    @Param('thangKetThuc') thangKetThuc: Date,
+  ) {
+    return this.thongKeService.thongKeDoanhThuTaiSanTheoThang(
+      user,
+      thangBatDau,
+      thangKetThuc,
     );
   }
 }
