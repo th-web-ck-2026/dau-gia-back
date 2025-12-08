@@ -646,7 +646,9 @@ export class ThongKeService {
 
     return {
       tongTaiSan,
-      tongSoDonViChoThueDangTrong,
+      tongDonVi: tongSoDonViChoThue,
+      tongSoDonViTrong: tongSoDonViChoThueDangTrong,
+      tongDonViDangChoThue: soDonViDangChoThue,
       tyLeLapDay,
       tyLeTrungBinhHienTai,
     };
