@@ -47,27 +47,7 @@ export class HopDongThueNguoiChoThueController {
     @ReqUser() user: AuthUser,
     @Param('id') id: string,
   ) {
-    return this.hopDongThueService.getOne({
-      where: { _id: id },
-      include: [
-        {
-          model: UnitModel,
-          where: { userId: user.id },
-          required: true,
-          include: [
-            {
-              model: PropertieModel,
-            },
-          ],
-        },
-        {
-          model: UserModel,
-          as: 'khachHangUser',
-          required: true,
-          attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'],
-        },
-      ],
-    });
+    return this.hopDongThueService.nguoiChoThueGetOne(user, id);
   }
   @Post('me')
   async nguoiChoThueCreate(
