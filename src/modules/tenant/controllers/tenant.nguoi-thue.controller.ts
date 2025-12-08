@@ -26,13 +26,6 @@ export class TenantNguoiThueController {
   ) {
     return this.tenantNguoiThueService.getPageYeuCauChoThueMe(user, condition, query);
   }
-  @Get('me/:id')
-  async getYeuCauChoThueMeById(
-    @ReqUser() user: AuthUser,
-    @Param('id') id: string,
-  ) {
-    return this.tenantNguoiThueService.getYeuCauChoThueMeById(user, id);
-  }
   @Get('me/one')
   async getYeuCauChoThueMeOne(
     @ReqUser() user: AuthUser,
@@ -42,6 +35,14 @@ export class TenantNguoiThueController {
       where: { ...condition, khachHangUserId: user.id },
     });
   }
+  @Get('me/:id')
+  async getYeuCauChoThueMeById(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+  ) {
+    return this.tenantNguoiThueService.getYeuCauChoThueMeById(user, id);
+  }
+  
   @Post('me/:id/phan-hoi')
   async phanHoiYeuCauChoThueMe(
     @ReqUser() user: AuthUser,
