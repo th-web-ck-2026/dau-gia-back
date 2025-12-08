@@ -107,4 +107,8 @@ export class HopDongThueNguoiChoThueController {
   ) {
     return this.hopDongThueService.nguoiChoThueHoanThanhHopDong(user, id);
   }
+  @Get('me/danh-sach-can-tao-hoa-don')
+  async nguoiChoThueGetDanhSachCanTaoHoaDon(@ReqUser() user: AuthUser) {
+    return this.hopDongThueService.getDanhSachCanTaoHoaDon(user);
+  }
 }

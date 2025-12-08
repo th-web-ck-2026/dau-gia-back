@@ -364,35 +364,33 @@ export class HopDongThueService extends BaseService<HopDongThue> {
 
     return hopDongPage;
   }
-  // Api get danh sach cần tạo hoá đơn cho kì thanh toán (dự vào ngày bắt đầu thanh toán - 2 ngày)
-  async getDanhSachCanTaoHoaDon(user: AuthUser, ngayBatDauThanhToan: Date) {
-    const ngayBatDauThanhToanDate = new Date(ngayBatDauThanhToan);
-    // Tính ngày bắt đầu thanh toán - 2 ngày
-    const ngayBatDauThanhToanDateMinus2Days = new Date(ngayBatDauThanhToanDate);
-    ngayBatDauThanhToanDateMinus2Days.setDate(
-      ngayBatDauThanhToanDateMinus2Days.getDate() - 2,
+  async getDanhSachCanTaoHoaDon(user: AuthUser) {
+    const today = new Date();
+    const ngayBatDauThanhToanIn2Days = new Date(today);
+    ngayBatDauThanhToanIn2Days.setDate(
+      ngayBatDauThanhToanIn2Days.getDate() + 2,
     );
 
-    // Set thời gian bắt đầu và kết thúc của ngày để query chính xác
-    const startOfDay = new Date(ngayBatDauThanhToanDateMinus2Days);
+    const startOfDay = new Date(ngayBatDauThanhToanIn2Days);
     startOfDay.setHours(0, 0, 0, 0);
 
-    const endOfDay = new Date(ngayBatDauThanhToanDateMinus2Days);
+    const endOfDay = new Date(ngayBatDauThanhToanIn2Days);
     endOfDay.setHours(23, 59, 59, 999);
 
-    // Lấy danh sách các kỳ thanh toán cần tạo hóa đơn
     const kyThanhToans = await this.kyThanhToanRepository.getMany({
       where: {
-        ngayBatDauThanhToan: {
-          [Op.gte]: startOfDay,
-          [Op.lte]: endOfDay,
-        },
-        trangThai: {
-          [Op.in]: [
-            KyThanhToanTrangThai.CHUA_BAT_DAU,
-            KyThanhToanTrangThai.CHO_THANH_TOAN,
-          ],
-        },
+        [Op.or]: [
+          {
+            trangThai: KyThanhToanTrangThai.CHO_TAO_HOA_DON,
+          },
+          {
+            trangThai: KyThanhToanTrangThai.CHUA_BAT_DAU,
+            ngayBatDauThanhToan: {
+              [Op.gte]: startOfDay,
+              [Op.lte]: endOfDay,
+            },
+          },
+        ],
       },
       include: [
         {
