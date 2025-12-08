@@ -52,12 +52,9 @@ export class HoaDonNguoiThueService extends BaseService<HoaDon> {
     if (!hoaDon) {
       throw ApiError.NotFound('Hợp đồng thuê không tồn tại');
     }
-    if (hoaDon.trangThai !== HoaDonTrangThai.CHO_THANH_TOAN) {
-      throw ApiError.BadRequest('Hợp đồng thuê không thể thanh toán');
-    }
     hoaDon.trangThaiKhachHangThanhToan =
       HoaDonTrangThaiKhachHangThanhToan.DA_THANH_TOAN;
-    hoaDon.ngayXacNhanThanhToan = new Date();
+    hoaDon.ngayKhachHangThanhToan = new Date();
     await this.hoaDonNotificationService.hoaDonDuocKhachHangXacNhanThanhToan(
       hoaDon,
     );

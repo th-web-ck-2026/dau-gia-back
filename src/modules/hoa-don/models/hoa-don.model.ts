@@ -59,9 +59,6 @@ export class HoaDonModel extends Model implements HoaDon {
   })
   maHoaDon?: string;
 
-  @Column
-  ngayTao: Date;
-
   @Column({
     allowNull: true,
   })

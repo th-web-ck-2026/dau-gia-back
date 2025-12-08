@@ -40,9 +40,6 @@ export class HoaDon implements BaseEntity {
   maHoaDon?: string;
 
   @IsDateString()
-  ngayTao: Date;
-
-  @IsDateString()
   @IsOptional()
   ngayThanhToan?: Date;
 
