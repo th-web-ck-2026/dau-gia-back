@@ -9,6 +9,7 @@ import { HopDongThueNguoiChoThueController } from './controllers/hop-dong-thue.n
 import { HopDongThueNguoiThueController } from './controllers/hop-dong-thue.nguoi-thue.controller';
 import { HopDongThueNotificationService } from './services/hop-dong-thue.notification.service';
 import { NotificationModule } from '../notification/notification.module';
+import { KyThanhToanRepository } from './repositories/ky-thanh-toan.repository';
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { NotificationModule } from '../notification/notification.module';
     HopDongThueService,
     HopDongThueRepository,
     HopDongThueNotificationService,
+    KyThanhToanRepository,
   ],
-  exports: [HopDongThueService, HopDongThueRepository],
+  exports: [HopDongThueService, HopDongThueRepository, KyThanhToanRepository],
 })
 export class HopDongThueModule {}

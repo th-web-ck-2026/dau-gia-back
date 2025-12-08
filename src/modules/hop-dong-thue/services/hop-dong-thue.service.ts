@@ -9,7 +9,7 @@ import { UsersService } from '@/modules/user/services/user.service';
 import { ApiError } from '@/common/exceptions/api-error';
 import { UnitTrangThaiThue } from '@/modules/unit/common/constant';
 import { TenantChoThueService } from '@/modules/tenant/services/tenant.cho-thue.service';
-import { HopDongTrangThai } from '../common/constant';
+import { HopDongTrangThai, KyThanhToanTrangThai } from '../common/constant';
 import { QueryOption } from '@/common/pipe/query-option.interface';
 import { UnitModel } from '@/modules/unit/models/unit.model';
 import { Sequelize } from 'sequelize-typescript';
@@ -20,6 +20,8 @@ import { Op } from 'sequelize';
 import { HopDongThueNotificationService } from './hop-dong-thue.notification.service';
 import { PropertieModel } from '@/modules/propertie/models/propertie.model';
 import { KyThanhToanModel } from '../models/ky-thanh-toan.model';
+import { KyThanhToanRepository } from '../repositories/ky-thanh-toan.repository';
+import { HopDongThueModel } from '../models/hop-dong-thue.model';
 
 @Injectable()
 export class HopDongThueService extends BaseService<HopDongThue> {
@@ -30,6 +32,7 @@ export class HopDongThueService extends BaseService<HopDongThue> {
     private readonly tenantChoThueService: TenantChoThueService,
     private readonly sequelize: Sequelize,
     private readonly hopDongThueNotificationService: HopDongThueNotificationService,
+    private readonly kyThanhToanRepository: KyThanhToanRepository,
   ) {
     super(hopDongThueRepository);
   }
@@ -181,6 +184,9 @@ export class HopDongThueService extends BaseService<HopDongThue> {
         },
         include: [
           {
+            model: KyThanhToanModel,
+          },
+          {
             model: UnitModel,
             include: [
               {
@@ -210,6 +216,9 @@ export class HopDongThueService extends BaseService<HopDongThue> {
         {
           model: UnitModel,
           include: [
+            {
+              model: KyThanhToanModel,
+            },
             {
               model: PropertieModel,
             },
@@ -279,6 +288,9 @@ export class HopDongThueService extends BaseService<HopDongThue> {
         where: { ...condition, khachHangUserId: user.id },
         include: [
           {
+            model: KyThanhToanModel,
+          },
+          {
             model: UnitModel,
             include: [
               {
@@ -310,6 +322,9 @@ export class HopDongThueService extends BaseService<HopDongThue> {
           include: [
             {
               model: PropertieModel,
+            },
+            {
+              model: KyThanhToanModel,
             },
           ],
         },
@@ -348,5 +363,48 @@ export class HopDongThueService extends BaseService<HopDongThue> {
     ) as any[];
 
     return hopDongPage;
+  }
+  // Api get danh sach cần tạo hoá đơn cho kì thanh toán (dự vào ngày bắt đầu thanh toán - 2 ngày)
+  async getDanhSachCanTaoHoaDon(user: AuthUser, ngayBatDauThanhToan: Date) {
+    const ngayBatDauThanhToanDate = new Date(ngayBatDauThanhToan);
+    // Tính ngày bắt đầu thanh toán - 2 ngày
+    const ngayBatDauThanhToanDateMinus2Days = new Date(ngayBatDauThanhToanDate);
+    ngayBatDauThanhToanDateMinus2Days.setDate(
+      ngayBatDauThanhToanDateMinus2Days.getDate() - 2,
+    );
+
+    // Set thời gian bắt đầu và kết thúc của ngày để query chính xác
+    const startOfDay = new Date(ngayBatDauThanhToanDateMinus2Days);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(ngayBatDauThanhToanDateMinus2Days);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Lấy danh sách các kỳ thanh toán cần tạo hóa đơn
+    const kyThanhToans = await this.kyThanhToanRepository.getMany({
+      where: {
+        ngayBatDauThanhToan: {
+          [Op.gte]: startOfDay,
+          [Op.lte]: endOfDay,
+        },
+        trangThai: {
+          [Op.in]: [
+            KyThanhToanTrangThai.CHUA_BAT_DAU,
+            KyThanhToanTrangThai.CHO_THANH_TOAN,
+          ],
+        },
+      },
+      include: [
+        {
+          model: HopDongThueModel,
+          where: {
+            userId: user.id,
+            trangThai: HopDongTrangThai.DANG_THUE,
+          },
+        },
+      ],
+    });
+
+    return kyThanhToans;
   }
 }

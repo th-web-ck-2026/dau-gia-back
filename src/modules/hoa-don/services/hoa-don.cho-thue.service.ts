@@ -15,6 +15,7 @@ import {
   HoaDonTrangThaiKhachHangThanhToan,
 } from '../common/constant';
 import { HoaDonNotificationService } from './hoa-don.notification.service';
+import { KyThanhToanModel } from '@/modules/hop-dong-thue/models/ky-thanh-toan.model';
 
 @Injectable()
 export class HoaDonChoThueService extends BaseService<HoaDon> {
@@ -74,6 +75,9 @@ export class HoaDonChoThueService extends BaseService<HoaDon> {
         include: [
           {
             model: HopDongThueModel,
+          },
+          {
+            model: KyThanhToanModel,
           },
         ],
       },

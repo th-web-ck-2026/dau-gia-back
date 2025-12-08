@@ -9,6 +9,8 @@ import { UserModel } from '@/modules/user/models/user.model';
 import { DichVuHoaDon } from '../dto/dich-vu-hoa-don.dto';
 import { User } from '@/modules/user/entities/user.entity';
 import { HdtThongTinThanhToanDto } from '@/modules/thong-tin-thanh-toan/dto/hd-thong-tin-thanh-toan.dto';
+import { KyThanhToan } from '@/modules/hop-dong-thue/entities/ky-thanh-toan.entity';
+import { KyThanhToanModel } from '@/modules/hop-dong-thue/models/ky-thanh-toan.model';
 
 @Table({
   tableName: EntityTable.HOA_DON,
@@ -120,4 +122,12 @@ export class HoaDonModel extends Model implements HoaDon {
     allowNull: true,
   })
   thongTinThanhToan: HdtThongTinThanhToanDto;
+  @Column
+  @ForeignKey(() => KyThanhToanModel)
+  kyThanhToanId: string;
+  @BelongsTo(() => KyThanhToanModel, {
+    foreignKey: 'kyThanhToanId',
+    onDelete: 'CASCADE',
+  })
+  kyThanhToan: KyThanhToan;
 }

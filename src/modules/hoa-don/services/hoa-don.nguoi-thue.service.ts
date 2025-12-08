@@ -17,6 +17,7 @@ import {
 } from '../common/constant';
 import { XacNhanNoiDungHoaDonDto } from '../dto/xac-nhan-noi-dung-hoa-don.dto';
 import { HoaDonNotificationService } from './hoa-don.notification.service';
+import { KyThanhToanModel } from '@/modules/hop-dong-thue/models/ky-thanh-toan.model';
 
 @Injectable()
 export class HoaDonNguoiThueService extends BaseService<HoaDon> {
@@ -39,6 +40,9 @@ export class HoaDonNguoiThueService extends BaseService<HoaDon> {
         include: [
           {
             model: HopDongThueModel,
+          },
+          {
+            model: KyThanhToanModel,
           },
         ],
       },

@@ -17,10 +17,9 @@ import {
   IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { HopDongThue } from '@/modules/hop-dong-thue/entities/hop-dong-thue.entity';
 import { DichVuHoaDon } from '../dto/dich-vu-hoa-don.dto';
-import { ThongTinThanhToan } from '@/modules/thong-tin-thanh-toan/entities/thong-tin-thanh-toan.entity';
 import { HdtThongTinThanhToanDto } from '@/modules/thong-tin-thanh-toan/dto/hd-thong-tin-thanh-toan.dto';
+
 
 export class HoaDon implements BaseEntity {
   @StrObjectId()
@@ -28,6 +27,10 @@ export class HoaDon implements BaseEntity {
 
   @IsString()
   hopDongThueId: string;
+  
+
+  @IsString()
+  kyThanhToanId: string;
 
   @IsString()
   khachHangUserId: string;
