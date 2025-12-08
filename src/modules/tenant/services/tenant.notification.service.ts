@@ -14,7 +14,7 @@ export class TenantNotificationService {
       content: 'Bạn có 1 yêu cầu cho thuê đơn vị này cần xử lý',
       metadata: {
         phanHe: PhanHeNotification.TENANT,
-        module: ModuleNotification.TENANT,
+        module: ModuleNotification.HO_DONG_THUE,
         targetId: tenant._id,
       },
     });
