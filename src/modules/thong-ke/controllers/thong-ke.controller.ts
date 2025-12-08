@@ -62,4 +62,8 @@ export class ThongKeController {
       thangKetThuc,
     );
   }
+  @Get('thong-so')
+  async thongKeThongSo(@ReqUser() user: AuthUser) {
+    return this.thongKeService.thongKeThongSo(user);
+  }
 }

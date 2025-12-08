@@ -8,6 +8,7 @@ import { Op } from 'sequelize';
 import { AuthUser } from '@/common/interfaces/auth-user.interface';
 import { BaseEntity } from '@/common/interfaces/base-entity.interface';
 import { HopDongTrangThai } from '@/modules/hop-dong-thue/common/constant';
+import { UnitTrangThaiThue } from '@/modules/unit/common/constant';
 import { HoaDonTrangThai } from '@/modules/hoa-don/common/constant';
 import { HoaDonModel } from '@/modules/hoa-don/models/hoa-don.model';
 import { HopDongThueModel } from '@/modules/hop-dong-thue/models/hop-dong-thue.model';
@@ -582,5 +583,72 @@ export class ThongKeService {
     }
 
     return sortedResult;
+  }
+  async thongKeThongSo(user: AuthUser) {
+    const tongTaiSan = await this.propertieService.count({
+      where: {
+        userId: user.id,
+      },
+    });
+
+    const tongSoDonViChoThue = await this.unitService.count({
+      where: {
+        userId: user.id,
+      },
+    });
+
+    const tongSoDonViChoThueDangTrong = await this.unitService.count({
+      where: {
+        userId: user.id,
+        trangThaiThue: UnitTrangThaiThue.TRONG,
+      },
+    });
+
+    const hopDongThuesAll = await this.hopDongThueService.getMany({
+      where: {
+        userId: user.id,
+      },
+      attributes: ['unitId'],
+    });
+
+    const unitIdsDaTungChoThue = new Set(
+      hopDongThuesAll.map((hopDong) => hopDong.unitId),
+    );
+    const soDonViDaTungChoThue = unitIdsDaTungChoThue.size;
+
+    const hopDongThuesDangThue = await this.hopDongThueService.getMany({
+      where: {
+        userId: user.id,
+        trangThai: {
+          [Op.in]: [
+            HopDongTrangThai.DANG_THUE,
+            HopDongTrangThai.CHO_HOAN_THANH,
+          ],
+        },
+      },
+      attributes: ['unitId'],
+    });
+
+    const unitIdsDangChoThue = new Set(
+      hopDongThuesDangThue.map((hopDong) => hopDong.unitId),
+    );
+    const soDonViDangChoThue = unitIdsDangChoThue.size;
+
+    const tyLeLapDay =
+      tongSoDonViChoThue > 0
+        ? Number(((soDonViDaTungChoThue / tongSoDonViChoThue) * 100).toFixed(2))
+        : 0;
+
+    const tyLeTrungBinhHienTai =
+      tongSoDonViChoThue > 0
+        ? Number(((soDonViDangChoThue / tongSoDonViChoThue) * 100).toFixed(2))
+        : 0;
+
+    return {
+      tongTaiSan,
+      tongSoDonViChoThueDangTrong,
+      tyLeLapDay,
+      tyLeTrungBinhHienTai,
+    };
   }
 }
