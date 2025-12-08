@@ -15,6 +15,8 @@ import { HopDongThueModel } from '@/modules/hop-dong-thue/models/hop-dong-thue.m
 import { UserModel } from '@/modules/user/models/user.model';
 import { TenantNotificationService } from './tenant.notification.service';
 import { ConditionTenantDto } from '../dto/condition-tenant.dto';
+import { PageableDto } from '@Common/dto/pageable.dto';
+import { FindOptions } from 'sequelize';
 @Injectable()
 export class TenantChoThueService extends BaseService<Tenant> {
   constructor(
@@ -46,24 +48,44 @@ export class TenantChoThueService extends BaseService<Tenant> {
     condition: ConditionTenantDto,
     query: QueryOption,
   ) {
-    return this.getPage(
-      {
-        where: { ...condition },
-        include: [
-          {
-            model: HopDongThueModel,
-            where: { userId: user.id },
-            required: true,
-          },
-          {
-            model: UserModel,
-            as: 'khachHangUser',
-            required: true,
-            attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'],
-          },
-        ],
-      },
-      query,
+    const { page = 1, limit = 10, offset = (page - 1) * limit, order } = query;
+
+    const findOptions: FindOptions = {
+      where: { ...condition },
+      include: [
+        {
+          model: HopDongThueModel,
+          where: { userId: user.id },
+          required: true,
+          attributes: [],
+        },
+        {
+          model: UserModel,
+          as: 'khachHangUser',
+          required: true,
+          attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'],
+        },
+      ],
+      attributes: ['khachHangUserId'],
+      group: [
+        'TenantModel.khachHangUserId',
+        'khachHangUser._id',
+        'khachHangUser.fullname',
+        'khachHangUser.email',
+        'khachHangUser.phone',
+        'khachHangUser.avatar',
+      ],
+      limit,
+      offset,
+      subQuery: false,
+      order,
+    };
+
+    const { rows, count } = await this.tenantRepository.findAndCountAll(
+      findOptions,
     );
+    const total = Array.isArray(count) ? count.length : count;
+
+    return PageableDto.create(query, total, rows);
   }
 }
