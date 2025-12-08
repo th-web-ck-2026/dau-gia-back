@@ -16,6 +16,8 @@ import {
 } from '../common/constant';
 import { HoaDonNotificationService } from './hoa-don.notification.service';
 import { KyThanhToanModel } from '@/modules/hop-dong-thue/models/ky-thanh-toan.model';
+import { KyThanhToanRepository } from '@/modules/hop-dong-thue/repositories/ky-thanh-toan.repository';
+import { KyThanhToanTrangThai } from '@/modules/hop-dong-thue/common/constant';
 
 @Injectable()
 export class HoaDonChoThueService extends BaseService<HoaDon> {
@@ -23,6 +25,7 @@ export class HoaDonChoThueService extends BaseService<HoaDon> {
     private readonly hoaDonRepository: HoaDonRepository,
     private readonly hopDongThueService: HopDongThueService,
     private readonly hoaDonNotificationService: HoaDonNotificationService,
+    private readonly kyThanhToanRepository: KyThanhToanRepository,
   ) {
     super(hoaDonRepository);
   }
@@ -53,13 +56,33 @@ export class HoaDonChoThueService extends BaseService<HoaDon> {
     } else {
       trangThai = HoaDonTrangThai.CHO_THANH_TOAN;
     }
+    const kyThanhToan = await this.kyThanhToanRepository.getOne({
+      where: {
+        _id: createHoaDonChoThueDto.kyThanhToanId,
+        hopDongThueId: hopDongThue._id,
+      },
+    });
+    if (!kyThanhToan) {
+      throw ApiError.NotFound('Kỳ thanh toán không tồn tại');
+    }
+    await this.kyThanhToanRepository.updateOne(
+      {
+        trangThai: KyThanhToanTrangThai.CHO_THANH_TOAN,
+      },
+      {
+        where: { _id: createHoaDonChoThueDto.kyThanhToanId },
+      },
+    );
+
     const hoaDon = await this.hoaDonRepository.create({
       ...createHoaDonChoThueDto,
       trangThai,
       userId: user.id,
       hopDongThueId: hopDongThue._id,
       khachHangUserId: hopDongThue.khachHangUserId,
+      kyThanhToanId: createHoaDonChoThueDto.kyThanhToanId,
     });
+
     await this.hoaDonNotificationService.hoaDonDuocTao(hoaDon);
     return hoaDon;
   }
@@ -100,6 +123,15 @@ export class HoaDonChoThueService extends BaseService<HoaDon> {
       hoaDon.trangThaiKhachHangThanhToan =
         HoaDonTrangThaiKhachHangThanhToan.DA_THANH_TOAN;
       hoaDon.ngayXacNhanThanhToan = new Date();
+
+      await this.kyThanhToanRepository.updateOne(
+        {
+          trangThai: KyThanhToanTrangThai.DA_THANH_TOAN,
+        },
+        {
+          where: { _id: hoaDon.kyThanhToanId },
+        },
+      );
       await this.hoaDonNotificationService.hoaDonDaXacNhanThanhToan(hoaDon);
     } else {
       hoaDon.trangThaiKhachHangThanhToan =

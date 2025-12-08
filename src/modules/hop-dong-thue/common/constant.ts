@@ -14,6 +14,7 @@ export enum DongThueTheo {
 
 export enum KyThanhToanTrangThai {
   CHUA_BAT_DAU = 'Chưa bắt đầu',
+  CHO_TAO_HOA_DON = 'Chờ tạo hoá đơn',
   CHO_THANH_TOAN = 'Chờ thanh toán',
   DA_THANH_TOAN = 'Đã thanh toán',
   QUA_HAN = 'Quá hạn',

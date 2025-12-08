@@ -2,6 +2,8 @@ import { BaseEntity } from '@Common/interfaces/base-entity.interface';
 import { StrObjectId } from '@/common/constants/base.constant';
 import { IsDateString, IsEnum, IsOptional, IsString } from 'class-validator';
 import { KyThanhToanTrangThai } from '../common/constant';
+import { HopDongThue } from './hop-dong-thue.entity';
+import { ApiHideProperty } from '@nestjs/swagger';
 export class KyThanhToan implements BaseEntity {
   @StrObjectId()
   _id: string;
@@ -18,4 +20,7 @@ export class KyThanhToan implements BaseEntity {
   @IsString()
   @IsOptional()
   ghiChu?: string;
+
+  @ApiHideProperty()
+  hopDongThue?: HopDongThue;
 }

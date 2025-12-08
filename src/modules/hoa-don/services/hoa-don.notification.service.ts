@@ -8,6 +8,8 @@ import {
 } from '@/modules/notification/common/constant';
 import { formatDate, formatMoney } from '@/common/utils/string.utils';
 import { TrangThaiXacNhanNoiDungHoaDon } from '../common/constant';
+import { KyThanhToan } from '@/modules/hop-dong-thue/entities/ky-thanh-toan.entity';
+import { HopDongThue } from '@/modules/hop-dong-thue/entities/hop-dong-thue.entity';
 
 @Injectable()
 export class HoaDonNotificationService {
@@ -146,5 +148,18 @@ export class HoaDonNotificationService {
         targetId: hoaDon._id,
       },
     });
+  }
+  // Nhac nho can tao hoa don cho ky thanh toan
+  async nhacNhoCanTaoHoaDonChoKyThanhToan(kyThanhToan: KyThanhToan) {
+    const title = 'Nhắc nhở tạo hóa đơn cho kỳ thanh toán';
+    const content = `Kỳ thanh toán (#${kyThanhToan.ten ?? kyThanhToan._id}) của hợp đồng thuê (#${kyThanhToan.hopDongThue?.code ?? kyThanhToan.hopDongThue?._id}) đã đến hạn tạo hóa đơn. Vui lòng tạo hóa đơn sớm nhất có thể.`;
+    if (kyThanhToan.hopDongThue?.userId) {
+      await this.notificationService.createNotification({
+        userIds: [kyThanhToan.hopDongThue?.userId],
+        type: NotificationType.HE_THONG,
+        title,
+        content,
+      });
+    }
   }
 }
