@@ -48,4 +48,18 @@ export class ThongKeController {
       thangKetThuc,
     );
   }
+  @Get('don-vi-thue/:thangBatDau/:thangKetThuc/:taiSanId')
+  async thongKeDonViTheoTaiSanId(
+    @ReqUser() user: AuthUser,
+    @Param('taiSanId') taiSanId: string,
+    @Param('thangBatDau') thangBatDau: Date,
+    @Param('thangKetThuc') thangKetThuc: Date,
+  ) {
+    return this.thongKeService.thongKeDonViTheoTaiSanId(
+      user,
+      taiSanId,
+      thangBatDau,
+      thangKetThuc,
+    );
+  }
 }
