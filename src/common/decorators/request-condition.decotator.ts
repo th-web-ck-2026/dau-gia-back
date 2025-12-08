@@ -11,10 +11,6 @@ type Primitive = string | number | boolean | null | Date;
 type Between = [Primitive, Primitive];
 type OperatorValue = Primitive | Primitive[] | Between;
 
-/**
- * Interface for field-level operators
- * Example: { name: { $like: '%test%', $gt: 10 } }
- */
 export interface FieldOperatorObject {
   $eq?: Primitive;
   $ne?: Primitive;
