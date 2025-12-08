@@ -146,6 +146,7 @@ export class HopDongThueService extends BaseService<HopDongThue> {
         throw ApiError.NotFound('Hợp đồng thuê không tồn tại');
       }
       hopDongThue.trangThai = HopDongTrangThai.DA_HUY;
+      hopDongThue.ngayThucKetThucThue = new Date();
       await this.hopDongThueRepository.updateOne(hopDongThue, {
         where: { _id: hopDongThueId },
         transaction,
@@ -252,14 +253,20 @@ export class HopDongThueService extends BaseService<HopDongThue> {
     });
   }
   async nguoiChoThueHoanThanhHopDong(user: AuthUser, hopDongThueId: string) {
-    return this.updateOne({
-      where: {
-        _id: hopDongThueId,
-        userId: user.id,
-        trangThai: HopDongTrangThai.CHO_HOAN_THANH,
+    const today = new Date();
+    return this.updateOne(
+      {
+        ngayThucKetThucThue: today,
+        trangThai: HopDongTrangThai.DA_HOAN_THANH,
       },
-      trangThai: HopDongTrangThai.CHO_HOAN_THANH,
-    });
+      {
+        where: {
+          _id: hopDongThueId,
+          userId: user.id,
+          trangThai: HopDongTrangThai.CHO_HOAN_THANH,
+        },
+      },
+    );
   }
   // nguoi thue
   async nguoiThueGetPage(

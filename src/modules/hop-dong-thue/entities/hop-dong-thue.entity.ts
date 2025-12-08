@@ -80,6 +80,11 @@ export class HopDongThue implements BaseEntity {
   @Type(() => KyThanhToanDto)
   kyThanhToans: KyThanhToanDto[];
 
+
+  @IsDateString()
+  @IsOptional()
+  ngayThucKetThucThue?: Date;
+
   @ApiHideProperty()
   unit?: Unit;
 }

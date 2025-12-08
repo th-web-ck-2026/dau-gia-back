@@ -122,6 +122,11 @@ export class HopDongThueModel extends Model implements HopDongThue {
   })
   kyThanhToans: KyThanhToan[];
 
+  @Column({
+    allowNull: true,
+  })
+  ngayThucKetThucThue?: Date;
+
   @StrObjectId()
   _id: string;
 }
