@@ -333,7 +333,6 @@ export class ThongKeService {
     thangBatDau: Date,
     thangKetThuc: Date,
   ) {
-    // Tính ngày đầu và cuối khoảng thời gian
     const thangBatDauDate = new Date(thangBatDau);
     const ngayBatDauStart = new Date(
       thangBatDauDate.getFullYear(),
@@ -350,7 +349,6 @@ export class ThongKeService {
     );
     ngayKetThucEnd.setHours(23, 59, 59, 999);
 
-    // Lấy hóa đơn đã thanh toán trong khoảng thời gian, lọc theo tài sản ID
     const hoaDons = await this.hoaDonChoThueService.getMany({
       where: {
         userId: user.id,
@@ -397,13 +395,11 @@ export class ThongKeService {
 
     const monthsInRange = getMonthsInRange(ngayBatDauStart, ngayKetThucEnd);
 
-    // Khởi tạo kết quả với tất cả các tháng (doanh thu = 0)
     const result: Record<string, number> = {};
     for (const monthKey of monthsInRange) {
       result[monthKey] = 0;
     }
 
-    // Tính tổng doanh thu theo tháng (đã được lọc từ database)
     for (const hoaDon of hoaDons) {
       const ngayXacNhanThanhToan = hoaDon.ngayXacNhanThanhToan;
       if (!ngayXacNhanThanhToan) {
@@ -416,8 +412,162 @@ export class ThongKeService {
       }
     }
 
-    // Sắp xếp kết quả theo thứ tự thời gian (mới nhất trước)
     const sortedResult: Record<string, number> = {};
+    const sortedMonths = monthsInRange.sort((a, b) => {
+      const [yearA, monthA] = a.split('/').map(Number);
+      const [yearB, monthB] = b.split('/').map(Number);
+      if (yearA !== yearB) {
+        return yearB - yearA;
+      }
+      return monthB - monthA;
+    });
+
+    for (const month of sortedMonths) {
+      sortedResult[month] = result[month];
+    }
+
+    return sortedResult;
+  }
+  async thongKeDonViTheoTaiSanId(
+    user: AuthUser,
+    taiSanId: string,
+    thangBatDau: Date,
+    thangKetThuc: Date,
+  ) {
+    const thangBatDauDate = new Date(thangBatDau);
+    const ngayBatDauStart = new Date(
+      thangBatDauDate.getFullYear(),
+      thangBatDauDate.getMonth(),
+      1,
+    );
+    ngayBatDauStart.setHours(0, 0, 0, 0);
+
+    const thangKetThucDate = new Date(thangKetThuc);
+    const ngayKetThucEnd = new Date(
+      thangKetThucDate.getFullYear(),
+      thangKetThucDate.getMonth() + 1,
+      0,
+    );
+    ngayKetThucEnd.setHours(23, 59, 59, 999);
+
+    // Lấy tất cả đơn vị của tài sản
+    const units = await this.unitService.getMany({
+      where: {
+        userId: user.id,
+        propertieId: taiSanId,
+      },
+      attributes: ['_id', 'ten', 'code', 'createdAt'],
+    });
+
+    // Lấy tất cả hợp đồng thuê của các đơn vị này
+    const unitIds = units.map((unit) => unit._id);
+    const hopDongThues = await this.hopDongThueService.getMany({
+      where: {
+        userId: user.id,
+        unitId: {
+          [Op.in]: unitIds,
+        },
+      },
+      attributes: [
+        '_id',
+        'unitId',
+        'ngayBatDauThue',
+        'ngayKetThucThue',
+        'ngayThucKetThucThue',
+        'trangThai',
+      ],
+    });
+
+    const getMonthsInRange = (start: Date, end: Date): string[] => {
+      const months: string[] = [];
+      const currentDate = new Date(start.getFullYear(), start.getMonth(), 1);
+      const endDate = new Date(end.getFullYear(), end.getMonth(), 1);
+
+      while (currentDate <= endDate) {
+        months.push(formatMonth(currentDate));
+        currentDate.setMonth(currentDate.getMonth() + 1);
+      }
+
+      return months;
+    };
+
+    const monthsInRange = getMonthsInRange(ngayBatDauStart, ngayKetThucEnd);
+
+    const result: Record<
+      string,
+      {
+        tongSoDonVi: number;
+        soDonViDangChoThue: number;
+      }
+    > = {};
+
+    for (const monthKey of monthsInRange) {
+      const [year, month] = monthKey.split('/').map(Number);
+      const ngayDauThang = new Date(year, month - 1, 1);
+      ngayDauThang.setHours(0, 0, 0, 0);
+      const ngayCuoiThang = new Date(year, month, 0);
+      ngayCuoiThang.setHours(23, 59, 59, 999);
+
+      const tongSoDonVi = units.filter((unit) => {
+        const unitWithCreatedAt = unit as BaseEntity;
+        if (!unitWithCreatedAt.createdAt) return false;
+        const unitCreatedAt = new Date(unitWithCreatedAt.createdAt);
+        unitCreatedAt.setHours(0, 0, 0, 0);
+        return unitCreatedAt <= ngayCuoiThang;
+      }).length;
+
+      const unitIdsDangChoThue = new Set<string>();
+
+      for (const hopDong of hopDongThues) {
+        const ngayBatDauThue = new Date(hopDong.ngayBatDauThue);
+        ngayBatDauThue.setHours(0, 0, 0, 0);
+
+        if (hopDong.ngayThucKetThucThue) {
+          const ngayThucKetThuc = new Date(hopDong.ngayThucKetThucThue);
+          ngayThucKetThuc.setHours(0, 0, 0, 0);
+
+
+          if (ngayThucKetThuc >= ngayDauThang) {
+
+            if (
+              ngayBatDauThue.getTime() <= ngayCuoiThang.getTime() &&
+              ngayThucKetThuc.getTime() >= ngayDauThang.getTime()
+            ) {
+              unitIdsDangChoThue.add(hopDong.unitId);
+            }
+          }
+        } else {
+          const ngayKetThucThue = new Date(hopDong.ngayKetThucThue);
+          ngayKetThucThue.setHours(0, 0, 0, 0);
+
+          if (
+            ngayBatDauThue.getTime() <= ngayCuoiThang.getTime() &&
+            ngayKetThucThue.getTime() >= ngayDauThang.getTime()
+          ) {
+            if (
+              hopDong.trangThai === HopDongTrangThai.DANG_THUE ||
+              hopDong.trangThai === HopDongTrangThai.CHO_HOAN_THANH
+            ) {
+              unitIdsDangChoThue.add(hopDong.unitId);
+            }
+          }
+        }
+      }
+
+      result[monthKey] = {
+        tongSoDonVi,
+        soDonViDangChoThue: unitIdsDangChoThue.size,
+      };
+    }
+
+    const sortedResult: Record<
+      string,
+      {
+        tongSoDonVi: number;
+        soDonViDangChoThue: number;
+      }
+    > = {};
+
     const sortedMonths = monthsInRange.sort((a, b) => {
       const [yearA, monthA] = a.split('/').map(Number);
       const [yearB, monthB] = b.split('/').map(Number);
