@@ -15,6 +15,7 @@ import { UnitModel } from '@/modules/unit/models/unit.model';
 import { PropertieModel } from '@/modules/propertie/models/propertie.model';
 import { HoaDon } from '@/modules/hoa-don/entities/hoa-don.entity';
 import { Propertie } from '@/modules/propertie/entities/propertie.entity';
+import { formatMonth } from '@/common/utils/string.utils';
 
 @Injectable()
 export class ThongKeService {
@@ -80,14 +81,6 @@ export class ThongKeService {
       ],
     });
 
-    // Hàm format tháng thành yyyy/mm
-    const formatMonth = (date: Date): string => {
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const year = date.getFullYear();
-      return `${year}/${month}`;
-    };
-
-    // Hàm tạo danh sách các tháng từ thangBatDau đến thangKetThuc
     const getMonthsInRange = (start: Date, end: Date): string[] => {
       const months: string[] = [];
       const currentDate = new Date(start.getFullYear(), start.getMonth(), 1);
@@ -217,12 +210,6 @@ export class ThongKeService {
       ],
     });
 
-    const formatMonth = (date: Date): string => {
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const year = date.getFullYear();
-      return `${year}/${month}`;
-    };
-
     const getMonthsInRange = (start: Date, end: Date): string[] => {
       const months: string[] = [];
       const currentDate = new Date(start.getFullYear(), start.getMonth(), 1);
@@ -332,6 +319,112 @@ export class ThongKeService {
         return yearB - yearA;
       }
       return monthB - monthA;
+    });
+
+    for (const month of sortedMonths) {
+      sortedResult[month] = result[month];
+    }
+
+    return sortedResult;
+  }
+  async thongKeDoanhThuTaiSanById(
+    user: AuthUser,
+    taiSanId: string,
+    thangBatDau: Date,
+    thangKetThuc: Date,
+  ) {
+    // Tính ngày đầu và cuối khoảng thời gian
+    const thangBatDauDate = new Date(thangBatDau);
+    const ngayBatDauStart = new Date(
+      thangBatDauDate.getFullYear(),
+      thangBatDauDate.getMonth(),
+      1,
+    );
+    ngayBatDauStart.setHours(0, 0, 0, 0);
+
+    const thangKetThucDate = new Date(thangKetThuc);
+    const ngayKetThucEnd = new Date(
+      thangKetThucDate.getFullYear(),
+      thangKetThucDate.getMonth() + 1,
+      0,
+    );
+    ngayKetThucEnd.setHours(23, 59, 59, 999);
+
+    // Lấy hóa đơn đã thanh toán trong khoảng thời gian, lọc theo tài sản ID
+    const hoaDons = await this.hoaDonChoThueService.getMany({
+      where: {
+        userId: user.id,
+        trangThai: HoaDonTrangThai.DA_THANH_TOAN,
+        ngayXacNhanThanhToan: {
+          [Op.ne]: null,
+          [Op.gte]: ngayBatDauStart,
+          [Op.lte]: ngayKetThucEnd,
+        },
+      },
+      include: [
+        {
+          model: HopDongThueModel,
+          required: true,
+          include: [
+            {
+              model: UnitModel,
+              where: {
+                propertieId: taiSanId,
+              },
+              include: [
+                {
+                  model: PropertieModel,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    const getMonthsInRange = (start: Date, end: Date): string[] => {
+      const months: string[] = [];
+      const currentDate = new Date(start.getFullYear(), start.getMonth(), 1);
+      const endDate = new Date(end.getFullYear(), end.getMonth(), 1);
+
+      while (currentDate <= endDate) {
+        months.push(formatMonth(currentDate));
+        currentDate.setMonth(currentDate.getMonth() + 1);
+      }
+
+      return months;
+    };
+
+    const monthsInRange = getMonthsInRange(ngayBatDauStart, ngayKetThucEnd);
+
+    // Khởi tạo kết quả với tất cả các tháng (doanh thu = 0)
+    const result: Record<string, number> = {};
+    for (const monthKey of monthsInRange) {
+      result[monthKey] = 0;
+    }
+
+    // Tính tổng doanh thu theo tháng (đã được lọc từ database)
+    for (const hoaDon of hoaDons) {
+      const ngayXacNhanThanhToan = hoaDon.ngayXacNhanThanhToan;
+      if (!ngayXacNhanThanhToan) {
+        continue;
+      }
+
+      const monthKey = formatMonth(new Date(ngayXacNhanThanhToan));
+      if (result[monthKey] !== undefined) {
+        result[monthKey] += Number(hoaDon.tongTien) || 0;
+      }
+    }
+
+    // Sắp xếp kết quả theo thứ tự thời gian (mới nhất trước)
+    const sortedResult: Record<string, number> = {};
+    const sortedMonths = monthsInRange.sort((a, b) => {
+      const [yearA, monthA] = a.split('/').map(Number);
+      const [yearB, monthB] = b.split('/').map(Number);
+      if (yearA !== yearB) {
+        return yearB - yearA; // Năm mới nhất trước
+      }
+      return monthB - monthA; // Tháng mới nhất trước
     });
 
     for (const month of sortedMonths) {
