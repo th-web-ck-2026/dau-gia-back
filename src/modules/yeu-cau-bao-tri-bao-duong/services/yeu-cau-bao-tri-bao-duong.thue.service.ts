@@ -13,6 +13,7 @@ import { HopDongTrangThai } from '@/modules/hop-dong-thue/common/constant';
 import { QueryOption } from '@/common/pipe/query-option.interface';
 import { UserModel } from '@/modules/user/models/user.model';
 import { UnitModel } from '@/modules/unit/models/unit.model';
+import { PropertieModel } from '@/modules/propertie/models/propertie.model';
 
 @Injectable()
 export class YeuCauBaoTriBaoDuongThueService extends BaseService<YeuCauBaoTriBaoDuong> {
@@ -70,6 +71,11 @@ export class YeuCauBaoTriBaoDuongThueService extends BaseService<YeuCauBaoTriBao
         include: [
           {
             model: UnitModel,
+            include: [
+              {
+                model: PropertieModel,
+              },
+            ],
           },
         ],
       },
@@ -82,6 +88,11 @@ export class YeuCauBaoTriBaoDuongThueService extends BaseService<YeuCauBaoTriBao
       include: [
         {
           model: UnitModel,
+          include: [
+            {
+              model: PropertieModel,
+            },
+          ],
         },
       ],
     });

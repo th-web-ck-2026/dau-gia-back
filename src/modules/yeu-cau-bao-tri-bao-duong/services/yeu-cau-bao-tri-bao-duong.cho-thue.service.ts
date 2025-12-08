@@ -12,6 +12,7 @@ import { UserModel } from '@/modules/user/models/user.model';
 import { YeuCauBaoTriBaoDuongTrangThai } from '../common/constant';
 import { ApiError } from '@/common/exceptions/api-error';
 import { Sequelize } from 'sequelize-typescript';
+import { PropertieModel } from '@/modules/propertie/models/propertie.model';
 
 @Injectable()
 export class YeuCauBaoTriBaoDuongChoThueService extends BaseService<YeuCauBaoTriBaoDuong> {
@@ -32,6 +33,11 @@ export class YeuCauBaoTriBaoDuongChoThueService extends BaseService<YeuCauBaoTri
         include: [
           {
             model: UnitModel,
+            include: [
+              {
+                model: PropertieModel,
+              },
+            ],
           },
           {
             model: UserModel,
@@ -49,6 +55,11 @@ export class YeuCauBaoTriBaoDuongChoThueService extends BaseService<YeuCauBaoTri
       include: [
         {
           model: UnitModel,
+          include: [
+            {
+              model: PropertieModel,
+            },
+          ],
         },
         {
           model: UserModel,
