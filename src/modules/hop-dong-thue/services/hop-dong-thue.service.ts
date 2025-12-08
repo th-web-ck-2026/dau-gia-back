@@ -214,11 +214,11 @@ export class HopDongThueService extends BaseService<HopDongThue> {
       where: { _id: hopDongThueId, userId: user.id },
       include: [
         {
+          model: KyThanhToanModel,
+        },
+        {
           model: UnitModel,
           include: [
-            {
-              model: KyThanhToanModel,
-            },
             {
               model: PropertieModel,
             },
@@ -318,13 +318,13 @@ export class HopDongThueService extends BaseService<HopDongThue> {
       where: { _id: hopDongThueId, khachHangUserId: user.id },
       include: [
         {
+          model: KyThanhToanModel,
+        },
+        {
           model: UnitModel,
           include: [
             {
               model: PropertieModel,
-            },
-            {
-              model: KyThanhToanModel,
             },
           ],
         },

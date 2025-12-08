@@ -6,7 +6,7 @@ import { Tenant } from '../entities/tenant.entity';
 @Injectable()
 export class TenantNotificationService {
   constructor(private readonly notificationService: NotificationService) {}
-  async taoYeuCauChoThue(tenant: Tenant) {
+  async taoYeuCauChoThue(tenant: Tenant, hopDongThueId: string) {
     await this.notificationService.createNotification({
       userIds: [tenant.khachHangUserId],
       type: NotificationType.HE_THONG,
@@ -15,7 +15,7 @@ export class TenantNotificationService {
       metadata: {
         phanHe: PhanHeNotification.TENANT,
         module: ModuleNotification.HO_DONG_THUE,
-        targetId: tenant._id,
+        targetId: hopDongThueId,
       },
     });
   }

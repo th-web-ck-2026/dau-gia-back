@@ -40,7 +40,7 @@ export class TenantChoThueService extends BaseService<Tenant> {
     if (!tenant) {
       throw ApiError.BadRequest('Lỗi khi tạo yêu cầu cho thuê');
     }
-    await this.tenantNotificationService.taoYeuCauChoThue(tenant);
+    await this.tenantNotificationService.taoYeuCauChoThue(tenant, createYeuCauChoThueDto.hopDongThueId);
     return tenant;
   }
   async getDanhSachNguoiThuePage(
