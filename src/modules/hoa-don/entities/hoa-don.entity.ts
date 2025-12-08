@@ -91,4 +91,6 @@ export class HoaDon implements BaseEntity {
   @IsString()
   @IsOptional()
   khachHangGhiChu?: string;
+
+  createdAt?: Date;
 }
