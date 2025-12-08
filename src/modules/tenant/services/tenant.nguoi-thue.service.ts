@@ -11,6 +11,7 @@ import { QueryOption } from '@/common/pipe/query-option.interface';
 import { HopDongThueModel } from '@/modules/hop-dong-thue/models/hop-dong-thue.model';
 import { UnitModel } from '@/modules/unit/models/unit.model';
 import { HopDongThueService } from '@/modules/hop-dong-thue/services/hop-dong-thue.service';
+import { ConditionTenantDto } from '../dto/condition-tenant.dto';
 
 @Injectable()
 export class TenantNguoiThueService extends BaseService<Tenant> {
@@ -23,11 +24,13 @@ export class TenantNguoiThueService extends BaseService<Tenant> {
   }
   async getPageYeuCauChoThueMe(
     user: AuthUser,
+    condition: ConditionTenantDto,
     query: QueryOption,
   ): Promise<PageableDto<Tenant>> {
     return this.getPage(
       {
         where: {
+          ...condition,
           khachHangUserId: user.id,
         },
         include: [

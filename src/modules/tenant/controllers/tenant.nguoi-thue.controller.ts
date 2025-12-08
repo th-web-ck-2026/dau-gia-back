@@ -8,6 +8,8 @@ import { AuthUser } from '@/common/interfaces/auth-user.interface';
 import { RequestQuery } from '@/common/decorators/request-query.decorator';
 import { QueryOption } from '@/common/pipe/query-option.interface';
 import { PhanHoiYeuCauChoThueDto } from '../dto/phan-hoi-tenant.dto';
+import { ConditionTenantDto } from '../dto/condition-tenant.dto';
+import { RequestCondition } from '@/common/decorators/request-condition.decotator';
 @Auth(UserRoles.USER)
 @Controller('tenant/nguoi-thue')
 @ApiTags('Tenant Nguoi Thue')
@@ -19,9 +21,10 @@ export class TenantNguoiThueController {
   @Get('me/page')
   async getPageYeuCauChoThueMe(
     @ReqUser() user: AuthUser,
+    @RequestCondition(ConditionTenantDto) condition: ConditionTenantDto,
     @RequestQuery() query: QueryOption,
   ) {
-    return this.tenantNguoiThueService.getPageYeuCauChoThueMe(user, query);
+    return this.tenantNguoiThueService.getPageYeuCauChoThueMe(user, condition, query);
   }
   @Get('me/:id')
   async getYeuCauChoThueMeById(
@@ -29,6 +32,15 @@ export class TenantNguoiThueController {
     @Param('id') id: string,
   ) {
     return this.tenantNguoiThueService.getYeuCauChoThueMeById(user, id);
+  }
+  @Get('me/one')
+  async getYeuCauChoThueMeOne(
+    @ReqUser() user: AuthUser,
+    @RequestCondition(ConditionTenantDto) condition: ConditionTenantDto
+  ) {
+    return this.tenantNguoiThueService.getOne({
+      where: { ...condition, khachHangUserId: user.id },
+    });
   }
   @Post('me/:id/phan-hoi')
   async phanHoiYeuCauChoThueMe(
