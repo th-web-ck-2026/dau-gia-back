@@ -42,9 +42,12 @@ export abstract class BaseRepository<E extends BaseEntity> {
       queryOptions.order = order;
     }
     // console.log(queryOptions);
-    const { where } = condition;
     const data = await this.getMany(queryOptions);
-    const count = await this.model.count({ where });
+    const countOptions: FindOptions = {
+      where: condition.where,
+      include: condition.include,
+    };
+    const count = await this.model.count(countOptions);
 
     return PageableDto.create(options, count, data);
   }
