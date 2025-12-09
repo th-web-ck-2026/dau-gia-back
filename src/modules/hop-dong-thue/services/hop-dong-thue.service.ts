@@ -397,7 +397,12 @@ export class HopDongThueService extends BaseService<HopDongThue> {
           model: HopDongThueModel,
           where: {
             userId: user.id,
-            trangThai: HopDongTrangThai.DANG_THUE,
+            trangThai: {
+              [Op.in]: [
+                HopDongTrangThai.DANG_THUE,
+                HopDongTrangThai.CHO_HOAN_THANH,
+              ],
+            },
           },
         },
       ],
