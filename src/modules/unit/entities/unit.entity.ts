@@ -1,6 +1,6 @@
 import { BaseEntity } from '@Common/interfaces/base-entity.interface';
 import { StrObjectId } from "@/common/constants/base.constant";
-import { IsEnum, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { UnitType, UnitTrangThaiThue } from '../common/constant';
 
 export class Unit implements BaseEntity {
@@ -15,7 +15,8 @@ export class Unit implements BaseEntity {
   @IsString()
   ten: string;
   @IsString()
-  moTa: string;
+  @IsOptional()
+  moTa?: string;
   @IsEnum(UnitType)
   type: UnitType;
   @IsEnum(UnitTrangThaiThue)

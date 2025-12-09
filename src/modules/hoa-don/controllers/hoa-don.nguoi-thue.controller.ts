@@ -104,6 +104,12 @@ export class HoaDonNguoiThueController {
       include: [
         {
           model: HopDongThueModel,
+          include: [
+            {
+              model: UnitModel,
+              attributes: ['_id', 'ten', 'code'],
+            },
+          ],
         },
       ],
     });
