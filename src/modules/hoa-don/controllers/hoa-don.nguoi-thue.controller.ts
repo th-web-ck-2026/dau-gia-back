@@ -21,6 +21,7 @@ import { HoaDonNguoiThueService } from '../services/hoa-don.nguoi-thue.service';
 import { Auth } from '@Decorators/auth.decorator';
 import { UserRoles } from '@/modules/user/common/constant';
 import { XacNhanNoiDungHoaDonDto } from '../dto/xac-nhan-noi-dung-hoa-don.dto';
+import { UnitModel } from '@/modules/unit/models/unit.model';
 
 @Auth(UserRoles.USER)
 @Controller('hoa-don/nguoi-thue')
@@ -38,6 +39,58 @@ export class HoaDonNguoiThueController {
     return this.hoaDonNguoiThueService.getHoaDonNguoiThuePageMe(
       user,
       condition,
+      query,
+    );
+  }
+  @Get('me/unit/:unitId/page')
+  async getHoaDonNguoiThuePageByUnitIdMe(
+    @ReqUser() user: AuthUser,
+    @Param('unitId') unitId: string,
+    @RequestCondition(ConditionHoaDonDto) condition: ConditionHoaDonDto,
+    @RequestQuery() query: QueryOption,
+  ) {
+    return this.hoaDonNguoiThueService.getPage(
+      {
+        where: { ...condition },
+        include: [
+          {
+            model: HopDongThueModel,
+            where: { unitId: unitId, userId: user.id },
+            required: true,
+            attributes: ['_id'],
+          },
+        ],
+      },
+      query,
+    );
+  }
+  @Get('me/property/:propertyId/page')
+  async getHoaDonNguoiThuePageByPropertyIdMe(
+    @ReqUser() user: AuthUser,
+    @Param('propertyId') propertyId: string,
+    @RequestCondition(ConditionHoaDonDto) condition: ConditionHoaDonDto,
+    @RequestQuery() query: QueryOption,
+  ) {
+    return this.hoaDonNguoiThueService.getPage(
+      {
+        where: { ...condition },
+        include: [
+          {
+            model: HopDongThueModel,
+            where: { userId: user.id },
+            required: true,
+            attributes: ['_id'],
+            include: [
+              {
+                model: UnitModel,
+                where: { propertieId: propertyId },
+                required: true,
+                attributes: ['_id'],
+              },
+            ],
+          },
+        ],
+      },
       query,
     );
   }
