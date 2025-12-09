@@ -38,7 +38,7 @@ import { ThongKeModule } from './modules/thong-ke/thong-ke.module';
       throttlers: [
         {
           ttl: 10000,
-          limit: 20,
+          limit: 1000,
         },
       ],
     }),
