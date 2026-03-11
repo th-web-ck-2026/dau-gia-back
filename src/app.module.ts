@@ -15,17 +15,9 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { FileModule } from './modules/file/file.module';
 import { SendMailModule } from './modules/send-mail/send-mail.module';
 import { RecaptchaModule } from './modules/recaptcha/recaptcha.module';
-import { PropertieModule } from './modules/propertie/propertie.module';
-import { UnitModule } from './modules/unit/unit.module';
-import { TenantModule } from './modules/tenant/tenant.module';
-import { HopDongThueModule } from './modules/hop-dong-thue/hop-dong-thue.module';
-import { RepositoryModule } from './modules/repository/repository.module';
-import { HoaDonModule } from './modules/hoa-don/hoa-don.module';
-import { ThongTinThanhToanModule } from './modules/thong-tin-thanh-toan/thong-tin-thanh-toan.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CronJobModule } from './modules/cron-job/cron-job.module';
-import { YeuCauBaoTriBaoDuongModule } from './modules/yeu-cau-bao-tri-bao-duong/yeu-cau-bao-tri-bao-duong.module';
-import { ThongKeModule } from './modules/thong-ke/thong-ke.module';
+import { RepositoryModule } from './modules/repository/repository.module';
 
 @Module({
   imports: [
@@ -52,14 +44,6 @@ import { ThongKeModule } from './modules/thong-ke/thong-ke.module';
     SendMailModule,
     AuthModule,
     RecaptchaModule,
-    PropertieModule,
-    UnitModule,
-    TenantModule,
-    HopDongThueModule,
-    HoaDonModule,
-    ThongTinThanhToanModule,
-    YeuCauBaoTriBaoDuongModule,
-    ThongKeModule,
   ],
   controllers: [AppController],
   providers: [
