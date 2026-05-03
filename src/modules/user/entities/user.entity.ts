@@ -19,10 +19,6 @@ export class User implements BaseEntity {
   @MaxLength(11)
   phone: string;
 
-  @MinLength(8)
-  password: string;
-
-  @IsOptional()
   birthday?: string;
 
   @IsOptional()
@@ -40,5 +36,5 @@ export class User implements BaseEntity {
   userStatus?: UserStatus;
 
   @IsOptional()
-  refreshToken?: string;
+  verifyScore?: number;
 }

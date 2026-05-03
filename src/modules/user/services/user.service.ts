@@ -36,30 +36,10 @@ export class UsersService extends BaseService<User> {
     userId: string,
     updateUserPasswordDto: UpdateUserPasswordDto,
   ) {
-    const { old_password, new_password } = updateUserPasswordDto;
-    const user = await this.userRepository.getOne({
-      where: { _id: userId },
-      attributes: ['_id', 'password'],
-    });
-    if (!user) {
-      throw ApiError.NotFound('Người dùng không tồn tại');
-    }
-    const isOldPasswordValid = await bcrypt.compare(
-      old_password,
-      user.password,
-    );
-    if (!isOldPasswordValid) {
-      throw ApiError.BadRequest('Mật khẩu không chính xác');
-    }
-    const hashedPassword = await bcrypt.hash(new_password, 10);
-    const result = await this.userRepository.updateOne(
-      { password: hashedPassword },
-      { where: { _id: userId } },
-    );
-    if (!result) {
-      throw ApiError.InternalServerError('Cập nhật mật khẩu thất bại');
-    }
-    return { updated: true };
+    // NOTE: This method is deprecated and should be removed.
+    // Password management is now handled by AuthService.changePassword()
+    // which uses AuthProviderService to update credentials.
+    throw ApiError.BadRequest('Please use /auth/change-password endpoint');
   }
   async updateUserAvatar(userId: string, avatar: string) {
     const result = await this.userRepository.updateOne(
