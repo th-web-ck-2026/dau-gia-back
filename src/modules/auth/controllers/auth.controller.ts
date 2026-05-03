@@ -1,10 +1,11 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Req } from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { Public } from '../../../common/decorators/public.decorator';
 import { Throttle } from '@nestjs/throttler';
+import { Request } from 'express';
 
 @Public()
 @Controller('auth')
@@ -18,14 +19,14 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  async login(@Body() loginDto: LoginDto, @Req() request: Request) {
+    return this.authService.loginWithEmail(loginDto, request);
   }
 
   @HttpCode(HttpStatus.OK)
   @Post('refresh')
-  async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
-    return this.authService.refreshTokens(refreshTokenDto.refreshToken);
+  async refresh(@Body() refreshTokenDto: RefreshTokenDto, @Req() request: Request) {
+    return this.authService.refreshTokens(refreshTokenDto.refreshToken, request);
   }
   @Throttle({ default: { limit: 1, ttl: 60000 } })
   @Post('forgot-password')
