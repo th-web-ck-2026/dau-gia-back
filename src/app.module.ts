@@ -15,6 +15,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { FileModule } from './modules/file/file.module';
 import { SendMailModule } from './modules/send-mail/send-mail.module';
 import { RecaptchaModule } from './modules/recaptcha/recaptcha.module';
+import { ExampleController } from './common/decorators/swagger/example.controller';
 
 @Module({
   imports: [
@@ -39,7 +40,7 @@ import { RecaptchaModule } from './modules/recaptcha/recaptcha.module';
     AuthModule,
     RecaptchaModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, ExampleController],
   providers: [
     AppService,
     {
