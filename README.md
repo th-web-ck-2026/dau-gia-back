@@ -101,3 +101,34 @@ Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
 # Tạo Base Modules
 node nestbase Product
 \`\`\`
+
+
+### Condition
+
+```
+{ "status": ["ACTIVE", "PENDING"] }
+{ "status": "ACTIVE" }
+
+{ "name": { "$like": "%test%" } }
+{ "price": { "$gt": 100, "$lt": 1000 } }
+{ "status": { "$in": ["ACTIVE", "PENDING"] } }
+{ "age": { "$between": [18, 65] } }
+
+// Kết hợp với $or:
+{
+  "status": "ACTIVE",
+  "$or": [
+    { "city": "Hanoi" },
+    { "price": { "$gt": 100 } }
+  ]
+}
+
+// Kết hợp với $and:
+{
+  "status": "ACTIVE",
+  "$and": [
+    { "city": "Hanoi" },
+    { "price": { "$between": [100, 500] } }
+  ]
+}
+```

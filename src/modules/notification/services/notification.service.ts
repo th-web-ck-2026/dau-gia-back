@@ -6,6 +6,8 @@ import { CreateNotificationDto } from '../dto/create-notification.dto';
 import { PageableDto } from '@Common/dto/pageable.dto';
 import { QueryOption } from '@Common/pipe/query-option.interface';
 import { ApiError } from '@Common/exceptions/api-error';
+import { Op } from 'sequelize';
+import { AuthUser } from '@/common/interfaces/auth-user.interface';
 
 @Injectable()
 export class NotificationService extends BaseService<Notification> {
@@ -21,44 +23,102 @@ export class NotificationService extends BaseService<Notification> {
     userId: string,
     query: QueryOption,
   ): Promise<PageableDto<Notification>> {
-    return this.getPage(
+    // add total unread notifications
+    const totalUnread = await this.notificationRepository.count({
+      where: {
+        userIds: { [Op.contains]: [userId] },
+        [Op.or]: [
+          { userReadIds: null },
+          {
+            [Op.not]: {
+              userReadIds: { [Op.contains]: [userId] },
+            },
+          },
+        ],
+      },
+    });
+    const pageable = (await this.getPage(
       {
-        where: { user_id: userId },
+        where: { userIds: { [Op.contains]: [userId] } },
       },
       query,
-    );
+    )) as unknown as PageableDto<Notification & { totalUnread: number }>;
+    (pageable as any).totalUnread = totalUnread;
+    return pageable;
+  }
+  async getMeById(
+    user: AuthUser,
+    notificationId: string,
+  ): Promise<Notification> {
+    const notification = await this.notificationRepository.getOne({
+      where: {
+        _id: notificationId,
+        userIds: { [Op.contains]: [user.id] },
+      },
+    });
+    if (!notification) {
+      throw ApiError.NotFound('Thông báo không tồn tại');
+    } 
+    notification.userReadIds = [...(notification.userReadIds || []), user.id];
+    return this.notificationRepository.updateOne(notification, {
+      where: { _id: notificationId },
+    });
   }
   async markAsRead(
     userId: string,
     notificationId: string,
   ): Promise<Notification> {
     const notification = await this.notificationRepository.getOne({
-      where: { _id: notificationId, user_id: userId },
+      where: {
+        _id: notificationId,
+        userIds: { [Op.contains]: [userId] },
+      },
     });
+
     if (!notification) {
-      throw ApiError.NotFound('Notification not found');
+      throw ApiError.NotFound('Thông báo không tồn tại');
     }
-    if (notification.is_read) {
-      throw ApiError.Conflict('Notification already marked as read');
+
+    const currentReadIds = notification.userReadIds || [];
+    if (currentReadIds.includes(userId)) {
+      return notification;
     }
+
+    const nextReadIds = [...currentReadIds, userId];
     return this.notificationRepository.updateOne(
-      { is_read: true },
-      { where: { _id: notificationId, user_id: userId } },
-    );
-  }
-  // mark all notifications as read
-  async markAllAsRead(userId: string): Promise<void> {
-    const notifications = await this.notificationRepository.getMany({
-      where: { user_id: userId},
-    });
-    console.log("notifications: ",notifications);
-    if (notifications.length === 0) {
-      throw ApiError.NotFound('No unread notifications found');
-    }
-    await this.notificationRepository.updateMany(
-      { is_read: true },
-      { where: { user_id: userId, is_read: false } },
+      { userReadIds: nextReadIds },
+      {
+        where: { _id: notificationId },
+      },
     );
   }
 
+  // mark all notifications as read
+  async markAllAsRead(userId: string): Promise<{ n: number }> {
+    // Lấy tất cả notification của user
+    const notifications = await this.notificationRepository.getMany({
+      where: {
+        userIds: { [Op.contains]: [userId] },
+      },
+    });
+
+    let updated = 0;
+
+    for (const noti of notifications) {
+      const currentReadIds = noti.userReadIds || [];
+
+      if (currentReadIds.includes(userId)) {
+        continue;
+      }
+
+      const nextReadIds = [...currentReadIds, userId];
+      await this.notificationRepository.updateOne(
+        { userReadIds: nextReadIds },
+        { where: { _id: noti._id } },
+      );
+      updated += 1;
+    }
+
+    return { n: updated };
+  }
 }

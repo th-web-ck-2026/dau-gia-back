@@ -4,17 +4,28 @@ import { ReqUser } from '@/common/decorators/user.decorator';
 import { RequestQuery } from '@/common/decorators/request-query.decorator';
 import { QueryOption } from '@/common/pipe/query-option.interface';
 import { ApiOperation } from '@nestjs/swagger';
+import { Auth } from '@/common/decorators/auth.decorator';
+import { UserRoles } from '@/modules/user/common/constant';
 
+@Auth(UserRoles.USER)
 @Controller('notification')
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
   @ApiOperation({ summary: 'Lấy thông báo của tôi' })
-  @Get('me')
+  @Get('me/page')
   async getMyNotifications(
     @ReqUser() user,
     @RequestQuery() query: QueryOption,
   ) {
     return this.notificationService.getMyNotifications(user.id, query);
+  }
+  @ApiOperation({ summary: 'Lấy thông báo của tôi' })
+  @Get('me/:notificationId')
+  async getMeById(
+    @ReqUser() user,
+    @Param('notificationId') notificationId: string,
+  ) {
+    return this.notificationService.getMeById(user, notificationId);
   }
   @ApiOperation({ summary: 'Đánh dấu tất cả thông báo đã đọc' })
   @Post('read/all')

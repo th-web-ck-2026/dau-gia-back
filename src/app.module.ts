@@ -16,6 +16,9 @@ import { FileModule } from './modules/file/file.module';
 import { SendMailModule } from './modules/send-mail/send-mail.module';
 import { RecaptchaModule } from './modules/recaptcha/recaptcha.module';
 import { ExampleController } from './common/decorators/swagger/example.controller';
+import { ScheduleModule } from '@nestjs/schedule';
+import { CronJobModule } from './modules/cron-job/cron-job.module';
+import { RepositoryModule } from './modules/repository/repository.module';
 
 @Module({
   imports: [
@@ -32,7 +35,10 @@ import { ExampleController } from './common/decorators/swagger/example.controlle
         },
       ],
     }),
+    ScheduleModule.forRoot(),
+    CronJobModule,
     DatabaseModule,
+    RepositoryModule,
     UsersModule,
     NotificationModule,
     FileModule,

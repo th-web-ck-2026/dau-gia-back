@@ -24,7 +24,10 @@ export class UserModel extends Model implements User {
   birthday?: string;
   @Column
   avatar?: string;
-  @Column
+  @Column({
+    type: DataType.ENUM(...Object.values(UserRoles)),
+    defaultValue: UserRoles.USER,
+  })
   role: UserRoles;
   @Column
   gender?: Gender;
@@ -46,11 +49,11 @@ export class UserModel extends Model implements User {
   })
   userStatus?: UserStatus;
 
-  @Column({
-    defaultValue: 0,
-    type: DataType.INTEGER,
-    allowNull: true,
-  })
-  verifyScore?: number;
+  @Column
+  soCccd?: string;
+  @Column
+  ngayCapCccd?: string;
+  @Column
+  noiCapCccd?: string;
 
 }

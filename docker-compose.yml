@@ -3,11 +3,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: conggiasu-app
+    container_name: ql-bds-app
     env_file:
       - .env
     ports:
-      - "${PORT:-3000}:${PORT:-3000}"
+      - "${PORT:-3000}:3000"
     depends_on:
       - postgres
       # - redis
@@ -28,7 +28,7 @@ services:
     ports:
       - "${DB_PORT:-5432}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data-2
     networks:
       - app-network
     restart: always

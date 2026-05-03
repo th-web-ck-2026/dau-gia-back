@@ -1,5 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { SequelizeModuleOptions } from '@nestjs/sequelize';
+import { SequelizeModel } from '../modules/repository/common/sequelize-model';
 
 export const databaseConfig = (
   configService: ConfigService,
@@ -16,6 +17,7 @@ export const databaseConfig = (
   username: configService.get<string>('DB_USERNAME'),
   password: configService.get<string>('DB_PASSWORD'),
   database: configService.get<string>('DB_NAME'),
+  models: SequelizeModel,
   autoLoadModels: true,
   synchronize: configService.get<boolean>('DB_SYNC', false),
   sync: {

@@ -7,6 +7,11 @@ import { UpdateUserProfileDto } from '../dto/update-user-profile.dto';
 import { UpdateUserPasswordDto } from '../dto/update-user-password.dto';
 import { AuthUser } from '@/common/interfaces/auth-user.interface';
 import * as bcrypt from 'bcrypt';
+import { ConditionUserDto } from '../dto/condition-user.dto';
+import { PageableDto } from '@/common/dto/pageable.dto';
+import { UserRoles, UserStatus } from '../common/constant';
+import { QueryOption } from '@/common/pipe/query-option.interface';
+import { Op } from 'sequelize';
 @Injectable()
 export class UsersService extends BaseService<User> {
   constructor(private readonly userRepository: UserRepository) {
@@ -41,12 +46,34 @@ export class UsersService extends BaseService<User> {
     // which uses AuthProviderService to update credentials.
     throw ApiError.BadRequest('Please use /auth/change-password endpoint');
   }
-  async updateUserAvatar(userId: string, avatar: string) {
-    const result = await this.userRepository.updateOne(
-      { avatar },
-      { where: { _id: userId } },
+  async getDanhSachNguoiDung(
+    user: AuthUser,
+    search: string,
+    query?: QueryOption,
+  ): Promise<PageableDto<User>> {
+    // Chống cào dữ liệu
+    if (query.limit && query.limit > 10) {
+      throw ApiError.BadRequest('Số lượng người dùng tối đa là 10');
+    }
+    // bắt buộc phải có condition
+    if (!search || search.trim() === '' || search.trim().length < 3) {
+      throw ApiError.BadRequest('Tìm kiếm phải có ít nhất 3 ký tự');
+    }
+    return this.userRepository.getPage(
+      {
+        where: {
+          _id: { [Op.ne]: user.id },
+          [Op.or]: [
+            { fullname: { [Op.iLike]: `%${search}%` } },
+            { email: { [Op.eq]: search } },
+            { phone: { [Op.eq]: search } },
+          ],
+          userStatus: UserStatus.ACTIVE,
+          role: UserRoles.USER,
+        },
+        attributes: ['_id', 'fullname', 'email', 'phone'],
+      },
+      query,
     );
-
-    return result;
   }
 }
