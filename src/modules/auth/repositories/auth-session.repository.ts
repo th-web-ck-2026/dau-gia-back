@@ -8,4 +8,8 @@ export class AuthSessionRepository extends BaseRepository<AuthSession> {
   constructor() {
     super(AuthSessionModel);
   }
+
+  async findByRefreshToken(hashedToken: string): Promise<AuthSession | null> {
+    return this.getOne({ where: { refreshToken: hashedToken } });
+  }
 }
