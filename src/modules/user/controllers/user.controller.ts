@@ -52,23 +52,4 @@ export class UsersController {
   ) {
     return this.usersService.updateUserProfile(user, updateUserProfileDto);
   }
-
-  @ApiOperation({ summary: 'Cập nhật mật khẩu của tôi' })
-  @Put('password/me')
-  async updatePassword(
-    @ReqUser() user,
-    @Body() updateUserPasswordDto: UpdateUserPasswordDto,
-  ) {
-    return this.usersService.updatePassword(user.id, updateUserPasswordDto);
-  }
-
-  @ApiOperation({ summary: 'Lấy danh sách người dùng' })
-  @Get('page')
-  async getDanhSachNguoiDung(
-    @ReqUser() user,
-    @Query('search') search: string,
-    @RequestQuery() query: QueryOption,
-  ) {
-    return this.usersService.getDanhSachNguoiDung(user, search, query);
-  }
 }
