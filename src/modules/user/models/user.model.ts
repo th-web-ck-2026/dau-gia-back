@@ -1,12 +1,17 @@
 import { EntityTable } from '@/common/constants/entity.constant';
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
 import { User } from '../entities/user.entity';
-import { Gender, UserRoles, UserStatus } from '../common/constant';
+import { Gender, UserRoles, UserRoleType, UserStatus } from '../common/constant';
 import { StrObjectId } from '@/common/constants/base.constant';
 @Table({
   tableName: EntityTable.USER,
 })
 export class UserModel extends Model implements User {
+  @Column({
+    type: DataType.ENUM(...Object.values(UserRoleType)),
+  })
+  userRoles: UserRoleType;
+
   @StrObjectId()
   _id: string;
   @Column

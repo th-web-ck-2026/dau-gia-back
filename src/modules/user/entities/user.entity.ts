@@ -1,4 +1,4 @@
-import { Gender, UserRoles, UserStatus } from '../common/constant';
+import { Gender, UserRoles, UserRoleType, UserStatus } from '../common/constant';
 import { IsDate, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { BaseEntity } from '@Common/interfaces/base-entity.interface';
 import { StrObjectId } from '@Common/constants/base.constant';
@@ -23,6 +23,9 @@ export class User implements BaseEntity {
 
   @IsOptional()
   avatar?: string;
+
+  @IsEnum(UserRoleType)
+  userRoles: UserRoleType;
 
   @IsNotEmpty()
   @IsEnum(UserRoles)

@@ -3,6 +3,10 @@ export enum UserRoles {
     USER = 'USER',
 }
 
+export enum UserRoleType {
+    TO_CHUC = 'TO_CHUC',
+    CA_NHAN = 'CA_NHAN'
+}
 export enum UserStatus {
     ACTIVE = 'ACTIVE',
     BLOCKED = 'BLOCKED',
