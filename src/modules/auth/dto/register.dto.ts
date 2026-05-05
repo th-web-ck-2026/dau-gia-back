@@ -14,6 +14,9 @@ export class RegisterDto {
   phone: string;
 
   @IsString()
+  soCccd: string;
+
+  @IsString()
   @MinLength(8)
   password: string;
 }

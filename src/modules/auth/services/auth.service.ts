@@ -132,12 +132,16 @@ export class AuthService {
   async register(registerDto: RegisterDto) {
     const existingUser = await this.userRepository.getOne({
       where: {
-        [Op.or]: [{ email: registerDto.email }, { phone: registerDto.phone }],
+        [Op.or]: [
+          { email: registerDto.email },
+          { phone: registerDto.phone },
+          { soCccd: registerDto.soCccd },
+        ],
       },
     });
 
     if (existingUser) {
-      throw ApiError.Conflict('Email hoặc số điện thoại đã tồn tại');
+      throw ApiError.Conflict('Tài khoản đã tồn tại');
     }
 
     const user = await this.userRepository.create({
