@@ -13,6 +13,7 @@ import * as bcrypt from 'bcrypt';
 import { Op } from 'sequelize';
 import { RegisterDto } from '../dto/register.dto';
 import { UserRoles } from '@/modules/user/common/constant';
+import { EmailCredentials, GoogleCredentials } from '../common/interface';
 
 @Injectable()
 export class AuthService {
@@ -26,11 +27,13 @@ export class AuthService {
   ) {}
 
   // Login method - delegates to provider-specific handlers
-  async login(provider: string, credentials: any, request: Request) {
+  async login(provider: string, credentials: GoogleCredentials | EmailCredentials, request: Request) {
     if (provider === AuthProvider.EMAIL) {
-      return this.handleEmailLogin(credentials.email, credentials.password, request);
+      const emailCreds = credentials as EmailCredentials;
+      return this.handleEmailLogin(emailCreds.email, emailCreds.password, request);
     } else if (provider === AuthProvider.GOOGLE) {
-      return this.handleGoogleLogin(credentials.idToken, request);
+      const googleCreds = credentials as GoogleCredentials;
+      return this.handleGoogleLogin(googleCreds, request);
     }
     throw ApiError.BadRequest('Invalid provider');
   }
@@ -75,8 +78,16 @@ export class AuthService {
   }
 
   // Google login handler
-  private async handleGoogleLogin(idToken: string, request: Request) {
-    const googleData = await this.authProviderService.verifyGoogleToken(idToken);
+  private async handleGoogleLogin(credentials: GoogleCredentials, request: Request) {
+    let googleData;
+    if (credentials.code) {
+      const idToken = await this.authProviderService.codeToIdTokenGoogle(credentials.code);
+      googleData = await this.authProviderService.verifyGoogleToken(idToken);
+    } else if (credentials.idToken) {
+      googleData = await this.authProviderService.verifyGoogleToken(credentials.idToken);
+    } else {
+      throw ApiError.BadRequest('Invalid google credentials');
+    }
 
     let authProvider = await this.authProviderService.findByProvider(
       AuthProvider.GOOGLE,
