@@ -1,6 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { AuthProviderRepository } from '../repositories/auth-provider.repository';
 import { AuthProvider } from '../common/constants';
+import { AuthProvider as AuthProviderEntity } from '../entities/auth-provider.entity';
+import { UserModel } from '@/modules/user/models/user.model';
 import * as bcrypt from 'bcrypt';
 import { ApiError } from '@Exceptions/api-error';
 import { OAuth2Client } from 'google-auth-library';
@@ -9,13 +11,15 @@ import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class AuthProviderService {
   private googleClient: OAuth2Client;
+  private readonly logger = new Logger(AuthProviderService.name);
 
   constructor(
     private authProviderRepository: AuthProviderRepository,
     private configService: ConfigService,
   ) {
-    const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
-    this.googleClient = new OAuth2Client(clientId);
+    this.googleClient = new OAuth2Client(
+      this.configService.get<string>('GOOGLE_CLIENT_ID'),
+    );
   }
 
   async createProvider(userId: string, provider: AuthProvider, providerId: string, credentials?: string) {
@@ -28,7 +32,7 @@ export class AuthProviderService {
     });
   }
 
-  async findByProvider(provider: AuthProvider, providerId: string) {
+  async findByProvider(provider: AuthProvider, providerId: string): Promise<AuthProviderEntity> {
     return this.authProviderRepository.getOne({
       where: { provider, providerId },
       include: [{ association: 'user' }],
@@ -62,12 +66,22 @@ export class AuthProviderService {
   }
 
   async verifyGoogleToken(idToken: string) {
+    const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+    if (!clientId) {
+      this.logger.error('GOOGLE_CLIENT_ID is not configured');
+      throw ApiError.InternalServerError('Google login is not configured');
+    }
+
     try {
       const ticket = await this.googleClient.verifyIdToken({
         idToken,
-        audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
+        audience: clientId,
       });
       const payload = ticket.getPayload();
+      if (!payload) {
+        throw new Error('No payload found in Google token');
+      }
+
       return {
         googleSub: payload.sub,
         email: payload.email,
@@ -75,6 +89,7 @@ export class AuthProviderService {
         avatar: payload.picture,
       };
     } catch (error) {
+      this.logger.error(`Google token verification failed: ${error.message}`);
       throw ApiError.Unauthorized('Invalid Google token');
     }
   }

@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import * as bcrypt from 'bcrypt';
 import { Op } from 'sequelize';
 import { RegisterDto } from '../dto/register.dto';
+import { UserRoles } from '@/modules/user/common/constant';
 
 @Injectable()
 export class AuthService {
@@ -97,8 +98,7 @@ export class AuthService {
           email: googleData.email,
           fullname: googleData.name,
           avatar: googleData.avatar,
-          role: 'user',
-          phone: '',
+          role: UserRoles.USER,
         });
         authProvider = await this.authProviderService.createProvider(
           user._id,
@@ -107,7 +107,21 @@ export class AuthService {
         );
       }
     } else {
-      user = (authProvider as any).user;
+      user = authProvider.user;
+      if (!user) {
+        // Fallback if provider exists but user is missing
+        user = await this.userRepository.findByEmail(googleData.email);
+        if (!user) {
+           user = await this.userRepository.create({
+            email: googleData.email,
+            fullname: googleData.name,
+            avatar: googleData.avatar,
+            role: UserRoles.USER,
+          });
+        }
+        // Update provider with new userId if it changed (unlikely but safe)
+        // For now just assign it
+      }
     }
 
     const accessToken = this.generateAccessToken(user);

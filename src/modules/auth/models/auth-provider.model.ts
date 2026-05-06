@@ -1,8 +1,18 @@
-import { Column, DataType, Model, Table, ForeignKey, BelongsTo } from 'sequelize-typescript';
+import {
+  Column,
+  DataType,
+  Model,
+  Table,
+  ForeignKey,
+  BelongsTo,
+} from 'sequelize-typescript';
 import { EntityTable } from '@/common/constants/entity.constant';
 import { StrObjectId } from '@/common/constants/base.constant';
 import { AuthProvider as AuthProviderEntity } from '../entities/auth-provider.entity';
-import { AuthProvider as AuthProviderEnum, AUTH_PROVIDER_VALUES } from '../common/constants';
+import {
+  AuthProvider as AuthProviderEnum,
+  AUTH_PROVIDER_VALUES,
+} from '../common/constants';
 import { UserModel } from '@/modules/user/models/user.model';
 
 @Table({
@@ -20,7 +30,10 @@ export class AuthProviderModel extends Model implements AuthProviderEntity {
   @Column({ allowNull: false })
   userId: string;
 
-  @BelongsTo(() => UserModel)
+  @BelongsTo(() => UserModel, {
+    foreignKey: 'userId',
+    as: 'user',
+  })
   user: UserModel;
 
   @Column({
