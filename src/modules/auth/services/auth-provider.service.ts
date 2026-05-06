@@ -66,6 +66,7 @@ export class AuthProviderService {
   }
   async codeToIdTokenGoogle(code: string) {
     const ticket = await this.googleClient.getToken(code);
+    console.log("ticket", ticket);
     return ticket.tokens.id_token;
   }
   async verifyGoogleToken(idToken: string) {

@@ -13,4 +13,8 @@ export class LoginDto {
   @IsOptional()
   @IsString()
   idToken?: string;
+
+  @IsOptional()
+  @IsString()
+  code?: string;
 }
