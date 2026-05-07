@@ -66,7 +66,10 @@ export class AuthProviderService {
     return (authProvider as any).user;
   }
   async codeToIdTokenGoogle(code: string) {
-    const ticket = await this.googleClient.getToken(code);
+    const ticket = await this.googleClient.getToken({
+      code,
+      redirect_uri: "postmessage",
+    });
     console.log("ticket", ticket);
     return ticket.tokens.id_token;
   }
