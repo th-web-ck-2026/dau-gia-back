@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tài liệu đấu thầu và đấu giá</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              ink: '#172033',
+              line: '#d8dee8',
+              paper: '#f7f8fb',
+              brand: '#0f766e',
+              accent: '#b45309',
+              info: '#2563eb',
+            },
+            boxShadow: {
+              soft: '0 18px 48px rgba(23, 32, 51, 0.08)',
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="bg-paper text-ink">
+    <header class="border-b border-line bg-white">
+      <div class="mx-auto flex max-w-7xl flex-col gap-6 px-5 py-8 lg:px-8">
+        <div
+          class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
+        >
+          <div>
+            <p class="text-sm font-semibold uppercase text-brand">
+              Documentation Kit
+            </p>
+            <h1
+              class="mt-2 text-3xl font-bold leading-tight text-ink lg:text-5xl"
+            >
+              Hệ thống đấu thầu và đấu giá
+            </h1>
+            <p class="mt-4 max-w-3xl text-base leading-7 text-slate-600">
+              Bản HTML + Tailwind CSS để hình dung nhanh nghiệp vụ, màn hình WEB
+              và kế hoạch BACK. Nội dung được chuẩn hóa từ bộ tài liệu Markdown
+              trong
+              <code class="rounded bg-slate-100 px-1.5 py-0.5 text-sm"
+                >docs/chung</code
+              >,
+              <code class="rounded bg-slate-100 px-1.5 py-0.5 text-sm"
+                >docs/web</code
+              >
+              và
+              <code class="rounded bg-slate-100 px-1.5 py-0.5 text-sm"
+                >docs/back</code
+              >.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3 text-center">
+            <a
+              href="#chung"
+              class="rounded-lg border border-line bg-white px-4 py-3 text-sm font-semibold text-brand shadow-soft"
+            >
+              Chung
+            </a>
+            <a
+              href="#web"
+              class="rounded-lg border border-line bg-white px-4 py-3 text-sm font-semibold text-info shadow-soft"
+            >
+              WEB
+            </a>
+            <a
+              href="#back"
+              class="rounded-lg border border-line bg-white px-4 py-3 text-sm font-semibold text-accent shadow-soft"
+            >
+              BACK
+            </a>
+          </div>
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-3">
+          <div class="rounded-lg border border-line bg-white p-5">
+            <p class="text-sm font-semibold text-slate-500">Nghiệp vụ lõi</p>
+            <p class="mt-2 text-2xl font-bold">2 luồng</p>
+            <p class="mt-1 text-sm leading-6 text-slate-600">
+              Đấu thầu chấm điểm đa tiêu chí; đấu giá ưu tiên giá cao và uy tín.
+            </p>
+          </div>
+          <div class="rounded-lg border border-line bg-white p-5">
+            <p class="text-sm font-semibold text-slate-500">User groups</p>
+            <p class="mt-2 text-2xl font-bold">4 tác nhân</p>
+            <p class="mt-1 text-sm leading-6 text-slate-600">
+              Host, Bidder/Participant, Admin và System.
+            </p>
+          </div>
+          <div class="rounded-lg border border-line bg-white p-5">
+            <p class="text-sm font-semibold text-slate-500">
+              Kế hoạch triển khai
+            </p>
+            <p class="mt-2 text-2xl font-bold">WEB + BACK</p>
+            <p class="mt-1 text-sm leading-6 text-slate-600">
+              Tách rõ UI, API, database, scoring, cron, realtime và testing.
+            </p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <nav
+      class="sticky top-0 z-20 border-b border-line bg-white/95 backdrop-blur"
+    >
+      <div
+        class="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-5 py-3 text-sm lg:px-8"
+      >
+        <a
+          href="#tong-quan"
+          class="whitespace-nowrap rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-slate-100"
+        >
+          Tổng quan
+        </a>
+        <a
+          href="#scoring"
+          class="whitespace-nowrap rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-slate-100"
+        >
+          Scoring
+        </a>
+        <a
+          href="#web"
+          class="whitespace-nowrap rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-slate-100"
+        >
+          Kế hoạch WEB
+        </a>
+        <a
+          href="#back"
+          class="whitespace-nowrap rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-slate-100"
+        >
+          Kế hoạch BACK
+        </a>
+        <a
+          href="#api"
+          class="whitespace-nowrap rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-slate-100"
+        >
+          API
+        </a>
+        <a
+          href="#verify"
+          class="whitespace-nowrap rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-slate-100"
+        >
+          Verify
+        </a>
+      </div>
+    </nav>
+
+    <main class="mx-auto max-w-7xl px-5 py-10 lg:px-8">
+      <section id="tong-quan" class="scroll-mt-24">
+        <div class="flex flex-col gap-3">
+          <p class="text-sm font-semibold uppercase text-brand">01. Chung</p>
+          <h2 id="chung" class="text-2xl font-bold lg:text-3xl">
+            Bản đồ nghiệp vụ
+          </h2>
+          <p class="max-w-4xl text-base leading-7 text-slate-600">
+            Hệ thống cần phân biệt rõ đấu thầu và đấu giá. Đấu thầu chọn nhà
+            thầu tốt nhất dựa trên scoring đa tiêu chí. Đấu giá chọn người thắng
+            dựa trên giá, cam kết và uy tín, có cập nhật realtime.
+          </p>
+        </div>
+
+        <div class="mt-6 grid gap-5 lg:grid-cols-2">
+          <article
+            class="rounded-lg border border-line bg-white p-6 shadow-soft"
+          >
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <p class="text-sm font-semibold text-brand">Tendering</p>
+                <h3 class="mt-1 text-xl font-bold">Đấu thầu</h3>
+              </div>
+              <span
+                class="rounded-lg bg-emerald-50 px-3 py-1 text-sm font-semibold text-brand"
+                >Score-based</span
+              >
+            </div>
+            <ul class="mt-5 space-y-3 text-sm leading-6 text-slate-700">
+              <li>
+                <strong>Mục tiêu:</strong> chọn nhà thầu có tổng điểm cao nhất.
+              </li>
+              <li>
+                <strong>Đầu vào:</strong> proposal, giá đề xuất, hồ sơ năng lực,
+                criteria values.
+              </li>
+              <li>
+                <strong>Chấm điểm:</strong> sàng lọc pass/fail, technical score,
+                price score, final score.
+              </li>
+              <li>
+                <strong>Kết quả:</strong> ranking, winner, breakdown điểm và
+                audit log.
+              </li>
+            </ul>
+          </article>
+
+          <article
+            class="rounded-lg border border-line bg-white p-6 shadow-soft"
+          >
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <p class="text-sm font-semibold text-accent">Auction</p>
+                <h3 class="mt-1 text-xl font-bold">Đấu giá</h3>
+              </div>
+              <span
+                class="rounded-lg bg-amber-50 px-3 py-1 text-sm font-semibold text-accent"
+                >Realtime</span
+              >
+            </div>
+            <ul class="mt-5 space-y-3 text-sm leading-6 text-slate-700">
+              <li>
+                <strong>Mục tiêu:</strong> xác định người trả giá hợp lệ và có
+                ưu tiên cao nhất.
+              </li>
+              <li>
+                <strong>Đầu vào:</strong> giá khởi điểm, bước giá, bid amount,
+                đặt cọc, lịch sử uy tín.
+              </li>
+              <li>
+                <strong>Chấm điểm:</strong> price score, commitment score, trust
+                score.
+              </li>
+              <li>
+                <strong>Kết quả:</strong> current winner, next valid bid, bid
+                history và biên bản.
+              </li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="mt-12 grid gap-5 lg:grid-cols-4">
+        <article class="rounded-lg border border-line bg-white p-5">
+          <p class="text-sm font-semibold text-slate-500">Host/Owner</p>
+          <p class="mt-2 text-sm leading-6 text-slate-700">
+            Tạo phiên, cấu hình criteria, publish, theo dõi ranking, close và
+            công bố kết quả.
+          </p>
+        </article>
+        <article class="rounded-lg border border-line bg-white p-5">
+          <p class="text-sm font-semibold text-slate-500">Bidder/Participant</p>
+          <p class="mt-2 text-sm leading-6 text-slate-700">
+            Đăng nhập, nộp proposal hoặc đặt giá, theo dõi trạng thái và hoàn
+            tất thủ tục nếu thắng.
+          </p>
+        </article>
+        <article class="rounded-lg border border-line bg-white p-5">
+          <p class="text-sm font-semibold text-slate-500">Admin</p>
+          <p class="mt-2 text-sm leading-6 text-slate-700">
+            Kiểm duyệt phiên, quản lý người dùng, khóa tài khoản vi phạm và xử
+            lý tranh chấp.
+          </p>
+        </article>
+        <article class="rounded-lg border border-line bg-white p-5">
+          <p class="text-sm font-semibold text-slate-500">System</p>
+          <p class="mt-2 text-sm leading-6 text-slate-700">
+            Validate, score, rank, realtime update, auto open/close và ghi audit
+            log.
+          </p>
+        </article>
+      </section>
+
+      <section id="scoring" class="mt-16 scroll-mt-24">
+        <div class="flex flex-col gap-3">
+          <p class="text-sm font-semibold uppercase text-brand">02. Scoring</p>
+          <h2 class="text-2xl font-bold lg:text-3xl">
+            Công thức và quy tắc tính điểm
+          </h2>
+        </div>
+
+        <div class="mt-6 grid gap-5 lg:grid-cols-3">
+          <article class="rounded-lg border border-line bg-white p-6">
+            <h3 class="text-lg font-bold">Technical Score</h3>
+            <p class="mt-3 text-sm leading-6 text-slate-600">
+              Dùng cho đấu thầu. Nếu điểm kỹ thuật nhỏ hơn ngưỡng tối thiểu thì
+              loại trước khi so sánh final score.
+            </p>
+            <pre
+              class="mt-4 overflow-x-auto rounded-lg bg-slate-950 p-4 text-sm text-slate-100"
+            ><code>T = exp x 0.4 + finance x 0.3 + trust x 0.3
+if T &lt; 50 =&gt; REJECTED</code></pre>
+          </article>
+
+          <article class="rounded-lg border border-line bg-white p-6">
+            <h3 class="text-lg font-bold">Tender Price Score</h3>
+            <p class="mt-3 text-sm leading-6 text-slate-600">
+              Đấu thầu ưu tiên giá thấp hợp lệ. Giá phải lớn hơn 0 và không vượt
+              giá trần nếu phiên có cấu hình ceiling price.
+            </p>
+            <pre
+              class="mt-4 overflow-x-auto rounded-lg bg-slate-950 p-4 text-sm text-slate-100"
+            ><code>P = (Gmin / Gi) x 100
+Total = T x 0.6 + P x 0.4</code></pre>
+          </article>
+
+          <article class="rounded-lg border border-line bg-white p-6">
+            <h3 class="text-lg font-bold">Auction Price Score</h3>
+            <p class="mt-3 text-sm leading-6 text-slate-600">
+              Đấu giá ưu tiên giá cao hợp lệ. Mỗi bid mới phải đạt tối thiểu
+              current price cộng bid increment.
+            </p>
+            <pre
+              class="mt-4 overflow-x-auto rounded-lg bg-slate-950 p-4 text-sm text-slate-100"
+            ><code>Pi = (Gi / Gmax) x 100
+newBid &gt;= current + increment</code></pre>
+          </article>
+        </div>
+
+        <div
+          class="mt-6 overflow-hidden rounded-lg border border-line bg-white shadow-soft"
+        >
+          <div class="border-b border-line px-5 py-4">
+            <h3 class="font-bold">Criteria normalization</h3>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-left text-sm">
+              <thead class="bg-slate-50 text-slate-600">
+                <tr>
+                  <th class="px-5 py-3 font-semibold">Loại criteria</th>
+                  <th class="px-5 py-3 font-semibold">Hướng tốt hơn</th>
+                  <th class="px-5 py-3 font-semibold">Công thức/rule</th>
+                  <th class="px-5 py-3 font-semibold">Edge case</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-line">
+                <tr>
+                  <td class="px-5 py-4 font-medium">number / percent</td>
+                  <td class="px-5 py-4">Cao hơn hoặc thấp hơn tùy isReverse</td>
+                  <td class="px-5 py-4">Min-max về thang 0-100</td>
+                  <td class="px-5 py-4">max == min thì score = 100</td>
+                </tr>
+                <tr>
+                  <td class="px-5 py-4 font-medium">boolean</td>
+                  <td class="px-5 py-4">true/false theo cấu hình</td>
+                  <td class="px-5 py-4">true = 100, false = 0</td>
+                  <td class="px-5 py-4">Có thể dùng làm hard constraint</td>
+                </tr>
+                <tr>
+                  <td class="px-5 py-4 font-medium">enum</td>
+                  <td class="px-5 py-4">Theo mapping</td>
+                  <td class="px-5 py-4">
+                    basic = 40, standard = 70, premium = 100
+                  </td>
+                  <td class="px-5 py-4">
+                    Reject nếu value không nằm trong options
+                  </td>
+                </tr>
+                <tr>
+                  <td class="px-5 py-4 font-medium">document</td>
+                  <td class="px-5 py-4">Hợp lệ/không hợp lệ</td>
+                  <td class="px-5 py-4">Pass/fail hoặc admin review</td>
+                  <td class="px-5 py-4">
+                    Thiếu tài liệu required thì REJECTED
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="web" class="mt-16 scroll-mt-24">
+        <div class="flex flex-col gap-3">
+          <p class="text-sm font-semibold uppercase text-info">03. WEB</p>
+          <h2 class="text-2xl font-bold lg:text-3xl">
+            Màn hình và trải nghiệm người dùng
+          </h2>
+          <p class="max-w-4xl text-base leading-7 text-slate-600">
+            WEB cần giải thích rõ phiên đang ở trạng thái nào, người dùng có
+            quyền làm gì, đầu vào nào hợp lệ và kết quả scoring đến từ đâu.
+          </p>
+        </div>
+
+        <div class="mt-6 grid gap-5 lg:grid-cols-2">
+          <article
+            class="rounded-lg border border-line bg-white p-6 shadow-soft"
+          >
+            <h3 class="text-lg font-bold">Route map đề xuất</h3>
+            <div class="mt-4 grid gap-3 text-sm">
+              <div class="rounded-lg bg-slate-50 p-3">
+                <code>/sessions</code> - danh sách phiên
+              </div>
+              <div class="rounded-lg bg-slate-50 p-3">
+                <code>/sessions/:id</code> - chi tiết phiên
+              </div>
+              <div class="rounded-lg bg-slate-50 p-3">
+                <code>/host/sessions/new</code> - tạo phiên
+              </div>
+              <div class="rounded-lg bg-slate-50 p-3">
+                <code>/host/sessions/:id/ranking</code> - ranking
+              </div>
+              <div class="rounded-lg bg-slate-50 p-3">
+                <code>/admin/sessions</code> - kiểm duyệt
+              </div>
+            </div>
+          </article>
+
+          <article
+            class="rounded-lg border border-line bg-white p-6 shadow-soft"
+          >
+            <h3 class="text-lg font-bold">Dynamic form</h3>
+            <div class="mt-4 space-y-4">
+              <label class="block">
+                <span class="text-sm font-medium text-slate-700"
+                  >Budget / Giá đề xuất</span
+                >
+                <input
+                  type="number"
+                  value="900000000"
+                  class="mt-2 w-full rounded-lg border border-line px-3 py-2 text-sm outline-none focus:border-info"
+                />
+              </label>
+              <label class="block">
+                <span class="text-sm font-medium text-slate-700">Warranty</span>
+                <select
+                  class="mt-2 w-full rounded-lg border border-line px-3 py-2 text-sm outline-none focus:border-info"
+                >
+                  <option>3 năm</option>
+                  <option>5 năm</option>
+                </select>
+              </label>
+              <label
+                class="flex items-center gap-3 rounded-lg border border-line p-3 text-sm"
+              >
+                <input type="checkbox" checked class="h-4 w-4" />
+                Có chứng chỉ/hard constraint required
+              </label>
+            </div>
+          </article>
+        </div>
+
+        <div class="mt-6 grid gap-5 lg:grid-cols-4">
+          <article class="rounded-lg border border-line bg-white p-5">
+            <p class="text-sm font-semibold text-info">Phase WEB-1</p>
+            <h3 class="mt-2 font-bold">Nền tảng</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-600">
+              Routes, API client, session status model.
+            </p>
+          </article>
+          <article class="rounded-lg border border-line bg-white p-5">
+            <p class="text-sm font-semibold text-info">Phase WEB-2</p>
+            <h3 class="mt-2 font-bold">Đấu thầu</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-600">
+              Criteria table, proposal form, ranking, result.
+            </p>
+          </article>
+          <article class="rounded-lg border border-line bg-white p-5">
+            <p class="text-sm font-semibold text-info">Phase WEB-3</p>
+            <h3 class="mt-2 font-bold">Đấu giá</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-600">
+              Bid input, history, realtime/polling update.
+            </p>
+          </article>
+          <article class="rounded-lg border border-line bg-white p-5">
+            <p class="text-sm font-semibold text-info">Phase WEB-4</p>
+            <h3 class="mt-2 font-bold">Host/Admin</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-600">
+              Create/edit session, moderation, result control.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section id="back" class="mt-16 scroll-mt-24">
+        <div class="flex flex-col gap-3">
+          <p class="text-sm font-semibold uppercase text-accent">04. BACK</p>
+          <h2 class="text-2xl font-bold lg:text-3xl">
+            Kiến trúc backend NestJS
+          </h2>
+          <p class="max-w-4xl text-base leading-7 text-slate-600">
+            Backend tách scoring, tender, auction và audit để controller mỏng,
+            service rõ trách nhiệm, dễ test và dễ mở rộng realtime.
+          </p>
+        </div>
+
+        <div class="mt-6 grid gap-5 lg:grid-cols-4">
+          <article
+            class="rounded-lg border border-line bg-white p-5 shadow-soft"
+          >
+            <h3 class="font-bold">scoring</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-600">
+              Formula, normalize, weighted score, price score, final score.
+            </p>
+          </article>
+          <article
+            class="rounded-lg border border-line bg-white p-5 shadow-soft"
+          >
+            <h3 class="font-bold">tender</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-600">
+              Tender session, criteria, submission, value, ranking.
+            </p>
+          </article>
+          <article
+            class="rounded-lg border border-line bg-white p-5 shadow-soft"
+          >
+            <h3 class="font-bold">auction</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-600">
+              Auction session, bid, transaction, current price, winner.
+            </p>
+          </article>
+          <article
+            class="rounded-lg border border-line bg-white p-5 shadow-soft"
+          >
+            <h3 class="font-bold">audit-log</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-600">
+              Log action quan trọng: publish, submit, bid, close, cancel.
+            </p>
+          </article>
+        </div>
+
+        <div class="mt-6 grid gap-5 lg:grid-cols-2">
+          <article class="rounded-lg border border-line bg-white p-6">
+            <h3 class="text-lg font-bold">Database lõi cho đấu thầu</h3>
+            <ul class="mt-4 space-y-3 text-sm leading-6 text-slate-700">
+              <li>
+                <strong>tender_sessions:</strong> title, hostId, status, time,
+                weights, winner.
+              </li>
+              <li>
+                <strong>tender_criteria:</strong> code, type, weight, isReverse,
+                hard constraint.
+              </li>
+              <li>
+                <strong>tender_submissions:</strong> bidderId, price,
+                technicalScore, priceScore, totalScore.
+              </li>
+              <li>
+                <strong>tender_submission_values:</strong> raw value, normalized
+                score, weighted score.
+              </li>
+            </ul>
+          </article>
+
+          <article class="rounded-lg border border-line bg-white p-6">
+            <h3 class="text-lg font-bold">Database lõi cho đấu giá</h3>
+            <ul class="mt-4 space-y-3 text-sm leading-6 text-slate-700">
+              <li>
+                <strong>auction_sessions:</strong> startPrice, currentPrice,
+                increment, currentWinnerId.
+              </li>
+              <li>
+                <strong>auction_bids:</strong> userId, bidAmount, score,
+                serverSequence, placedAt.
+              </li>
+              <li>
+                <strong>audit_logs:</strong> actorId, action, targetType,
+                before, after, metadata.
+              </li>
+              <li>
+                <strong>cron-job:</strong> auto open/close sessions by startTime
+                and endTime.
+              </li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="mt-6 rounded-lg border border-line bg-white p-6">
+          <h3 class="text-lg font-bold">Transaction bắt buộc cho đấu giá</h3>
+          <div class="mt-5 grid gap-3 md:grid-cols-5">
+            <div
+              class="rounded-lg bg-amber-50 p-4 text-sm font-semibold text-accent"
+            >
+              1. Lock session
+            </div>
+            <div
+              class="rounded-lg bg-amber-50 p-4 text-sm font-semibold text-accent"
+            >
+              2. Read price
+            </div>
+            <div
+              class="rounded-lg bg-amber-50 p-4 text-sm font-semibold text-accent"
+            >
+              3. Validate bid
+            </div>
+            <div
+              class="rounded-lg bg-amber-50 p-4 text-sm font-semibold text-accent"
+            >
+              4. Create bid
+            </div>
+            <div
+              class="rounded-lg bg-amber-50 p-4 text-sm font-semibold text-accent"
+            >
+              5. Commit winner
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="api" class="mt-16 scroll-mt-24">
+        <div class="flex flex-col gap-3">
+          <p class="text-sm font-semibold uppercase text-brand">05. API</p>
+          <h2 class="text-2xl font-bold lg:text-3xl">
+            Endpoint contract để triển khai
+          </h2>
+        </div>
+
+        <div class="mt-6 grid gap-5 lg:grid-cols-2">
+          <article class="rounded-lg border border-line bg-white p-6">
+            <h3 class="text-lg font-bold">Tender endpoints</h3>
+            <div class="mt-4 space-y-3 text-sm">
+              <div class="rounded-lg bg-slate-50 p-3">
+                <strong>POST</strong> /tender-sessions
+              </div>
+              <div class="rounded-lg bg-slate-50 p-3">
+                <strong>POST</strong> /tender-sessions/:id/publish
+              </div>
+              <div class="rounded-lg bg-slate-50 p-3">
+                <strong>POST</strong> /tender-sessions/:id/submissions
+              </div>
+              <div class="rounded-lg bg-slate-50 p-3">
+                <strong>GET</strong> /tender-sessions/:id/ranking
+              </div>
+              <div class="rounded-lg bg-slate-50 p-3">
+                <strong>POST</strong> /tender-sessions/:id/close
+              </div>
+            </div>
+          </article>
+
+          <article class="rounded-lg border border-line bg-white p-6">
+            <h3 class="text-lg font-bold">Auction endpoints</h3>
+            <div class="mt-4 space-y-3 text-sm">
+              <div class="rounded-lg bg-slate-50 p-3">
+                <strong>POST</strong> /auction-sessions
+              </div>
+              <div class="rounded-lg bg-slate-50 p-3">
+                <strong>POST</strong> /auction-sessions/:id/publish
+              </div>
+              <div class="rounded-lg bg-slate-50 p-3">
+                <strong>POST</strong> /auction-sessions/:id/bids
+              </div>
+              <div class="rounded-lg bg-slate-50 p-3">
+                <strong>GET</strong> /auction-sessions/:id/status
+              </div>
+              <div class="rounded-lg bg-slate-50 p-3">
+                <strong>POST</strong> /auction-sessions/:id/close
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="verify" class="mt-16 scroll-mt-24">
+        <div class="flex flex-col gap-3">
+          <p class="text-sm font-semibold uppercase text-brand">06. Verify</p>
+          <h2 class="text-2xl font-bold lg:text-3xl">
+            Checklist chuẩn trước khi build
+          </h2>
+        </div>
+
+        <div class="mt-6 grid gap-5 lg:grid-cols-3">
+          <article class="rounded-lg border border-line bg-white p-6">
+            <h3 class="font-bold">Business</h3>
+            <ul class="mt-4 space-y-3 text-sm leading-6 text-slate-700">
+              <li>Scoring đấu thầu và đấu giá tách rõ.</li>
+              <li>Có hard constraints trước scoring.</li>
+              <li>Có trạng thái session và submission/bid.</li>
+              <li>Có audit cho action quan trọng.</li>
+            </ul>
+          </article>
+
+          <article class="rounded-lg border border-line bg-white p-6">
+            <h3 class="font-bold">WEB</h3>
+            <ul class="mt-4 space-y-3 text-sm leading-6 text-slate-700">
+              <li>Có loading, empty, error state.</li>
+              <li>Form động theo criteria type.</li>
+              <li>Countdown dùng server time.</li>
+              <li>Ranking realtime hoặc polling fallback.</li>
+            </ul>
+          </article>
+
+          <article class="rounded-lg border border-line bg-white p-6">
+            <h3 class="font-bold">BACK</h3>
+            <ul class="mt-4 space-y-3 text-sm leading-6 text-slate-700">
+              <li>Scoring service có unit test.</li>
+              <li>Bid đấu giá dùng transaction.</li>
+              <li>Swagger có request/response mẫu.</li>
+              <li>E2E có happy path tender và auction.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="border-t border-line bg-white">
+      <div class="mx-auto max-w-7xl px-5 py-8 text-sm text-slate-500 lg:px-8">
+        Tài liệu HTML này là bản trực quan hóa. Nguồn chuẩn vẫn là các file
+        Markdown trong
+        <code class="rounded bg-slate-100 px-1.5 py-0.5">docs/chung</code>,
+        <code class="rounded bg-slate-100 px-1.5 py-0.5">docs/web</code> và
+        <code class="rounded bg-slate-100 px-1.5 py-0.5">docs/back</code>.
+      </div>
+    </footer>
+  </body>
+</html>
