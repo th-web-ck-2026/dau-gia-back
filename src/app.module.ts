@@ -19,6 +19,7 @@ import { ExampleController } from './common/decorators/swagger/example.controlle
 import { ScheduleModule } from '@nestjs/schedule';
 import { CronJobModule } from './modules/cron-job/cron-job.module';
 import { RepositoryModule } from './modules/repository/repository.module';
+import { ScoringModule } from './modules/scoring/scoring.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { RepositoryModule } from './modules/repository/repository.module';
     SendMailModule,
     AuthModule,
     RecaptchaModule,
+    ScoringModule,
   ],
   controllers: [AppController, ExampleController],
   providers: [
