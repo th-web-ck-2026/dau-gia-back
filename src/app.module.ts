@@ -20,6 +20,8 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { CronJobModule } from './modules/cron-job/cron-job.module';
 import { RepositoryModule } from './modules/repository/repository.module';
 import { ScoringModule } from './modules/scoring/scoring.module';
+import { TenderModule } from './modules/tender/tender.module';
+import { AuctionModule } from './modules/auction/auction.module';
 
 @Module({
   imports: [
@@ -47,6 +49,8 @@ import { ScoringModule } from './modules/scoring/scoring.module';
     AuthModule,
     RecaptchaModule,
     ScoringModule,
+    TenderModule,
+    AuctionModule,
   ],
   controllers: [AppController, ExampleController],
   providers: [

@@ -93,6 +93,21 @@
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/$1",
+      "^@Modules/(.*)$": "<rootDir>/modules/$1",
+      "^@Common/(.*)$": "<rootDir>/common/$1",
+      "^@Config/(.*)$": "<rootDir>/config/$1",
+      "^@Database/(.*)$": "<rootDir>/database/$1",
+      "^@Guards/(.*)$": "<rootDir>/common/guards/$1",
+      "^@Decorators/(.*)$": "<rootDir>/common/decorators/$1",
+      "^@Interceptors/(.*)$": "<rootDir>/common/interceptors/$1",
+      "^@Filters/(.*)$": "<rootDir>/common/filters/$1",
+      "^@Exceptions/(.*)$": "<rootDir>/common/exceptions/$1",
+      "^@Interfaces/(.*)$": "<rootDir>/common/interfaces/$1",
+      "^@Base/(.*)$": "<rootDir>/common/base/$1",
+      "^@Constants/(.*)$": "<rootDir>/common/constants/$1"
+    },
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ],
