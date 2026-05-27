@@ -195,7 +195,7 @@ export class TenderService extends BaseService<TenderSession> {
     return submission;
   }
 
-  async evaluateSession(userId: string, sessionId: string): Promise<any> {
+  async evaluateSession(userId: string, sessionId: string, force = false): Promise<any> {
     const session = await this.tenderSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau thau khong ton tai');
@@ -205,7 +205,7 @@ export class TenderService extends BaseService<TenderSession> {
     }
 
     const now = new Date();
-    if (now < new Date(session.thoiGianKetThuc)) {
+    if (!force && now < new Date(session.thoiGianKetThuc)) {
       throw ApiError.BadRequest('Phien dau thau van dang trong thoi gian nhan de xuat');
     }
 
@@ -416,5 +416,80 @@ export class TenderService extends BaseService<TenderSession> {
     }
 
     return result;
+  }
+
+  async getRanking(userId: string, sessionId: string): Promise<any> {
+    const session = await this.tenderSessionRepository.getOne({ where: { _id: sessionId } });
+    if (!session) {
+      throw ApiError.NotFound('Phien dau thau khong ton tai');
+    }
+
+    const isOwner = session.chuPhienId === userId;
+    const submissions = await this.tenderSubmissionRepository.getMany({
+      where: { phienId: sessionId },
+      order: [['diemTongHop', 'DESC']],
+    });
+
+    const resultList = submissions.map((sub, index) => {
+      const isSelf = sub.nguoiThamGiaId === userId;
+      let bietDanh = `Bidder ${String.fromCharCode(65 + index)}`; // e.g. Bidder A, Bidder B
+      let participantId = sub.nguoiThamGiaId;
+      if (session.anDanh && !isOwner && !isSelf) {
+        participantId = 'ANONYMOUS';
+      } else {
+        bietDanh = sub.nguoiThamGiaId;
+      }
+      return {
+        thuHang: sub.thuHang || index + 1,
+        deXuatId: sub._id,
+        nguoiThamGiaId: participantId,
+        bietDanh,
+        diemKyThuat: sub.diemKyThuat,
+        diemGia: sub.diemGia,
+        diemTongHop: sub.diemTongHop,
+        trangThai: sub.trangThai,
+      };
+    });
+
+    return {
+      phienId: session._id,
+      trangThai: session.trangThai,
+      danhSach: resultList,
+    };
+  }
+
+  async closeSession(userId: string, sessionId: string): Promise<any> {
+    const session = await this.tenderSessionRepository.getOne({ where: { _id: sessionId } });
+    if (!session) {
+      throw ApiError.NotFound('Phien dau thau khong ton tai');
+    }
+    if (session.chuPhienId !== userId) {
+      throw ApiError.Forbidden('Ban khong co quyen dong phien nay');
+    }
+    if (session.trangThai === TrangThaiPhien.DONG) {
+      throw ApiError.BadRequest('Phien da dong truoc do');
+    }
+
+    await this.tenderSessionRepository.updateOne(
+      { trangThai: TrangThaiPhien.DONG, thoiDiemDong: new Date() },
+      { where: { _id: sessionId } },
+    );
+
+    await this.evaluateSession(userId, sessionId, true);
+
+    // Update non-winning valid submissions to THUA instead of HOP_LE
+    const submissions = await this.tenderSubmissionRepository.getMany({
+      where: { phienId: sessionId },
+    });
+    for (const sub of submissions) {
+      if (sub.trangThai === TrangThaiDeXuat.HOP_LE) {
+        await this.tenderSubmissionRepository.updateOne(
+          { trangThai: TrangThaiDeXuat.THUA },
+          { where: { _id: sub._id } },
+        );
+      }
+    }
+
+    return this.getSessionDetails(sessionId);
   }
 }

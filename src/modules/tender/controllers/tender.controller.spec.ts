@@ -15,6 +15,9 @@ describe('TenderController', () => {
     evaluateSession: jest.fn(),
     getSessionDetails: jest.fn(),
     getSessionSubmissions: jest.fn(),
+    getPage: jest.fn(),
+    getRanking: jest.fn(),
+    closeSession: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -74,4 +77,23 @@ describe('TenderController', () => {
     await controller.getSessionSubmissions(user as any, 'session1');
     expect(service.getSessionSubmissions).toHaveBeenCalledWith('user1', 'session1');
   });
+
+  it('should call service.getPage', async () => {
+    const query = { page: 1, limit: 10 };
+    await controller.getSessions({}, query);
+    expect(service.getPage).toHaveBeenCalledWith({ where: {} }, query);
+  });
+
+  it('should call service.getRanking', async () => {
+    const user = { id: 'user1' };
+    await controller.getRanking(user as any, 'session1');
+    expect(service.getRanking).toHaveBeenCalledWith('user1', 'session1');
+  });
+
+  it('should call service.closeSession', async () => {
+    const user = { id: 'user1' };
+    await controller.closeSession(user as any, 'session1');
+    expect(service.closeSession).toHaveBeenCalledWith('user1', 'session1');
+  });
 });
+
