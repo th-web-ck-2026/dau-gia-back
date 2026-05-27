@@ -10,19 +10,58 @@ import { RequestCondition } from '@/common/decorators/request-condition.decotato
 import { RequestQuery } from '@/common/decorators/request-query.decorator';
 import { QueryOption } from '@/common/pipe/query-option.interface';
 import { ConditionAuctionSessionDto } from '../dto/condition-auction-session.dto';
+import { ApiGet, ApiCondition } from '@/common/decorators/swagger';
+import { TrangThaiPhien } from '@/modules/scoring/common/constants';
 
 @ApiTags('Auction')
 @Controller('auction-sessions')
 export class AuctionController {
   constructor(private readonly auctionService: AuctionService) {}
 
-  @Get()
-  @ApiOperation({ summary: 'Lay danh sach phien dau gia' })
+  @ApiGet({
+    mode: 'page',
+    summary: 'Lay danh sach phien dau gia',
+  })
+  @ApiCondition({
+    fields: [
+      {
+        name: '_id',
+        type: 'string',
+        description: 'Mã phiên đấu giá',
+      },
+      {
+        name: 'tieuDe',
+        type: 'string',
+        description: 'Tiêu đề phiên đấu giá',
+      },
+      {
+        name: 'chuPhienId',
+        type: 'string',
+        description: 'Mã chủ phiên',
+      },
+      {
+        name: 'trangThai',
+        type: 'string',
+        description: 'Trạng thái phiên',
+        enum: Object.values(TrangThaiPhien),
+      },
+      {
+        name: 'thoiGianBatDau',
+        type: 'date',
+        description: 'Thời gian bắt đầu',
+      },
+      {
+        name: 'thoiGianKetThuc',
+        type: 'date',
+        description: 'Thời gian kết thúc',
+      },
+    ],
+  })
   async getSessions(
-    @RequestCondition(ConditionAuctionSessionDto) condition: any,
+    @RequestCondition(ConditionAuctionSessionDto) condition: ConditionAuctionSessionDto,
     @RequestQuery() query: QueryOption,
   ) {
-    return this.auctionService.getPage({ where: condition }, query);
+    return this.auctionService.getPage({ where: condition as any }, query);
   }
 
   @Post()

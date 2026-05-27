@@ -10,19 +10,58 @@ import { RequestCondition } from '@/common/decorators/request-condition.decotato
 import { RequestQuery } from '@/common/decorators/request-query.decorator';
 import { QueryOption } from '@/common/pipe/query-option.interface';
 import { ConditionTenderSessionDto } from '../dto/condition-tender-session.dto';
+import { ApiGet, ApiCondition } from '@/common/decorators/swagger';
+import { TrangThaiPhien } from '@/modules/scoring/common/constants';
 
 @ApiTags('Tender')
 @Controller('tender-sessions')
 export class TenderController {
   constructor(private readonly tenderService: TenderService) {}
 
-  @Get()
-  @ApiOperation({ summary: 'Lay danh sach phien dau thau' })
+  @ApiGet({
+    mode: 'page',
+    summary: 'Lay danh sach phien dau thau',
+  })
+  @ApiCondition({
+    fields: [
+      {
+        name: '_id',
+        type: 'string',
+        description: 'Mã phiên đấu thầu',
+      },
+      {
+        name: 'tieuDe',
+        type: 'string',
+        description: 'Tiêu đề phiên đấu thầu',
+      },
+      {
+        name: 'chuPhienId',
+        type: 'string',
+        description: 'Mã chủ phiên',
+      },
+      {
+        name: 'trangThai',
+        type: 'string',
+        description: 'Trạng thái phiên',
+        enum: Object.values(TrangThaiPhien),
+      },
+      {
+        name: 'thoiGianBatDau',
+        type: 'date',
+        description: 'Thời gian bắt đầu',
+      },
+      {
+        name: 'thoiGianKetThuc',
+        type: 'date',
+        description: 'Thời gian kết thúc',
+      },
+    ],
+  })
   async getSessions(
-    @RequestCondition(ConditionTenderSessionDto) condition: any,
+    @RequestCondition(ConditionTenderSessionDto) condition: ConditionTenderSessionDto,
     @RequestQuery() query: QueryOption,
   ) {
-    return this.tenderService.getPage({ where: condition }, query);
+    return this.tenderService.getPage({ where: condition as any }, query);
   }
 
   @Post()

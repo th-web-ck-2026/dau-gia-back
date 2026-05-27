@@ -8,6 +8,7 @@ import { CreateAuctionSessionDto } from '../dto/create-auction-session.dto';
 import { PlaceAuctionBidDto } from '../dto/place-auction-bid.dto';
 import { ApiError } from '@/common/exceptions/api-error';
 import { TrangThaiPhien, TrangThaiDeXuat } from '@/modules/scoring/common/constants';
+import { AuctionSessionStatusDto } from '../dto/auction-session-status.dto';
 
 @Injectable()
 export class AuctionService extends BaseService<AuctionSession> {
@@ -127,7 +128,7 @@ export class AuctionService extends BaseService<AuctionSession> {
     return bid;
   }
 
-  async evaluateSession(userId: string, sessionId: string, force = false): Promise<any> {
+  async evaluateSession(userId: string, sessionId: string, force = false): Promise<AuctionSession | { message: string }> {
     const session = await this.auctionSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau gia khong ton tai');
@@ -238,7 +239,7 @@ export class AuctionService extends BaseService<AuctionSession> {
     });
   }
 
-  async getSessionStatus(sessionId: string): Promise<any> {
+  async getSessionStatus(sessionId: string): Promise<AuctionSessionStatusDto> {
     const session = await this.auctionSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau gia khong ton tai');
@@ -280,7 +281,7 @@ export class AuctionService extends BaseService<AuctionSession> {
     };
   }
 
-  async closeSession(userId: string, sessionId: string): Promise<any> {
+  async closeSession(userId: string, sessionId: string): Promise<AuctionSession | { message: string }> {
     const session = await this.auctionSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau gia khong ton tai');
