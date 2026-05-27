@@ -186,4 +186,40 @@ describe('TenderService', () => {
       await expect(service.getSessionSubmissions('user1', 'session1')).rejects.toThrow(ApiError);
     });
   });
+
+  describe('getRanking', () => {
+    it('should throw NotFound if session does not exist', async () => {
+      sessionRepo.getOne.mockResolvedValue(null);
+      await expect(service.getRanking('user1', 'session1')).rejects.toThrow(ApiError);
+    });
+
+    it('should return ranking representation', async () => {
+      const mockSession = { _id: 'session1', trangThai: TrangThaiPhien.MO, anDanh: true, chuPhienId: 'host1' };
+      const mockSubmissions = [
+        { _id: 'sub1', nguoiThamGiaId: 'user1', diemTongHop: 90, thuHang: 1, trangThai: TrangThaiDeXuat.HOP_LE },
+        { _id: 'sub2', nguoiThamGiaId: 'user2', diemTongHop: 80, thuHang: 2, trangThai: TrangThaiDeXuat.HOP_LE }
+      ];
+      sessionRepo.getOne.mockResolvedValue(mockSession);
+      submissionRepo.getMany.mockResolvedValue(mockSubmissions);
+
+      const res = await service.getRanking('user1', 'session1');
+      expect(res.phienId).toBe('session1');
+      expect(res.danhSach).toHaveLength(2);
+      expect(res.danhSach[0].bietDanh).toBe('user1'); // self is exposed
+      expect(res.danhSach[1].bietDanh).toBe('Bidder B'); // others anonymized
+    });
+  });
+
+  describe('closeSession', () => {
+    it('should throw NotFound if session does not exist', async () => {
+      sessionRepo.getOne.mockResolvedValue(null);
+      await expect(service.closeSession('user1', 'session1')).rejects.toThrow(ApiError);
+    });
+
+    it('should throw Forbidden if user is not host', async () => {
+      const mockSession = { _id: 'session1', chuPhienId: 'host2' };
+      sessionRepo.getOne.mockResolvedValue(mockSession);
+      await expect(service.closeSession('user1', 'session1')).rejects.toThrow(ApiError);
+    });
+  });
 });

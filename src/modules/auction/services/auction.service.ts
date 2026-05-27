@@ -127,7 +127,7 @@ export class AuctionService extends BaseService<AuctionSession> {
     return bid;
   }
 
-  async evaluateSession(userId: string, sessionId: string): Promise<any> {
+  async evaluateSession(userId: string, sessionId: string, force = false): Promise<any> {
     const session = await this.auctionSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau gia khong ton tai');
@@ -137,7 +137,7 @@ export class AuctionService extends BaseService<AuctionSession> {
     }
 
     const now = new Date();
-    if (now < new Date(session.thoiGianKetThuc)) {
+    if (!force && now < new Date(session.thoiGianKetThuc)) {
       throw ApiError.BadRequest('Phien dau gia van dang trong thoi gian dien ra');
     }
 
@@ -236,5 +236,67 @@ export class AuctionService extends BaseService<AuctionSession> {
       }
       return plainBid;
     });
+  }
+
+  async getSessionStatus(sessionId: string): Promise<any> {
+    const session = await this.auctionSessionRepository.getOne({ where: { _id: sessionId } });
+    if (!session) {
+      throw ApiError.NotFound('Phien dau gia khong ton tai');
+    }
+
+    const count = await this.auctionBidRepository.count({ where: { phienId: sessionId } });
+    
+    let bietDanhNguoiDanDau = 'None';
+    if (session.deXuatThangId) {
+      const leadingBid = await this.auctionBidRepository.getOne({ where: { _id: session.deXuatThangId } });
+      if (leadingBid) {
+        bietDanhNguoiDanDau = leadingBid.nguoiThamGiaId;
+      }
+    } else {
+      const highestBid = await this.auctionBidRepository.getOne({
+        where: { phienId: sessionId },
+        order: [['giaDat', 'DESC']],
+      });
+      if (highestBid) {
+        bietDanhNguoiDanDau = highestBid.nguoiThamGiaId;
+      }
+    }
+
+    const currentMax = Number(session.giaCaoNhat ?? session.giaKhoiDiem);
+    const minRequiredBid = currentMax === Number(session.giaKhoiDiem) && !session.deXuatThangId
+      ? Number(session.giaKhoiDiem)
+      : currentMax + Number(session.buocGia);
+
+    return {
+      phienDauGiaId: session._id,
+      giaHienTai: currentMax,
+      bietDanhNguoiDanDau,
+      tongSoLuotDat: count,
+      buocGia: session.buocGia,
+      giaHopLeKeTiep: minRequiredBid,
+      thoiGianServer: new Date(),
+      thoiGianKetThuc: session.thoiGianKetThuc,
+      trangThai: session.trangThai,
+    };
+  }
+
+  async closeSession(userId: string, sessionId: string): Promise<any> {
+    const session = await this.auctionSessionRepository.getOne({ where: { _id: sessionId } });
+    if (!session) {
+      throw ApiError.NotFound('Phien dau gia khong ton tai');
+    }
+    if (session.chuPhienId !== userId) {
+      throw ApiError.Forbidden('Ban khong co quyen dong phien nay');
+    }
+    if (session.trangThai === TrangThaiPhien.DONG) {
+      throw ApiError.BadRequest('Phien da dong truoc do');
+    }
+
+    await this.auctionSessionRepository.updateOne(
+      { trangThai: TrangThaiPhien.DONG, thoiDiemDong: new Date() },
+      { where: { _id: sessionId } },
+    );
+
+    return this.evaluateSession(userId, sessionId, true);
   }
 }

@@ -21,6 +21,8 @@ describe('AuctionService', () => {
     create: jest.fn(),
     getMany: jest.fn(),
     updateOne: jest.fn(),
+    getOne: jest.fn(),
+    count: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -116,6 +118,39 @@ describe('AuctionService', () => {
     it('should throw NotFound if session does not exist', async () => {
       sessionRepo.getOne.mockResolvedValue(null);
       await expect(service.getSessionBids('user1', 'session1')).rejects.toThrow(ApiError);
+    });
+  });
+
+  describe('getSessionStatus', () => {
+    it('should throw NotFound if session does not exist', async () => {
+      sessionRepo.getOne.mockResolvedValue(null);
+      await expect(service.getSessionStatus('session1')).rejects.toThrow(ApiError);
+    });
+
+    it('should return session status data', async () => {
+      const mockSession = { _id: 'session1', buocGia: 10, giaKhoiDiem: 100, giaCaoNhat: 150, trangThai: TrangThaiPhien.MO };
+      sessionRepo.getOne.mockResolvedValue(mockSession);
+      bidRepo.count.mockResolvedValue(5);
+      bidRepo.getOne.mockResolvedValue(null);
+
+      const res = await service.getSessionStatus('session1');
+      expect(res.phienDauGiaId).toBe('session1');
+      expect(res.tongSoLuotDat).toBe(5);
+      expect(res.giaHienTai).toBe(150);
+      expect(res.giaHopLeKeTiep).toBe(160);
+    });
+  });
+
+  describe('closeSession', () => {
+    it('should throw NotFound if session does not exist', async () => {
+      sessionRepo.getOne.mockResolvedValue(null);
+      await expect(service.closeSession('user1', 'session1')).rejects.toThrow(ApiError);
+    });
+
+    it('should throw Forbidden if user is not host', async () => {
+      const mockSession = { _id: 'session1', chuPhienId: 'host2' };
+      sessionRepo.getOne.mockResolvedValue(mockSession);
+      await expect(service.closeSession('user1', 'session1')).rejects.toThrow(ApiError);
     });
   });
 });

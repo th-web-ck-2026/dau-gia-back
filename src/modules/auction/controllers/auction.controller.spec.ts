@@ -15,6 +15,9 @@ describe('AuctionController', () => {
     evaluateSession: jest.fn(),
     getSessionDetails: jest.fn(),
     getSessionBids: jest.fn(),
+    getPage: jest.fn(),
+    getSessionStatus: jest.fn(),
+    closeSession: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -52,10 +55,10 @@ describe('AuctionController', () => {
   });
 
   it('should call service.placeBid', async () => {
-    const dto = { phienId: 'session1', giaDat: 200 };
+    const dto = { phienId: '', giaDat: 200 };
     const user = { id: 'user1' };
-    await controller.placeBid(user as any, dto);
-    expect(service.placeBid).toHaveBeenCalledWith('user1', dto);
+    await controller.placeBid(user as any, 'session1', dto);
+    expect(service.placeBid).toHaveBeenCalledWith('user1', { phienId: 'session1', giaDat: 200 });
   });
 
   it('should call service.evaluateSession', async () => {
@@ -73,5 +76,22 @@ describe('AuctionController', () => {
     const user = { id: 'user1' };
     await controller.getSessionBids(user as any, 'session1');
     expect(service.getSessionBids).toHaveBeenCalledWith('user1', 'session1');
+  });
+
+  it('should call service.getPage', async () => {
+    const query = { page: 1, limit: 10 };
+    await controller.getSessions({}, query);
+    expect(service.getPage).toHaveBeenCalledWith({ where: {} }, query);
+  });
+
+  it('should call service.getSessionStatus', async () => {
+    await controller.getSessionStatus('session1');
+    expect(service.getSessionStatus).toHaveBeenCalledWith('session1');
+  });
+
+  it('should call service.closeSession', async () => {
+    const user = { id: 'user1' };
+    await controller.closeSession(user as any, 'session1');
+    expect(service.closeSession).toHaveBeenCalledWith('user1', 'session1');
   });
 });

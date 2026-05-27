@@ -6,11 +6,24 @@ import { Auth } from '@/common/decorators/auth.decorator';
 import { ReqUser } from '@/common/decorators/user.decorator';
 import { AuthUser } from '@/common/interfaces/auth-user.interface';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { RequestCondition } from '@/common/decorators/request-condition.decotator';
+import { RequestQuery } from '@/common/decorators/request-query.decorator';
+import { QueryOption } from '@/common/pipe/query-option.interface';
+import { ConditionTenderSessionDto } from '../dto/condition-tender-session.dto';
 
 @ApiTags('Tender')
 @Controller('tender-sessions')
 export class TenderController {
   constructor(private readonly tenderService: TenderService) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Lay danh sach phien dau thau' })
+  async getSessions(
+    @RequestCondition(ConditionTenderSessionDto) condition: any,
+    @RequestQuery() query: QueryOption,
+  ) {
+    return this.tenderService.getPage({ where: condition }, query);
+  }
 
   @Post()
   @Auth()
@@ -46,6 +59,20 @@ export class TenderController {
     return this.tenderService.getSessionDetails(id);
   }
 
+  @Get(':id/ranking')
+  @Auth()
+  @ApiOperation({ summary: 'Lay bang xep hang phien dau thau' })
+  async getRanking(@ReqUser() user: AuthUser, @Param('id') id: string) {
+    return this.tenderService.getRanking(user.id, id);
+  }
+
+  @Post(':id/close')
+  @Auth()
+  @ApiOperation({ summary: 'Dong phien dau thau' })
+  async closeSession(@ReqUser() user: AuthUser, @Param('id') id: string) {
+    return this.tenderService.closeSession(user.id, id);
+  }
+
   @Get(':id/submissions')
   @Auth()
   @ApiOperation({ summary: 'Lay danh sach de xuat cua phien' })
@@ -53,3 +80,4 @@ export class TenderController {
     return this.tenderService.getSessionSubmissions(user.id, id);
   }
 }
+
