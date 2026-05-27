@@ -58,16 +58,20 @@ export class TenderController {
     ],
   })
   async getSessions(
-    @RequestCondition(ConditionTenderSessionDto) condition: ConditionTenderSessionDto,
+    @RequestCondition(ConditionTenderSessionDto)
+    condition: ConditionTenderSessionDto,
     @RequestQuery() query: QueryOption,
   ) {
-    return this.tenderService.getPage({ where: condition as any }, query);
+    return this.tenderService.getPage({ where: { ...condition } }, query);
   }
 
   @Post()
   @Auth()
   @ApiOperation({ summary: 'Tao phien dau thau moi' })
-  async createSession(@ReqUser() user: AuthUser, @Body() dto: CreateTenderSessionDto) {
+  async createSession(
+    @ReqUser() user: AuthUser,
+    @Body() dto: CreateTenderSessionDto,
+  ) {
     return this.tenderService.createSession(user.id, dto);
   }
 
@@ -81,7 +85,10 @@ export class TenderController {
   @Post('submissions')
   @Auth()
   @ApiOperation({ summary: 'Nop ho so de xuat' })
-  async submitProposal(@ReqUser() user: AuthUser, @Body() dto: SubmitTenderProposalDto) {
+  async submitProposal(
+    @ReqUser() user: AuthUser,
+    @Body() dto: SubmitTenderProposalDto,
+  ) {
     return this.tenderService.submitProposal(user.id, dto);
   }
 
@@ -115,8 +122,10 @@ export class TenderController {
   @Get(':id/submissions')
   @Auth()
   @ApiOperation({ summary: 'Lay danh sach de xuat cua phien' })
-  async getSessionSubmissions(@ReqUser() user: AuthUser, @Param('id') id: string) {
+  async getSessionSubmissions(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+  ) {
     return this.tenderService.getSessionSubmissions(user.id, id);
   }
 }
-
