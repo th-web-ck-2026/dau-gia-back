@@ -12,6 +12,7 @@ import { QueryOption } from '@/common/pipe/query-option.interface';
 import { ConditionTenderSessionDto } from '../dto/condition-tender-session.dto';
 import { ApiGet, ApiCondition } from '@/common/decorators/swagger';
 import { TrangThaiPhien } from '@/modules/scoring/common/constants';
+import { Public } from '@/common/decorators/public.decorator';
 
 @ApiTags('Tender')
 @Controller('tender-sessions')
@@ -57,6 +58,7 @@ export class TenderController {
       },
     ],
   })
+  @Public()
   async getSessions(
     @RequestCondition(ConditionTenderSessionDto)
     condition: ConditionTenderSessionDto,
@@ -99,6 +101,7 @@ export class TenderController {
     return this.tenderService.evaluateSession(user.id, id);
   }
 
+  @Public()
   @Get(':id')
   @ApiOperation({ summary: 'Lay chi tiet phien dau thau' })
   async getSessionDetails(@Param('id') id: string) {

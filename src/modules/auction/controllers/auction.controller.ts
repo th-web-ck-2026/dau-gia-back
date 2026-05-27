@@ -12,6 +12,7 @@ import { QueryOption } from '@/common/pipe/query-option.interface';
 import { ConditionAuctionSessionDto } from '../dto/condition-auction-session.dto';
 import { ApiGet, ApiCondition } from '@/common/decorators/swagger';
 import { TrangThaiPhien } from '@/modules/scoring/common/constants';
+import { Public } from '@/common/decorators/public.decorator';
 
 @ApiTags('Auction')
 @Controller('auction-sessions')
@@ -57,6 +58,7 @@ export class AuctionController {
       },
     ],
   })
+  @Public()
   async getSessions(
     @RequestCondition(ConditionAuctionSessionDto) condition: ConditionAuctionSessionDto,
     @RequestQuery() query: QueryOption,
@@ -96,13 +98,13 @@ export class AuctionController {
   async evaluateSession(@ReqUser() user: AuthUser, @Param('id') id: string) {
     return this.auctionService.evaluateSession(user.id, id);
   }
-
+  @Public()
   @Get(':id')
   @ApiOperation({ summary: 'Lay chi tiet phien dau gia' })
   async getSessionDetails(@Param('id') id: string) {
     return this.auctionService.getSessionDetails(id);
   }
-
+  @Public()
   @Get(':id/status')
   @ApiOperation({ summary: 'Lay trang thai phien dau gia' })
   async getSessionStatus(@Param('id') id: string) {
