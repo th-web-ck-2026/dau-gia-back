@@ -17,7 +17,7 @@ export class AuctionSession implements BaseEntity {
   trongSoCamKet?: number;
   deXuatThangId?: string;
   giaCaoNhat?: number;
-  danhSachAnh: string[];
+  danhSachHinhAnh: string[];
   anDanh: boolean;
   createdAt?: Date;
   updatedAt?: Date;

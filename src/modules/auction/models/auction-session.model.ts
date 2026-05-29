@@ -12,7 +12,7 @@ export class AuctionSessionModel extends Model implements AuctionSession {
     type: DataType.ARRAY(DataType.STRING),
     defaultValue: [],
   })
-  danhSachAnh: string[];
+  danhSachHinhAnh: string[];
   @StrObjectId()
   _id: string;
 
