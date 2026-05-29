@@ -8,6 +8,11 @@ import { TrangThaiPhien } from '@/modules/scoring/common/constants';
   tableName: EntityTable.AUCTION_SESSION,
 })
 export class AuctionSessionModel extends Model implements AuctionSession {
+  @Column({
+    type: DataType.ARRAY(DataType.STRING),
+    defaultValue: [],
+  })
+  danhSachAnh: string[];
   @StrObjectId()
   _id: string;
 
