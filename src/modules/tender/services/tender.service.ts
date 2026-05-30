@@ -191,6 +191,8 @@ export class TenderService extends BaseService<TenderSession> {
       }
     }
 
+    const now = new Date()
+
     const submission = await this.tenderSubmissionRepository.create({
       phienId: dto.phienId,
       nguoiThamGiaId: userId,

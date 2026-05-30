@@ -128,6 +128,8 @@ export class AuctionService extends BaseService<AuctionSession> {
       throw ApiError.BadRequest(`Gia dat phai toi thieu la ${minRequiredBid}`);
     }
 
+    const now = new Date();
+
     const bid = await this.auctionBidRepository.create({
       phienId: dto.phienId,
       nguoiThamGiaId: userId,
@@ -269,7 +271,7 @@ export class AuctionService extends BaseService<AuctionSession> {
     session = await this.checkAndTransitionStateInternal(session);
 
     const count = await this.auctionBidRepository.count({ where: { phienId: sessionId } });
-    
+
     let bietDanhNguoiDanDau = 'None';
     let leadingUserId = '';
     if (session.deXuatThangId) {
