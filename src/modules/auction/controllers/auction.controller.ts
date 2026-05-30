@@ -16,6 +16,7 @@ import { Public } from '@/common/decorators/public.decorator';
 import { AuctionSession } from '../entities/auction-session.entity';
 import { AuctionBid } from '../entities/auction-bid.entity';
 import { AuctionSessionStatusDto } from '../dto/auction-session-status.dto';
+import { PageableDto } from '@/common/dto/pageable.dto';
 
 @ApiTags('Auction')
 @Controller('auction-sessions')
@@ -66,7 +67,7 @@ export class AuctionController {
   async getSessions(
     @RequestCondition(ConditionAuctionSessionDto) condition: ConditionAuctionSessionDto,
     @RequestQuery() query: QueryOption,
-  ) {
+  ): Promise<PageableDto<AuctionSession>> {
     return this.auctionService.getPage({ where: condition as any }, query);
   }
 
@@ -74,7 +75,10 @@ export class AuctionController {
   @Auth()
   @ApiOperation({ summary: 'Tao phien dau gia moi' })
   @ApiCreatedResponse({ type: AuctionSession })
-  async createSession(@ReqUser() user: AuthUser, @Body() dto: CreateAuctionSessionDto) {
+  async createSession(
+    @ReqUser() user: AuthUser,
+    @Body() dto: CreateAuctionSessionDto,
+  ): Promise<AuctionSession> {
     return this.auctionService.createSession(user.id, dto);
   }
 
@@ -82,7 +86,10 @@ export class AuctionController {
   @Auth()
   @ApiOperation({ summary: 'Cong bo phien dau gia' })
   @ApiOkResponse({ type: AuctionSession })
-  async publishSession(@ReqUser() user: AuthUser, @Param('id') id: string) {
+  async publishSession(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+  ): Promise<AuctionSession> {
     return this.auctionService.publishSession(user.id, id);
   }
 
@@ -94,7 +101,7 @@ export class AuctionController {
     @ReqUser() user: AuthUser,
     @Param('id') id: string,
     @Body() dto: PlaceAuctionBidDto,
-  ) {
+  ): Promise<AuctionBid> {
     dto.phienId = id;
     return this.auctionService.placeBid(user.id, dto);
   }
@@ -103,7 +110,10 @@ export class AuctionController {
   @Auth()
   @ApiOperation({ summary: 'Danh gia va xep hang phien dau gia' })
   @ApiOkResponse({ type: AuctionSession })
-  async evaluateSession(@ReqUser() user: AuthUser, @Param('id') id: string) {
+  async evaluateSession(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+  ): Promise<AuctionSession | { message: string }> {
     return this.auctionService.evaluateSession(user.id, id);
   }
 
@@ -111,7 +121,7 @@ export class AuctionController {
   @Get(':id')
   @ApiOperation({ summary: 'Lay chi tiet phien dau gia' })
   @ApiOkResponse({ type: AuctionSession })
-  async getSessionDetails(@Param('id') id: string) {
+  async getSessionDetails(@Param('id') id: string): Promise<AuctionSession> {
     return this.auctionService.getSessionDetails(id);
   }
 
@@ -119,7 +129,7 @@ export class AuctionController {
   @Get(':id/status')
   @ApiOperation({ summary: 'Lay trang thai phien dau gia' })
   @ApiOkResponse({ type: AuctionSessionStatusDto })
-  async getSessionStatus(@Param('id') id: string) {
+  async getSessionStatus(@Param('id') id: string): Promise<AuctionSessionStatusDto> {
     return this.auctionService.getSessionStatus(id);
   }
 
@@ -127,7 +137,10 @@ export class AuctionController {
   @Auth()
   @ApiOperation({ summary: 'Dong phien dau gia' })
   @ApiOkResponse({ type: AuctionSession })
-  async closeSession(@ReqUser() user: AuthUser, @Param('id') id: string) {
+  async closeSession(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+  ): Promise<AuctionSession | { message: string }> {
     return this.auctionService.closeSession(user.id, id);
   }
 
@@ -135,7 +148,10 @@ export class AuctionController {
   @Auth()
   @ApiOperation({ summary: 'Lay danh sach cac luot dat gia cua phien' })
   @ApiOkResponse({ type: [AuctionBid] })
-  async getSessionBids(@ReqUser() user: AuthUser, @Param('id') id: string) {
+  async getSessionBids(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+  ): Promise<AuctionBid[]> {
     return this.auctionService.getSessionBids(user.id, id);
   }
 }

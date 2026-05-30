@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { BaseService } from '@/common/base/base.service';
-import { TenderSession } from '../entities/tender-session.entity';
+import { TenderSession, TenderSessionDetails } from '../entities/tender-session.entity';
 import { TenderSessionRepository } from '../repositories/tender-session.repository';
 import { TenderCriteriaRepository } from '../repositories/tender-criteria.repository';
 import { TenderSubmissionRepository } from '../repositories/tender-submission.repository';
+import { TenderSubmission } from '../entities/tender-submission.entity';
 import { TenderSubmissionValueRepository } from '../repositories/tender-submission-value.repository';
 import { ScoringService } from '@/modules/scoring/services/scoring.service';
 import { CreateTenderSessionDto } from '../dto/create-tender-session.dto';
@@ -67,7 +68,7 @@ export class TenderService extends BaseService<TenderSession> {
     return session;
   }
 
-  async createSession(userId: string, dto: CreateTenderSessionDto): Promise<TenderSession> {
+  async createSession(userId: string, dto: CreateTenderSessionDto): Promise<TenderSessionDetails> {
     const start = new Date(dto.thoiGianBatDau);
     const end = new Date(dto.thoiGianKetThuc);
     const now = new Date();
@@ -117,7 +118,7 @@ export class TenderService extends BaseService<TenderSession> {
     return this.getSessionDetails(session._id);
   }
 
-  async publishSession(userId: string, sessionId: string): Promise<TenderSession> {
+  async publishSession(userId: string, sessionId: string): Promise<TenderSessionDetails> {
     const session = await this.tenderSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau thau khong ton tai');
@@ -143,7 +144,7 @@ export class TenderService extends BaseService<TenderSession> {
     return this.getSessionDetails(sessionId);
   }
 
-  async submitProposal(userId: string, dto: SubmitTenderProposalDto): Promise<any> {
+  async submitProposal(userId: string, dto: SubmitTenderProposalDto): Promise<TenderSubmission> {
     let session = await this.tenderSessionRepository.getOne({ where: { _id: dto.phienId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau thau khong ton tai');
@@ -236,7 +237,7 @@ export class TenderService extends BaseService<TenderSession> {
     return submission;
   }
 
-  async evaluateSession(userId: string, sessionId: string, force = false, isSystem = false): Promise<any> {
+  async evaluateSession(userId: string, sessionId: string, force = false, isSystem = false): Promise<TenderSessionDetails | { message: string }> {
     const session = await this.tenderSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau thau khong ton tai');
@@ -417,7 +418,7 @@ export class TenderService extends BaseService<TenderSession> {
     return this.getSessionDetails(sessionId);
   }
 
-  async getSessionDetails(sessionId: string): Promise<any> {
+  async getSessionDetails(sessionId: string): Promise<TenderSessionDetails> {
     let session = await this.tenderSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau thau khong ton tai');
@@ -504,7 +505,7 @@ export class TenderService extends BaseService<TenderSession> {
     };
   }
 
-  async closeSession(userId: string, sessionId: string, isSystem = false): Promise<any> {
+  async closeSession(userId: string, sessionId: string, isSystem = false): Promise<TenderSessionDetails> {
     let session = await this.tenderSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau thau khong ton tai');

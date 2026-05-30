@@ -3,6 +3,7 @@ import { BaseService } from '@/common/base/base.service';
 import { AuctionSession } from '../entities/auction-session.entity';
 import { AuctionSessionRepository } from '../repositories/auction-session.repository';
 import { AuctionBidRepository } from '../repositories/auction-bid.repository';
+import { AuctionBid } from '../entities/auction-bid.entity';
 import { ScoringService } from '@/modules/scoring/services/scoring.service';
 import { CreateAuctionSessionDto } from '../dto/create-auction-session.dto';
 import { PlaceAuctionBidDto } from '../dto/place-auction-bid.dto';
@@ -107,7 +108,7 @@ export class AuctionService extends BaseService<AuctionSession> {
     ).then(() => this.getSessionDetails(sessionId));
   }
 
-  async placeBid(userId: string, dto: PlaceAuctionBidDto): Promise<any> {
+  async placeBid(userId: string, dto: PlaceAuctionBidDto): Promise<AuctionBid> {
     let session = await this.auctionSessionRepository.getOne({ where: { _id: dto.phienId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau gia khong ton tai');
@@ -247,7 +248,7 @@ export class AuctionService extends BaseService<AuctionSession> {
     return session;
   }
 
-  async getSessionBids(userId: string, sessionId: string): Promise<any[]> {
+  async getSessionBids(userId: string, sessionId: string): Promise<AuctionBid[]> {
     let session = await this.auctionSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau gia khong ton tai');

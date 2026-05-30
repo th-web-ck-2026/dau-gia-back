@@ -13,8 +13,9 @@ import { ConditionTenderSessionDto } from '../dto/condition-tender-session.dto';
 import { ApiGet, ApiCondition } from '@/common/decorators/swagger';
 import { TrangThaiPhien } from '@/modules/scoring/common/constants';
 import { Public } from '@/common/decorators/public.decorator';
-import { TenderSession } from '../entities/tender-session.entity';
+import { TenderSession, TenderSessionDetails } from '../entities/tender-session.entity';
 import { TenderSubmission } from '../entities/tender-submission.entity';
+import { PageableDto } from '@/common/dto/pageable.dto';
 
 @ApiTags('Tender')
 @Controller('tender-sessions')
@@ -66,26 +67,29 @@ export class TenderController {
     @RequestCondition(ConditionTenderSessionDto)
     condition: ConditionTenderSessionDto,
     @RequestQuery() query: QueryOption,
-  ) {
+  ): Promise<PageableDto<TenderSession>> {
     return this.tenderService.getPage({ where: { ...condition } }, query);
   }
 
   @Post()
   @Auth()
   @ApiOperation({ summary: 'Tao phien dau thau moi' })
-  @ApiCreatedResponse({ type: TenderSession })
+  @ApiCreatedResponse({ type: TenderSessionDetails })
   async createSession(
     @ReqUser() user: AuthUser,
     @Body() dto: CreateTenderSessionDto,
-  ) {
+  ): Promise<TenderSessionDetails> {
     return this.tenderService.createSession(user.id, dto);
   }
 
   @Post(':id/publish')
   @Auth()
   @ApiOperation({ summary: 'Cong bo phien dau thau' })
-  @ApiOkResponse({ type: TenderSession })
-  async publishSession(@ReqUser() user: AuthUser, @Param('id') id: string) {
+  @ApiOkResponse({ type: TenderSessionDetails })
+  async publishSession(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+  ): Promise<TenderSessionDetails> {
     return this.tenderService.publishSession(user.id, id);
   }
 
@@ -96,23 +100,26 @@ export class TenderController {
   async submitProposal(
     @ReqUser() user: AuthUser,
     @Body() dto: SubmitTenderProposalDto,
-  ) {
+  ): Promise<TenderSubmission> {
     return this.tenderService.submitProposal(user.id, dto);
   }
 
   @Post(':id/evaluate')
   @Auth()
   @ApiOperation({ summary: 'Danh gia va xep hang ho so phien dau thau' })
-  @ApiOkResponse({ type: TenderSession })
-  async evaluateSession(@ReqUser() user: AuthUser, @Param('id') id: string) {
+  @ApiOkResponse({ type: TenderSessionDetails })
+  async evaluateSession(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+  ): Promise<TenderSessionDetails | { message: string }> {
     return this.tenderService.evaluateSession(user.id, id);
   }
 
   @Public()
   @Get(':id')
   @ApiOperation({ summary: 'Lay chi tiết phien dau thau' })
-  @ApiOkResponse({ type: TenderSession })
-  async getSessionDetails(@Param('id') id: string) {
+  @ApiOkResponse({ type: TenderSessionDetails })
+  async getSessionDetails(@Param('id') id: string): Promise<TenderSessionDetails> {
     return this.tenderService.getSessionDetails(id);
   }
 
@@ -144,15 +151,21 @@ export class TenderController {
       },
     },
   })
-  async getRanking(@ReqUser() user: AuthUser, @Param('id') id: string) {
+  async getRanking(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+  ): Promise<any> {
     return this.tenderService.getRanking(user.id, id);
   }
 
   @Post(':id/close')
   @Auth()
   @ApiOperation({ summary: 'Dong phien dau thau' })
-  @ApiOkResponse({ type: TenderSession })
-  async closeSession(@ReqUser() user: AuthUser, @Param('id') id: string) {
+  @ApiOkResponse({ type: TenderSessionDetails })
+  async closeSession(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+  ): Promise<TenderSessionDetails> {
     return this.tenderService.closeSession(user.id, id);
   }
 
@@ -163,7 +176,7 @@ export class TenderController {
   async getSessionSubmissions(
     @ReqUser() user: AuthUser,
     @Param('id') id: string,
-  ) {
+  ): Promise<any[]> {
     return this.tenderService.getSessionSubmissions(user.id, id);
   }
 }

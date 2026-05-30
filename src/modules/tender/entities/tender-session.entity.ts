@@ -1,6 +1,7 @@
 import { BaseEntity } from '@/common/interfaces/base-entity.interface';
 import { TrangThaiPhien } from '@/modules/scoring/common/constants';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { TenderCriteria } from './tender-criteria.entity';
 
 export class TenderSession implements BaseEntity {
   @ApiProperty()
@@ -57,3 +58,9 @@ export class TenderSession implements BaseEntity {
   @ApiPropertyOptional()
   updatedAt?: Date;
 }
+
+export class TenderSessionDetails extends TenderSession {
+  @ApiProperty({ type: [TenderCriteria] })
+  tieuChi: TenderCriteria[];
+}
+
