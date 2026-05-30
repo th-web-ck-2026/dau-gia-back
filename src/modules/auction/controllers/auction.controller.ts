@@ -5,7 +5,7 @@ import { PlaceAuctionBidDto } from '../dto/place-auction-bid.dto';
 import { Auth } from '@/common/decorators/auth.decorator';
 import { ReqUser } from '@/common/decorators/user.decorator';
 import { AuthUser } from '@/common/interfaces/auth-user.interface';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { RequestCondition } from '@/common/decorators/request-condition.decotator';
 import { RequestQuery } from '@/common/decorators/request-query.decorator';
 import { QueryOption } from '@/common/pipe/query-option.interface';
@@ -13,6 +13,9 @@ import { ConditionAuctionSessionDto } from '../dto/condition-auction-session.dto
 import { ApiGet, ApiCondition } from '@/common/decorators/swagger';
 import { TrangThaiPhien } from '@/modules/scoring/common/constants';
 import { Public } from '@/common/decorators/public.decorator';
+import { AuctionSession } from '../entities/auction-session.entity';
+import { AuctionBid } from '../entities/auction-bid.entity';
+import { AuctionSessionStatusDto } from '../dto/auction-session-status.dto';
 
 @ApiTags('Auction')
 @Controller('auction-sessions')
@@ -22,6 +25,7 @@ export class AuctionController {
   @ApiGet({
     mode: 'page',
     summary: 'Lay danh sach phien dau gia',
+    responseType: AuctionSession,
   })
   @ApiCondition({
     fields: [
@@ -69,6 +73,7 @@ export class AuctionController {
   @Post()
   @Auth()
   @ApiOperation({ summary: 'Tao phien dau gia moi' })
+  @ApiCreatedResponse({ type: AuctionSession })
   async createSession(@ReqUser() user: AuthUser, @Body() dto: CreateAuctionSessionDto) {
     return this.auctionService.createSession(user.id, dto);
   }
@@ -76,6 +81,7 @@ export class AuctionController {
   @Post(':id/publish')
   @Auth()
   @ApiOperation({ summary: 'Cong bo phien dau gia' })
+  @ApiOkResponse({ type: AuctionSession })
   async publishSession(@ReqUser() user: AuthUser, @Param('id') id: string) {
     return this.auctionService.publishSession(user.id, id);
   }
@@ -83,6 +89,7 @@ export class AuctionController {
   @Post(':id/bids')
   @Auth()
   @ApiOperation({ summary: 'Dat gia dau gia' })
+  @ApiCreatedResponse({ type: AuctionBid })
   async placeBid(
     @ReqUser() user: AuthUser,
     @Param('id') id: string,
@@ -95,18 +102,23 @@ export class AuctionController {
   @Post(':id/evaluate')
   @Auth()
   @ApiOperation({ summary: 'Danh gia va xep hang phien dau gia' })
+  @ApiOkResponse({ type: AuctionSession })
   async evaluateSession(@ReqUser() user: AuthUser, @Param('id') id: string) {
     return this.auctionService.evaluateSession(user.id, id);
   }
+
   @Public()
   @Get(':id')
   @ApiOperation({ summary: 'Lay chi tiet phien dau gia' })
+  @ApiOkResponse({ type: AuctionSession })
   async getSessionDetails(@Param('id') id: string) {
     return this.auctionService.getSessionDetails(id);
   }
+
   @Public()
   @Get(':id/status')
   @ApiOperation({ summary: 'Lay trang thai phien dau gia' })
+  @ApiOkResponse({ type: AuctionSessionStatusDto })
   async getSessionStatus(@Param('id') id: string) {
     return this.auctionService.getSessionStatus(id);
   }
@@ -114,6 +126,7 @@ export class AuctionController {
   @Post(':id/close')
   @Auth()
   @ApiOperation({ summary: 'Dong phien dau gia' })
+  @ApiOkResponse({ type: AuctionSession })
   async closeSession(@ReqUser() user: AuthUser, @Param('id') id: string) {
     return this.auctionService.closeSession(user.id, id);
   }
@@ -121,6 +134,7 @@ export class AuctionController {
   @Get(':id/bids')
   @Auth()
   @ApiOperation({ summary: 'Lay danh sach cac luot dat gia cua phien' })
+  @ApiOkResponse({ type: [AuctionBid] })
   async getSessionBids(@ReqUser() user: AuthUser, @Param('id') id: string) {
     return this.auctionService.getSessionBids(user.id, id);
   }

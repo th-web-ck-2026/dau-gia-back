@@ -53,6 +53,13 @@ export class AuctionService extends BaseService<AuctionSession> {
   async createSession(userId: string, dto: CreateAuctionSessionDto): Promise<AuctionSession> {
     const start = new Date(dto.thoiGianBatDau);
     const end = new Date(dto.thoiGianKetThuc);
+    const now = new Date();
+    if (start <= now) {
+      throw ApiError.BadRequest('Thoi gian bat dau phai sau thoi gian hien tai');
+    }
+    if (end <= now) {
+      throw ApiError.BadRequest('Thoi gian ket thuc phai sau thoi gian hien tai');
+    }
     if (start >= end) {
       throw ApiError.BadRequest('Thoi gian bat dau phai truoc thoi gian ket thuc');
     }
@@ -72,6 +79,7 @@ export class AuctionService extends BaseService<AuctionSession> {
       trongSoCamKet: dto.trongSoCamKet ?? 0.0,
       giaCaoNhat: dto.giaKhoiDiem,
       anDanh: dto.anDanh ?? false,
+      danhSachHinhAnh: dto.danhSachHinhAnh ?? [],
     });
   }
 

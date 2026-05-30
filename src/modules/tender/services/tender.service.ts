@@ -70,6 +70,13 @@ export class TenderService extends BaseService<TenderSession> {
   async createSession(userId: string, dto: CreateTenderSessionDto): Promise<TenderSession> {
     const start = new Date(dto.thoiGianBatDau);
     const end = new Date(dto.thoiGianKetThuc);
+    const now = new Date();
+    if (start <= now) {
+      throw ApiError.BadRequest('Thoi gian bat dau phai sau thoi gian hien tai');
+    }
+    if (end <= now) {
+      throw ApiError.BadRequest('Thoi gian ket thuc phai sau thoi gian hien tai');
+    }
     if (start >= end) {
       throw ApiError.BadRequest('Thoi gian bat dau phai truoc thoi gian ket thuc');
     }
@@ -86,6 +93,7 @@ export class TenderService extends BaseService<TenderSession> {
       trongSoGia: dto.trongSoGia ?? 0.4,
       diemKyThuatToiThieu: dto.diemKyThuatToiThieu ?? 50,
       anDanh: dto.anDanh ?? false,
+      danhSachHinhAnh: dto.danhSachHinhAnh ?? [],
     });
 
     for (const cri of dto.tieuChi) {

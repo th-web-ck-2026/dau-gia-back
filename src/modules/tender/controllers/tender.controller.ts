@@ -5,7 +5,7 @@ import { SubmitTenderProposalDto } from '../dto/submit-tender-proposal.dto';
 import { Auth } from '@/common/decorators/auth.decorator';
 import { ReqUser } from '@/common/decorators/user.decorator';
 import { AuthUser } from '@/common/interfaces/auth-user.interface';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { RequestCondition } from '@/common/decorators/request-condition.decotator';
 import { RequestQuery } from '@/common/decorators/request-query.decorator';
 import { QueryOption } from '@/common/pipe/query-option.interface';
@@ -13,6 +13,8 @@ import { ConditionTenderSessionDto } from '../dto/condition-tender-session.dto';
 import { ApiGet, ApiCondition } from '@/common/decorators/swagger';
 import { TrangThaiPhien } from '@/modules/scoring/common/constants';
 import { Public } from '@/common/decorators/public.decorator';
+import { TenderSession } from '../entities/tender-session.entity';
+import { TenderSubmission } from '../entities/tender-submission.entity';
 
 @ApiTags('Tender')
 @Controller('tender-sessions')
@@ -22,6 +24,7 @@ export class TenderController {
   @ApiGet({
     mode: 'page',
     summary: 'Lay danh sach phien dau thau',
+    responseType: TenderSession,
   })
   @ApiCondition({
     fields: [
@@ -70,6 +73,7 @@ export class TenderController {
   @Post()
   @Auth()
   @ApiOperation({ summary: 'Tao phien dau thau moi' })
+  @ApiCreatedResponse({ type: TenderSession })
   async createSession(
     @ReqUser() user: AuthUser,
     @Body() dto: CreateTenderSessionDto,
@@ -80,6 +84,7 @@ export class TenderController {
   @Post(':id/publish')
   @Auth()
   @ApiOperation({ summary: 'Cong bo phien dau thau' })
+  @ApiOkResponse({ type: TenderSession })
   async publishSession(@ReqUser() user: AuthUser, @Param('id') id: string) {
     return this.tenderService.publishSession(user.id, id);
   }
@@ -87,6 +92,7 @@ export class TenderController {
   @Post('submissions')
   @Auth()
   @ApiOperation({ summary: 'Nop ho so de xuat' })
+  @ApiCreatedResponse({ type: TenderSubmission })
   async submitProposal(
     @ReqUser() user: AuthUser,
     @Body() dto: SubmitTenderProposalDto,
@@ -97,13 +103,15 @@ export class TenderController {
   @Post(':id/evaluate')
   @Auth()
   @ApiOperation({ summary: 'Danh gia va xep hang ho so phien dau thau' })
+  @ApiOkResponse({ type: TenderSession })
   async evaluateSession(@ReqUser() user: AuthUser, @Param('id') id: string) {
     return this.tenderService.evaluateSession(user.id, id);
   }
 
   @Public()
   @Get(':id')
-  @ApiOperation({ summary: 'Lay chi tiet phien dau thau' })
+  @ApiOperation({ summary: 'Lay chi tiết phien dau thau' })
+  @ApiOkResponse({ type: TenderSession })
   async getSessionDetails(@Param('id') id: string) {
     return this.tenderService.getSessionDetails(id);
   }
@@ -111,6 +119,31 @@ export class TenderController {
   @Get(':id/ranking')
   @Auth()
   @ApiOperation({ summary: 'Lay bang xep hang phien dau thau' })
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      properties: {
+        phienId: { type: 'string' },
+        trangThai: { type: 'string' },
+        danhSach: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              thuHang: { type: 'number' },
+              deXuatId: { type: 'string' },
+              nguoiThamGiaId: { type: 'string' },
+              bietDanh: { type: 'string' },
+              diemKyThuat: { type: 'number' },
+              diemGia: { type: 'number' },
+              diemTongHop: { type: 'number' },
+              trangThai: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+  })
   async getRanking(@ReqUser() user: AuthUser, @Param('id') id: string) {
     return this.tenderService.getRanking(user.id, id);
   }
@@ -118,6 +151,7 @@ export class TenderController {
   @Post(':id/close')
   @Auth()
   @ApiOperation({ summary: 'Dong phien dau thau' })
+  @ApiOkResponse({ type: TenderSession })
   async closeSession(@ReqUser() user: AuthUser, @Param('id') id: string) {
     return this.tenderService.closeSession(user.id, id);
   }
@@ -125,6 +159,7 @@ export class TenderController {
   @Get(':id/submissions')
   @Auth()
   @ApiOperation({ summary: 'Lay danh sach de xuat cua phien' })
+  @ApiOkResponse({ type: [TenderSubmission] })
   async getSessionSubmissions(
     @ReqUser() user: AuthUser,
     @Param('id') id: string,

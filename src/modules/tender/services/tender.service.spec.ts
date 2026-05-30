@@ -65,6 +65,26 @@ describe('TenderService', () => {
   });
 
   describe('createSession', () => {
+    it('should throw BadRequest if start date is in the past', async () => {
+      const dto = {
+        tieuDe: 'Phien test',
+        thoiGianBatDau: '2020-01-01T00:00:00.000Z',
+        thoiGianKetThuc: '2026-06-02T00:00:00.000Z',
+        tieuChi: [],
+      };
+      await expect(service.createSession('user1', dto as any)).rejects.toThrow(ApiError);
+    });
+
+    it('should throw BadRequest if end date is in the past', async () => {
+      const dto = {
+        tieuDe: 'Phien test',
+        thoiGianBatDau: '2026-06-01T00:00:00.000Z',
+        thoiGianKetThuc: '2020-01-01T00:00:00.000Z',
+        tieuChi: [],
+      };
+      await expect(service.createSession('user1', dto as any)).rejects.toThrow(ApiError);
+    });
+
     it('should throw BadRequest if start date is after end date', async () => {
       const dto = {
         tieuDe: 'Phien test',
@@ -80,6 +100,7 @@ describe('TenderService', () => {
         tieuDe: 'Phien test',
         thoiGianBatDau: '2026-06-01T00:00:00.000Z',
         thoiGianKetThuc: '2026-06-02T00:00:00.000Z',
+        danhSachHinhAnh: ['img1.jpg', 'img2.jpg'],
         tieuChi: [
           {
             tenTieuChi: 'Tieu chi 1',
@@ -107,7 +128,10 @@ describe('TenderService', () => {
 
       const res = await service.createSession('user1', dto as any);
       expect(res.tieuDe).toBe('Phien test');
-      expect(sessionRepo.create).toHaveBeenCalled();
+      expect(res.danhSachHinhAnh).toEqual(['img1.jpg', 'img2.jpg']);
+      expect(sessionRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+        danhSachHinhAnh: ['img1.jpg', 'img2.jpg'],
+      }));
       expect(criteriaRepo.create).toHaveBeenCalled();
     });
   });
