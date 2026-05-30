@@ -168,7 +168,7 @@ export class SendMailService {
       'PASSWORD_RESET_TOKEN_EXPIRES_IN_MINUTES',
     );
 
-    const resetUrl = `${this.platformUrl}/reset-password.html?token=${token}`;
+    const resetUrl = `${this.platformUrl}/auth/reset-password?token=${token}`;
 
     const emailContext = {
       subject: subject,
