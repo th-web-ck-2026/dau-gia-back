@@ -5,4 +5,10 @@ export const EntityTable = {
   AUTH_SESSION: 'auth_session',
   NOTIFICATION: 'notification',
   MAIL_CONFIG: 'mail_config',
+  TENDER_SESSION: 'phien_dau_thau',
+  TENDER_CRITERIA: 'tieu_chi_dau_thau',
+  TENDER_SUBMISSION: 'de_xuat_dau_thau',
+  TENDER_SUBMISSION_VALUE: 'gia_tri_de_xuat',
+  AUCTION_SESSION: 'phien_dau_gia',
+  AUCTION_BID: 'gia_dau_gia',
 } as const;

@@ -1,0 +1,64 @@
+import { Table, Column, DataType, Model, ForeignKey } from 'sequelize-typescript';
+import { EntityTable } from '@/common/constants/entity.constant';
+import { StrObjectId } from '@/common/constants/base.constant';
+import { TenderSubmissionValue } from '../entities/tender-submission-value.entity';
+import { TenderSubmissionModel } from './tender-submission.model';
+import { TenderCriteriaModel } from './tender-criteria.model';
+
+@Table({
+  tableName: EntityTable.TENDER_SUBMISSION_VALUE,
+})
+export class TenderSubmissionValueModel extends Model implements TenderSubmissionValue {
+  @StrObjectId()
+  _id: string;
+
+  @ForeignKey(() => TenderSubmissionModel)
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  deXuatId: string;
+
+  @ForeignKey(() => TenderCriteriaModel)
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  tieuChiId: string;
+
+  @Column({
+    type: DataType.FLOAT,
+  })
+  giaTriSo?: number;
+
+  @Column({
+    type: DataType.STRING,
+  })
+  giaTriChuoi?: string;
+
+  @Column({
+    type: DataType.BOOLEAN,
+  })
+  giaTriDungSai?: boolean;
+
+  @Column({
+    type: DataType.JSON,
+  })
+  giaTriJson?: object;
+
+  @Column({
+    type: DataType.JSON,
+    allowNull: false,
+  })
+  giaTriGoc: any;
+
+  @Column({
+    type: DataType.FLOAT,
+  })
+  diemChuanHoa?: number;
+
+  @Column({
+    type: DataType.FLOAT,
+  })
+  diemCoTrongSo?: number;
+}

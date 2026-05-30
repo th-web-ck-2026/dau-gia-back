@@ -1,0 +1,134 @@
+import { Controller, Post, Body, Param, Get } from '@nestjs/common';
+import { TenderService } from '../services/tender.service';
+import { CreateTenderSessionDto } from '../dto/create-tender-session.dto';
+import { SubmitTenderProposalDto } from '../dto/submit-tender-proposal.dto';
+import { Auth } from '@/common/decorators/auth.decorator';
+import { ReqUser } from '@/common/decorators/user.decorator';
+import { AuthUser } from '@/common/interfaces/auth-user.interface';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { RequestCondition } from '@/common/decorators/request-condition.decotator';
+import { RequestQuery } from '@/common/decorators/request-query.decorator';
+import { QueryOption } from '@/common/pipe/query-option.interface';
+import { ConditionTenderSessionDto } from '../dto/condition-tender-session.dto';
+import { ApiGet, ApiCondition } from '@/common/decorators/swagger';
+import { TrangThaiPhien } from '@/modules/scoring/common/constants';
+import { Public } from '@/common/decorators/public.decorator';
+
+@ApiTags('Tender')
+@Controller('tender-sessions')
+export class TenderController {
+  constructor(private readonly tenderService: TenderService) {}
+
+  @ApiGet({
+    mode: 'page',
+    summary: 'Lay danh sach phien dau thau',
+  })
+  @ApiCondition({
+    fields: [
+      {
+        name: '_id',
+        type: 'string',
+        description: 'Mã phiên đấu thầu',
+      },
+      {
+        name: 'tieuDe',
+        type: 'string',
+        description: 'Tiêu đề phiên đấu thầu',
+      },
+      {
+        name: 'chuPhienId',
+        type: 'string',
+        description: 'Mã chủ phiên',
+      },
+      {
+        name: 'trangThai',
+        type: 'string',
+        description: 'Trạng thái phiên',
+        enum: Object.values(TrangThaiPhien),
+      },
+      {
+        name: 'thoiGianBatDau',
+        type: 'date',
+        description: 'Thời gian bắt đầu',
+      },
+      {
+        name: 'thoiGianKetThuc',
+        type: 'date',
+        description: 'Thời gian kết thúc',
+      },
+    ],
+  })
+  @Public()
+  async getSessions(
+    @RequestCondition(ConditionTenderSessionDto)
+    condition: ConditionTenderSessionDto,
+    @RequestQuery() query: QueryOption,
+  ) {
+    return this.tenderService.getPage({ where: { ...condition } }, query);
+  }
+
+  @Post()
+  @Auth()
+  @ApiOperation({ summary: 'Tao phien dau thau moi' })
+  async createSession(
+    @ReqUser() user: AuthUser,
+    @Body() dto: CreateTenderSessionDto,
+  ) {
+    return this.tenderService.createSession(user.id, dto);
+  }
+
+  @Post(':id/publish')
+  @Auth()
+  @ApiOperation({ summary: 'Cong bo phien dau thau' })
+  async publishSession(@ReqUser() user: AuthUser, @Param('id') id: string) {
+    return this.tenderService.publishSession(user.id, id);
+  }
+
+  @Post('submissions')
+  @Auth()
+  @ApiOperation({ summary: 'Nop ho so de xuat' })
+  async submitProposal(
+    @ReqUser() user: AuthUser,
+    @Body() dto: SubmitTenderProposalDto,
+  ) {
+    return this.tenderService.submitProposal(user.id, dto);
+  }
+
+  @Post(':id/evaluate')
+  @Auth()
+  @ApiOperation({ summary: 'Danh gia va xep hang ho so phien dau thau' })
+  async evaluateSession(@ReqUser() user: AuthUser, @Param('id') id: string) {
+    return this.tenderService.evaluateSession(user.id, id);
+  }
+
+  @Public()
+  @Get(':id')
+  @ApiOperation({ summary: 'Lay chi tiet phien dau thau' })
+  async getSessionDetails(@Param('id') id: string) {
+    return this.tenderService.getSessionDetails(id);
+  }
+
+  @Get(':id/ranking')
+  @Auth()
+  @ApiOperation({ summary: 'Lay bang xep hang phien dau thau' })
+  async getRanking(@ReqUser() user: AuthUser, @Param('id') id: string) {
+    return this.tenderService.getRanking(user.id, id);
+  }
+
+  @Post(':id/close')
+  @Auth()
+  @ApiOperation({ summary: 'Dong phien dau thau' })
+  async closeSession(@ReqUser() user: AuthUser, @Param('id') id: string) {
+    return this.tenderService.closeSession(user.id, id);
+  }
+
+  @Get(':id/submissions')
+  @Auth()
+  @ApiOperation({ summary: 'Lay danh sach de xuat cua phien' })
+  async getSessionSubmissions(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+  ) {
+    return this.tenderService.getSessionSubmissions(user.id, id);
+  }
+}
