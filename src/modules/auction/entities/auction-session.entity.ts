@@ -19,6 +19,7 @@ export class AuctionSession implements BaseEntity {
   giaCaoNhat?: number;
   danhSachHinhAnh: string[];
   anDanh: boolean;
+  thoiDiemDong?: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }

@@ -47,6 +47,12 @@ export abstract class BaseService<T extends BaseEntity> {
   ): Promise<{ n: number }> {
     return this.repository.updateMany(updateDto, condition);
   }
+  async updateAtomic(
+    updateDto: any,
+    condition?: UpdateOptions,
+  ): Promise<number> {
+    return this.repository.updateAtomic(updateDto, condition);
+  }
 
   async deleteOne(condition: DestroyOptions): Promise<T | null> {
     return this.repository.deleteOne(condition);

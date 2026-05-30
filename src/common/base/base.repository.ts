@@ -86,6 +86,10 @@ export abstract class BaseRepository<E extends BaseEntity> {
     const res = await this.model.update(values, condition);
     return { n: res.length };
   }
+  async updateAtomic(values: any, condition: UpdateOptions): Promise<number> {
+    const [affectedCount] = await this.model.update(values, condition);
+    return affectedCount;
+  }
   async deleteOne(condition: DestroyOptions): Promise<E | null> {
     const res = await this.model.findOne(condition);
     if (res) {

@@ -20,6 +20,7 @@ describe('TenderService', () => {
     getOne: jest.fn(),
     getMany: jest.fn(),
     updateOne: jest.fn(),
+    updateAtomic: jest.fn(),
   };
 
   const mockCriteriaRepo = {

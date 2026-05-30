@@ -15,6 +15,7 @@ describe('AuctionService', () => {
     create: jest.fn(),
     getOne: jest.fn(),
     updateOne: jest.fn(),
+    updateAtomic: jest.fn(),
   };
 
   const mockBidRepo = {
