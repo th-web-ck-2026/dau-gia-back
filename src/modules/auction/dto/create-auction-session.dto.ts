@@ -1,4 +1,11 @@
-import { IsString, IsNotEmpty, IsOptional, IsDateString, IsNumber, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsDateString,
+  IsNumber,
+  IsBoolean,
+} from 'class-validator';
 
 export class CreateAuctionSessionDto {
   @IsString()
@@ -42,4 +49,8 @@ export class CreateAuctionSessionDto {
   @IsBoolean()
   @IsOptional()
   anDanh?: boolean;
+  
+  @IsString({ each: true })
+  @IsOptional()
+  danhSachHinhAnh?: string[];
 }

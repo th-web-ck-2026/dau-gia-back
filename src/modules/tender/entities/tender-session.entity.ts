@@ -13,6 +13,7 @@ export class TenderSession implements BaseEntity {
   trongSoKyThuat: number;
   trongSoGia: number;
   diemKyThuatToiThieu: number;
+  danhSachHinhAnh: string[];
   anDanh: boolean;
   thoiDiemCongBo?: Date;
   thoiDiemDong?: Date;

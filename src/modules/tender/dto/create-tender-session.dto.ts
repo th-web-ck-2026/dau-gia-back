@@ -83,6 +83,11 @@ export class CreateTenderSessionDto {
   anDanh?: boolean;
 
   @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  danhSachHinhAnh?: string[];
+
+  @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateCriteriaDto)
   tieuChi: CreateCriteriaDto[];
