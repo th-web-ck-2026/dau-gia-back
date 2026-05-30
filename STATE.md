@@ -14,10 +14,10 @@
 | BACK-3 | Tender Service/API | ✅ DONE |
 | BACK-4 | Auction Data Layer | ✅ DONE |
 | BACK-5 | Auction Service/API | ✅ DONE |
-| BACK-6 | Cron & Realtime Fallback | ⏳ IN PROGRESS (stub only) |
+| BACK-6 | Cron & Realtime Fallback | ✅ DONE |
 | BACK-7 | Audit & Hardening | ❌ NOT STARTED |
 
-**Đang ở:** Bắt đầu BACK-6 — cron-job service hiện chỉ là stub rỗng.
+**Đang ở:** Bắt đầu BACK-7.
 
 ---
 
@@ -51,13 +51,13 @@
 - DTO: create-auction-session, place-auction-bid, auction-session-status, condition-auction-session
 - `auction.service.spec.ts` — unit test có
 
-### ⏳ BACK-6: Cron & Realtime Fallback
-- `src/modules/cron-job/cron-job.service.ts` — **CHỈ LÀ STUB** (`console.log` rỗng)
+### ✅ BACK-6: Cron & Realtime Fallback
+- `src/modules/cron-job/cron-job.service.ts` — Đã hoàn thành triển khai background Cron job và realtime fallback check.
 - Cần làm:
-  - [ ] Cron tự động open session khi đến `thoiGianBatDau`
-  - [ ] Cron tự động close session khi đến `thoiGianKetThuc`
-  - [ ] Endpoint status/ranking tối ưu cho polling (đã có GET :id/status và GET :id/ranking)
-  - [ ] WebSocket/SSE (optional nếu có thời gian)
+  - [x] 1. Cron tự động open session khi đến `thoiGianBatDau`
+  - [x] 2. Cron tự động close session khi đến `thoiGianKetThuc`
+  - [x] 3. Endpoint status/ranking tối ưu cho polling (đã có GET :id/status và GET :id/ranking)
+  - [x] 4. WebSocket/SSE (optional nếu có thời gian)
 
 ### ❌ BACK-7: Audit & Hardening
 - Chưa có `audit-log` module
@@ -84,4 +84,4 @@ Sau mỗi task/phase hoàn thành, AI worker cập nhật:
 2. Cập nhật chi tiết phase tương ứng (tick checkbox, ghi chú file đã tạo)
 3. Cập nhật dòng "Đang ở:" để chỉ phase tiếp theo
 
-_Last updated: 2026-05-29_
+_Last updated: 2026-05-30_

@@ -15,6 +15,7 @@ describe('AuctionService', () => {
     create: jest.fn(),
     getOne: jest.fn(),
     updateOne: jest.fn(),
+    updateAtomic: jest.fn(),
   };
 
   const mockBidRepo = {
@@ -45,6 +46,28 @@ describe('AuctionService', () => {
   });
 
   describe('createSession', () => {
+    it('should throw BadRequest if start date is in the past', async () => {
+      const dto = {
+        tieuDe: 'Phien test',
+        thoiGianBatDau: '2020-01-01T00:00:00.000Z',
+        thoiGianKetThuc: '2026-06-02T00:00:00.000Z',
+        giaKhoiDiem: 100,
+        buocGia: 10,
+      };
+      await expect(service.createSession('user1', dto as any)).rejects.toThrow(ApiError);
+    });
+
+    it('should throw BadRequest if end date is in the past', async () => {
+      const dto = {
+        tieuDe: 'Phien test',
+        thoiGianBatDau: '2026-06-01T00:00:00.000Z',
+        thoiGianKetThuc: '2020-01-01T00:00:00.000Z',
+        giaKhoiDiem: 100,
+        buocGia: 10,
+      };
+      await expect(service.createSession('user1', dto as any)).rejects.toThrow(ApiError);
+    });
+
     it('should throw BadRequest if start date is after end date', async () => {
       const dto = {
         tieuDe: 'Phien test',
@@ -63,6 +86,7 @@ describe('AuctionService', () => {
         thoiGianKetThuc: '2026-06-02T00:00:00.000Z',
         giaKhoiDiem: 100,
         buocGia: 10,
+        danhSachHinhAnh: ['img1.jpg', 'img2.jpg'],
       };
 
       const mockSession = { _id: 'session1', ...dto, chuPhienId: 'user1', trangThai: TrangThaiPhien.NHAP };
@@ -70,7 +94,10 @@ describe('AuctionService', () => {
 
       const res = await service.createSession('user1', dto as any);
       expect(res.tieuDe).toBe('Phien test');
-      expect(sessionRepo.create).toHaveBeenCalled();
+      expect(res.danhSachHinhAnh).toEqual(['img1.jpg', 'img2.jpg']);
+      expect(sessionRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+        danhSachHinhAnh: ['img1.jpg', 'img2.jpg'],
+      }));
     });
   });
 

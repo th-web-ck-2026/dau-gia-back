@@ -105,4 +105,9 @@ export class AuctionSessionModel extends Model implements AuctionSession {
     allowNull: false,
   })
   anDanh: boolean;
+
+  @Column({
+    type: DataType.DATE,
+  })
+  thoiDiemDong?: Date;
 }
