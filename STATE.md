@@ -17,8 +17,9 @@
 | BACK-6 | Cron & Realtime Fallback | ✅ DONE |
 | BACK-7 | Audit & Hardening | ✅ DONE |
 | BACK-8 | Unique Participant Count | ✅ DONE |
+| BACK-9 | Module Review & Hardening | ✅ DONE |
 
-**Đang ở:** Backend phases are completed! Ready for frontend integration.
+**Đang ở:** Backend phases + đợt rà soát hardening đã xong. Sẵn sàng cho frontend integration.
 
 ---
 
@@ -73,12 +74,40 @@
 - [x] Thêm `soLuongNguoiThamGia` cho đấu giá (model, entity, status DTO, placeBid logic, onModuleInit self-healing)
 - [x] Thêm `soLuongNguoiThamGia` cho đấu thầu (model, entity, submitProposal logic, onModuleInit self-healing)
 
+### ✅ BACK-9: Module Review & Hardening (commit `bf25001`)
+Báo cáo: `docs/html-tailwind/module-review-report.html`
+
+**P0 - Critical:**
+- [x] `main.ts` — CORS đọc từ env `CORS_ORIGIN` (multi-origin, thay vì hardcode `*`)
+- [x] `app.module.ts` — bật `AuthGuard` global (trước đây bị comment-out → mọi endpoint public)
+- [x] `auth.controller.ts` — bỏ `@Public()` ở class scope, áp per-method; logout-all/change-password được protect đúng
+- [x] `auth.service.ts` — `register` không spread password vào user table; `resetPassword` update credential qua `AuthProviderService.updateCredentials` (trước đó update sai bảng → reset không có hiệu lực)
+- [x] `auction.service.ts::placeBid` — bọc `sequelize.transaction` + `LOCK.UPDATE` chống race condition; throw `ConflictException(409)` với `{giaCaoNhat, giaToiThieuKeTiep}`
+- [x] `auction-bid.model/entity` — thêm `thuTuServer` (autoIncrement) cho tie-break theo thứ tự server nhận
+
+**P1 - Integration:**
+- [x] Notification hooks: `AUCTION_OUTBID/AUCTION_WON/AUCTION_CLOSED`, `TENDER_NEW_SUBMISSION/TENDER_WON/TENDER_CLOSED`
+- [x] `auction/tender/cron-job.module` — import `NotificationModule`
+- [x] `tender.controller` — route `POST /tenders/:id/submissions` (thay `/submissions`); DTO `phienId` optional
+- [x] `audit-log` — `nguoiThucHienId` nullable cho system-triggered events
+- [x] `auction/tender.service::evaluateSession` — signature nhận `userId: string | null` (system trigger)
+
+**P2-P3 - Minor:**
+- [x] `mail-config.module` — bỏ import `SequelizeModule.forFeature` trùng
+
+**Tests & Verify:**
+- [x] `auction/tender service spec` — mock `NotificationService` + `Sequelize.transaction`
+- [x] 3 controller spec — dùng `objectContaining` cho assertion `getPage`
+- [x] `tender.controller.spec` — cập nhật `submitProposal` test theo route mới
+- [x] Build pass, **83/83 unit tests pass**
+
 ---
 
 ## Vấn đề kỹ thuật cần lưu ý
 
-- **Node v14** đang dùng không tương thích ts-jest mới → test chưa chạy được. Cần nâng Node lên v18+ hoặc downgrade ts-jest.
-- Chưa có `audit-log` module dù plan đề cập hook `createAuditLog()` nên các service hiện tại chưa có hook này.
+- **Node v14** đang dùng không tương thích ts-jest mới → đã verify chạy được trên môi trường hiện tại (83/83 pass). Nếu CI dùng Node v14 cần check lại.
+- ~~Chưa có `audit-log` module~~ → đã có (BACK-7) và đã hook vào các action quan trọng.
+- `.claude/` (worktrees, plans, settings nội bộ) chưa nằm trong `.gitignore` → nên thêm để sạch `git status`.
 
 ---
 
@@ -89,4 +118,4 @@ Sau mỗi task/phase hoàn thành, AI worker cập nhật:
 2. Cập nhật chi tiết phase tương ứng (tick checkbox, ghi chú file đã tạo)
 3. Cập nhật dòng "Đang ở:" để chỉ phase tiếp theo
 
-_Last updated: 2026-05-31_
+_Last updated: 2026-06-01_
