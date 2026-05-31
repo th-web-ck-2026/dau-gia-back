@@ -1,4 +1,4 @@
-import { Table, Column, DataType, Model, ForeignKey } from 'sequelize-typescript';
+import { Table, Column, DataType, Model, ForeignKey, BelongsTo } from 'sequelize-typescript';
 import { EntityTable } from '@/common/constants/entity.constant';
 import { StrObjectId } from '@/common/constants/base.constant';
 import { TenderSubmissionValue } from '../entities/tender-submission-value.entity';
@@ -19,12 +19,24 @@ export class TenderSubmissionValueModel extends Model implements TenderSubmissio
   })
   deXuatId: string;
 
+  @BelongsTo(() => TenderSubmissionModel, {
+    foreignKey: 'deXuatId',
+    as: 'deXuat',
+  })
+  deXuat: TenderSubmissionModel;
+
   @ForeignKey(() => TenderCriteriaModel)
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
   tieuChiId: string;
+
+  @BelongsTo(() => TenderCriteriaModel, {
+    foreignKey: 'tieuChiId',
+    as: 'tieuChi',
+  })
+  tieuChi: TenderCriteriaModel;
 
   @Column({
     type: DataType.FLOAT,

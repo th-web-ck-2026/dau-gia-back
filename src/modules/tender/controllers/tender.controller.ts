@@ -18,6 +18,10 @@ import { TenderSubmission } from '../entities/tender-submission.entity';
 import { PageableDto } from '@/common/dto/pageable.dto';
 import { Throttle } from '@nestjs/throttler';
 
+import { UserModel } from '@/modules/user/models/user.model';
+import { TenderCriteriaModel } from '../models/tender-criteria.model';
+import { TenderSubmissionModel } from '../models/tender-submission.model';
+
 @ApiTags('Tender')
 @Controller('tender-sessions')
 export class TenderController {
@@ -69,7 +73,14 @@ export class TenderController {
     condition: ConditionTenderSessionDto,
     @RequestQuery() query: QueryOption,
   ): Promise<PageableDto<TenderSession>> {
-    return this.tenderService.getPage({ where: { ...condition } }, query);
+    return this.tenderService.getPage({
+      where: { ...condition },
+      include: [
+        { model: UserModel, as: 'chuPhien', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+        { model: TenderCriteriaModel, as: 'tieuChi' },
+        { model: TenderSubmissionModel, as: 'deXuatThang' },
+      ],
+    }, query);
   }
 
   @Post()

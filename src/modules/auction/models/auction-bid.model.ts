@@ -1,4 +1,4 @@
-import { Table, Column, DataType, Model, ForeignKey } from 'sequelize-typescript';
+import { Table, Column, DataType, Model, ForeignKey, BelongsTo } from 'sequelize-typescript';
 import { EntityTable } from '@/common/constants/entity.constant';
 import { StrObjectId } from '@/common/constants/base.constant';
 import { AuctionBid } from '../entities/auction-bid.entity';
@@ -20,12 +20,24 @@ export class AuctionBidModel extends Model implements AuctionBid {
   })
   phienId: string;
 
+  @BelongsTo(() => AuctionSessionModel, {
+    foreignKey: 'phienId',
+    as: 'phien',
+  })
+  phien: AuctionSessionModel;
+
   @ForeignKey(() => UserModel)
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
   nguoiThamGiaId: string;
+
+  @BelongsTo(() => UserModel, {
+    foreignKey: 'nguoiThamGiaId',
+    as: 'nguoiThamGia',
+  })
+  nguoiThamGia: UserModel;
 
   @Column({
     type: DataType.DECIMAL,

@@ -1,8 +1,11 @@
-import { Table, Column, DataType, Model } from 'sequelize-typescript';
+import { Table, Column, DataType, Model, ForeignKey, BelongsTo, HasMany } from 'sequelize-typescript';
 import { EntityTable } from '@/common/constants/entity.constant';
 import { StrObjectId } from '@/common/constants/base.constant';
 import { TenderSession } from '../entities/tender-session.entity';
 import { TrangThaiPhien } from '@/modules/scoring/common/constants';
+import { UserModel } from '@/modules/user/models/user.model';
+import { TenderSubmissionModel } from './tender-submission.model';
+import { TenderCriteriaModel } from './tender-criteria.model';
 
 @Table({
   tableName: EntityTable.TENDER_SESSION,
@@ -27,11 +30,18 @@ export class TenderSessionModel extends Model implements TenderSession {
   })
   moTa?: string;
 
+  @ForeignKey(() => UserModel)
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
   chuPhienId: string;
+
+  @BelongsTo(() => UserModel, {
+    foreignKey: 'chuPhienId',
+    as: 'chuPhien',
+  })
+  chuPhien: UserModel;
 
   @Column({
     type: DataType.ENUM(...Object.values(TrangThaiPhien)),
@@ -95,8 +105,21 @@ export class TenderSessionModel extends Model implements TenderSession {
   })
   thoiDiemDong?: Date;
 
+  @ForeignKey(() => TenderSubmissionModel)
   @Column({
     type: DataType.STRING,
   })
   deXuatThangId?: string;
+
+  @BelongsTo(() => TenderSubmissionModel, {
+    foreignKey: 'deXuatThangId',
+    as: 'deXuatThang',
+  })
+  deXuatThang?: TenderSubmissionModel;
+
+  @HasMany(() => TenderCriteriaModel, {
+    foreignKey: 'phienId',
+    as: 'tieuChi',
+  })
+  tieuChi: TenderCriteriaModel[];
 }

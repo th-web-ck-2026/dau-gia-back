@@ -1,4 +1,4 @@
-import { Table, Column, DataType, Model, ForeignKey } from 'sequelize-typescript';
+import { Table, Column, DataType, Model, ForeignKey, BelongsTo } from 'sequelize-typescript';
 import { EntityTable } from '@/common/constants/entity.constant';
 import { StrObjectId } from '@/common/constants/base.constant';
 import { TenderCriteria } from '../entities/tender-criteria.entity';
@@ -18,6 +18,12 @@ export class TenderCriteriaModel extends Model implements TenderCriteria {
     allowNull: false,
   })
   phienId: string;
+
+  @BelongsTo(() => TenderSessionModel, {
+    foreignKey: 'phienId',
+    as: 'phien',
+  })
+  phien: TenderSessionModel;
 
   @Column({
     type: DataType.STRING,

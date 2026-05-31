@@ -10,6 +10,8 @@ import { AuditLog } from '../entities/audit-log.entity';
 import { PageableDto } from '@/common/dto/pageable.dto';
 import { CreateAuditLogDto } from '../dto/create-audit-log.dto';
 
+import { UserModel } from '@/modules/user/models/user.model';
+
 @ApiTags('AuditLog')
 @Controller('audit-logs')
 @Auth(UserRoles.ADMIN)
@@ -24,7 +26,11 @@ export class AuditLogController {
   async getLogs(
     @RequestQuery() query: QueryOption,
   ): Promise<PageableDto<AuditLog>> {
-    return this.auditLogService.getPage({}, query);
+    return this.auditLogService.getPage({
+      include: [
+        { model: UserModel, as: 'nguoiThucHien', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] }
+      ]
+    }, query);
   }
 
   @Post()

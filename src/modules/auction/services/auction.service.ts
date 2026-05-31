@@ -12,6 +12,8 @@ import { PlaceAuctionBidDto } from '../dto/place-auction-bid.dto';
 import { ApiError } from '@/common/exceptions/api-error';
 import { TrangThaiPhien, TrangThaiDeXuat } from '@/modules/scoring/common/constants';
 import { AuctionSessionStatusDto } from '../dto/auction-session-status.dto';
+import { UserModel } from '@/modules/user/models/user.model';
+import { AuctionBidModel } from '../models/auction-bid.model';
 
 @Injectable()
 export class AuctionService extends BaseService<AuctionSession> {
@@ -268,7 +270,13 @@ export class AuctionService extends BaseService<AuctionSession> {
   }
 
   async getSessionDetails(sessionId: string): Promise<AuctionSession> {
-    let session = await this.auctionSessionRepository.getOne({ where: { _id: sessionId } });
+    let session = await this.auctionSessionRepository.getOne({
+      where: { _id: sessionId },
+      include: [
+        { model: UserModel, as: 'chuPhien', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+        { model: AuctionBidModel, as: 'deXuatThang' },
+      ],
+    });
     if (!session) {
       throw ApiError.NotFound('Phien dau gia khong ton tai');
     }
@@ -289,12 +297,16 @@ export class AuctionService extends BaseService<AuctionSession> {
     const bids = await this.auctionBidRepository.getMany({
       where: { phienId: sessionId },
       order: [['giaDat', 'DESC']],
+      include: [
+        { model: UserModel, as: 'nguoiThamGia', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+      ],
     });
 
     return bids.map((bid) => {
       const plainBid = { ...bid } as any;
       if (session.anDanh && !isOwner && !isAdmin && bid.nguoiThamGiaId !== userId) {
         plainBid.nguoiThamGiaId = 'ANONYMOUS';
+        plainBid.nguoiThamGia = null;
       }
       return plainBid;
     });

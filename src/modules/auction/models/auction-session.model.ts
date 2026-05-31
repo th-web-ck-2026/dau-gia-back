@@ -1,8 +1,11 @@
-import { Table, Column, DataType, Model } from 'sequelize-typescript';
+import { Table, Column, DataType, Model, ForeignKey, BelongsTo } from 'sequelize-typescript';
 import { EntityTable } from '@/common/constants/entity.constant';
 import { StrObjectId } from '@/common/constants/base.constant';
 import { AuctionSession } from '../entities/auction-session.entity';
 import { TrangThaiPhien } from '@/modules/scoring/common/constants';
+import { UserModel } from '@/modules/user/models/user.model';
+import { User } from '@/modules/user/entities/user.entity';
+import { AuctionBidModel } from './auction-bid.model';
 
 @Table({
   tableName: EntityTable.AUCTION_SESSION,
@@ -31,8 +34,15 @@ export class AuctionSessionModel extends Model implements AuctionSession {
     type: DataType.STRING,
     allowNull: false,
   })
+  @ForeignKey(() => UserModel)
   chuPhienId: string;
 
+  @BelongsTo(() => UserModel, {
+    foreignKey: 'chuPhienId',
+    as: 'chuPhien',
+  })
+  chuPhien: User;
+  
   @Column({
     type: DataType.ENUM(...Object.values(TrangThaiPhien)),
     defaultValue: TrangThaiPhien.NHAP,
@@ -89,10 +99,17 @@ export class AuctionSessionModel extends Model implements AuctionSession {
   })
   trongSoCamKet?: number;
 
+  @ForeignKey(() => AuctionBidModel)
   @Column({
     type: DataType.STRING,
   })
   deXuatThangId?: string;
+
+  @BelongsTo(() => AuctionBidModel, {
+    foreignKey: 'deXuatThangId',
+    as: 'deXuatThang',
+  })
+  deXuatThang?: AuctionBidModel;
 
   @Column({
     type: DataType.DECIMAL,

@@ -19,6 +19,9 @@ import { AuctionSessionStatusDto } from '../dto/auction-session-status.dto';
 import { PageableDto } from '@/common/dto/pageable.dto';
 import { Throttle } from '@nestjs/throttler';
 
+import { UserModel } from '@/modules/user/models/user.model';
+import { AuctionBidModel } from '../models/auction-bid.model';
+
 @ApiTags('Auction')
 @Controller('auction-sessions')
 export class AuctionController {
@@ -69,7 +72,13 @@ export class AuctionController {
     @RequestCondition(ConditionAuctionSessionDto) condition: ConditionAuctionSessionDto,
     @RequestQuery() query: QueryOption,
   ): Promise<PageableDto<AuctionSession>> {
-    return this.auctionService.getPage({ where: condition as any }, query);
+    return this.auctionService.getPage({
+      where: condition as any,
+      include: [
+        { model: UserModel, as: 'chuPhien', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+        { model: AuctionBidModel, as: 'deXuatThang' },
+      ],
+    }, query);
   }
 
   @Post()

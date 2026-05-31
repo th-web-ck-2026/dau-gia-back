@@ -14,6 +14,10 @@ import { SubmitTenderProposalDto } from '../dto/submit-tender-proposal.dto';
 import { ApiError } from '@/common/exceptions/api-error';
 import { TrangThaiPhien, TrangThaiDeXuat, LoaiTieuChi, HuongToiUu } from '@/modules/scoring/common/constants';
 import { Op } from 'sequelize';
+import { UserModel } from '@/modules/user/models/user.model';
+import { TenderCriteriaModel } from '../models/tender-criteria.model';
+import { TenderSubmissionModel } from '../models/tender-submission.model';
+import { TenderSubmissionValueModel } from '../models/tender-submission-value.model';
 
 @Injectable()
 export class TenderService extends BaseService<TenderSession> {
@@ -387,11 +391,17 @@ export class TenderService extends BaseService<TenderSession> {
   }
 
   async getSessionDetails(sessionId: string): Promise<TenderSessionDetails> {
-    let session = await this.tenderSessionRepository.getOne({ where: { _id: sessionId } });
+    let session = await this.tenderSessionRepository.getOne({
+      where: { _id: sessionId },
+      include: [
+        { model: UserModel, as: 'chuPhien', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+        { model: TenderCriteriaModel, as: 'tieuChi' },
+        { model: TenderSubmissionModel, as: 'deXuatThang' },
+      ],
+    });
     if (!session) throw ApiError.NotFound('Phien dau thau khong ton tai');
     session = await this.checkAndTransitionStateInternal(session);
-    const criteria = await this.tenderCriteriaRepository.getMany({ where: { phienId: sessionId } });
-    return { ...session, tieuChi: criteria };
+    return session as unknown as TenderSessionDetails;
   }
 
   async getSessionSubmissions(userId: string, sessionId: string, userRole?: string): Promise<TenderSubmissionDetails[]> {
@@ -404,6 +414,10 @@ export class TenderService extends BaseService<TenderSession> {
     let submissions = await this.tenderSubmissionRepository.getMany({
       where: { phienId: sessionId },
       order: [['diemTongHop', 'DESC']],
+      include: [
+        { model: UserModel, as: 'nguoiThamGia', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+        { model: TenderSubmissionValueModel, as: 'giaTriTieuChi' },
+      ],
     });
 
     if (!isOwner && !isAdmin) {
@@ -414,12 +428,12 @@ export class TenderService extends BaseService<TenderSession> {
 
     const result: any[] = [];
     for (const sub of submissions) {
-      const values = await this.tenderSubmissionValueRepository.getMany({ where: { deXuatId: sub._id } });
       const plainSub = { ...sub } as any;
       if (session.anDanh && !isOwner && !isAdmin && sub.nguoiThamGiaId !== userId) {
         plainSub.nguoiThamGiaId = 'ANONYMOUS';
+        plainSub.nguoiThamGia = null;
       }
-      result.push({ ...plainSub, giaTriTieuChi: values });
+      result.push(plainSub);
     }
     return result;
   }
@@ -436,6 +450,9 @@ export class TenderService extends BaseService<TenderSession> {
     let submissions = await this.tenderSubmissionRepository.getMany({
       where: { phienId: sessionId },
       order: [['diemTongHop', 'DESC']],
+      include: [
+        { model: UserModel, as: 'nguoiThamGia', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+      ],
     });
 
     if (!isOwner && !isAdmin && !isClosed) {
@@ -444,13 +461,16 @@ export class TenderService extends BaseService<TenderSession> {
 
     const resultList = submissions.map((sub, index) => {
       let participantId = sub.nguoiThamGiaId;
+      let participant = (sub as any).nguoiThamGia;
       if (session.anDanh && !isOwner && !isAdmin && sub.nguoiThamGiaId !== userId) {
         participantId = 'ANONYMOUS';
+        participant = null;
       }
       return {
         thuHang: sub.thuHang || index + 1,
         deXuatId: sub._id,
         nguoiThamGiaId: participantId,
+        nguoiThamGia: participant,
         diemKyThuat: sub.diemKyThuat,
         diemGia: sub.diemGia,
         diemTongHop: sub.diemTongHop,
