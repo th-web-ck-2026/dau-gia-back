@@ -42,3 +42,8 @@ export class TenderSubmission implements BaseEntity {
   @ApiPropertyOptional()
   updatedAt?: Date;
 }
+
+export class TenderSubmissionDetails extends TenderSubmission {
+  @ApiProperty({ type: () => require('./tender-submission-value.entity').TenderSubmissionValue })
+  giaTriTieuChi: any[];
+}

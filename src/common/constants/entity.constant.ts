@@ -11,4 +11,5 @@ export const EntityTable = {
   TENDER_SUBMISSION_VALUE: 'gia_tri_de_xuat',
   AUCTION_SESSION: 'phien_dau_gia',
   AUCTION_BID: 'gia_dau_gia',
+  AUDIT_LOG: 'nhat_ky_kiem_toan',
 } as const;

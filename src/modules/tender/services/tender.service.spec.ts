@@ -7,6 +7,7 @@ import { TenderSubmissionValueRepository } from '../repositories/tender-submissi
 import { ScoringService } from '@/modules/scoring/services/scoring.service';
 import { ApiError } from '@/common/exceptions/api-error';
 import { TrangThaiPhien, TrangThaiDeXuat, LoaiTieuChi, HuongToiUu } from '@/modules/scoring/common/constants';
+import { AuditLogService } from '@/modules/audit-log/services/audit-log.service';
 
 describe('TenderService', () => {
   let service: TenderService;
@@ -14,6 +15,7 @@ describe('TenderService', () => {
   let criteriaRepo: any;
   let submissionRepo: any;
   let submissionValueRepo: any;
+  let auditLogService: any;
 
   const mockSessionRepo = {
     create: jest.fn(),
@@ -50,6 +52,12 @@ describe('TenderService', () => {
         { provide: TenderCriteriaRepository, useValue: mockCriteriaRepo },
         { provide: TenderSubmissionRepository, useValue: mockSubmissionRepo },
         { provide: TenderSubmissionValueRepository, useValue: mockSubmissionValueRepo },
+        {
+          provide: AuditLogService,
+          useValue: {
+            logAction: jest.fn().mockResolvedValue({}),
+          },
+        },
       ],
     }).compile();
 
@@ -58,6 +66,7 @@ describe('TenderService', () => {
     criteriaRepo = module.get<TenderCriteriaRepository>(TenderCriteriaRepository);
     submissionRepo = module.get<TenderSubmissionRepository>(TenderSubmissionRepository);
     submissionValueRepo = module.get<TenderSubmissionValueRepository>(TenderSubmissionValueRepository);
+    auditLogService = module.get<AuditLogService>(AuditLogService);
   });
 
   afterEach(() => {
@@ -95,7 +104,7 @@ describe('TenderService', () => {
       await expect(service.createSession('user1', dto as any)).rejects.toThrow(ApiError);
     });
 
-    it('should create session and criteria successfully', async () => {
+    it('should create session and criteria successfully and log audit', async () => {
       const dto = {
         tieuDe: 'Phien test',
         thoiGianBatDau: '2026-06-01T00:00:00.000Z',
@@ -133,6 +142,14 @@ describe('TenderService', () => {
         danhSachHinhAnh: ['img1.jpg', 'img2.jpg'],
       }));
       expect(criteriaRepo.create).toHaveBeenCalled();
+      expect(auditLogService.logAction).toHaveBeenCalledWith(
+        'user1',
+        'CREATE_TENDER_SESSION',
+        'TenderSession',
+        'session1',
+        null,
+        mockSession,
+      );
     });
   });
 
@@ -154,7 +171,7 @@ describe('TenderService', () => {
       await expect(service.publishSession('user1', 'session1')).rejects.toThrow(ApiError);
     });
 
-    it('should publish draft session', async () => {
+    it('should publish draft session and log audit', async () => {
       const session = {
         _id: 'session1',
         chuPhienId: 'user1',
@@ -162,11 +179,20 @@ describe('TenderService', () => {
         thoiGianBatDau: new Date(),
         thoiGianKetThuc: new Date(Date.now() + 10000),
       };
+      const mockResult = { ...session, trangThai: TrangThaiPhien.MO };
       sessionRepo.getOne.mockResolvedValue(session);
-      sessionRepo.updateOne.mockResolvedValue({ ...session, trangThai: TrangThaiPhien.MO });
+      sessionRepo.updateOne.mockResolvedValue(mockResult);
 
-      const res = await service.publishSession('user1', 'session1');
+      await service.publishSession('user1', 'session1');
       expect(sessionRepo.updateOne).toHaveBeenCalled();
+      expect(auditLogService.logAction).toHaveBeenCalledWith(
+        'user1',
+        'PUBLISH_TENDER_SESSION',
+        'TenderSession',
+        'session1',
+        { trangThai: TrangThaiPhien.NHAP },
+        { trangThai: TrangThaiPhien.MO },
+      );
     });
   });
 
@@ -189,12 +215,107 @@ describe('TenderService', () => {
         service.submitProposal('user1', { phienId: 'session1', giaDeXuat: 1200, giaTriTieuChi: [] }),
       ).rejects.toThrow(ApiError);
     });
+
+    it('should submit proposal successfully and log audit', async () => {
+      const session = {
+        _id: 'session1',
+        trangThai: TrangThaiPhien.MO,
+        giaToiDa: 1000,
+        thoiGianBatDau: new Date(Date.now() - 10000),
+        thoiGianKetThuc: new Date(Date.now() + 10000),
+        chuPhienId: 'host1',
+      };
+      const mockSubmission = {
+        _id: 'sub1',
+        phienId: 'session1',
+        nguoiThamGiaId: 'user1',
+        giaDeXuat: 800,
+      };
+      sessionRepo.getOne.mockResolvedValue(session);
+      submissionRepo.create.mockResolvedValue(mockSubmission);
+      submissionValueRepo.create.mockResolvedValue({});
+
+      const dto = { phienId: 'session1', giaDeXuat: 800, giaTriTieuChi: [] };
+      const res = await service.submitProposal('user1', dto);
+
+      expect(res).toEqual(mockSubmission);
+      expect(auditLogService.logAction).toHaveBeenCalledWith(
+        'user1',
+        'SUBMIT_TENDER_PROPOSAL',
+        'TenderSubmission',
+        'sub1',
+        null,
+        mockSubmission,
+      );
+    });
   });
 
   describe('evaluateSession', () => {
     it('should throw NotFound if session does not exist', async () => {
       sessionRepo.getOne.mockResolvedValue(null);
       await expect(service.evaluateSession('user1', 'session1')).rejects.toThrow(ApiError);
+    });
+
+    it('should evaluate session and select winner, then log audit', async () => {
+      const session = {
+        _id: 'session1',
+        trangThai: TrangThaiPhien.MO,
+        chuPhienId: 'user1',
+        thoiGianBatDau: new Date(Date.now() - 20000),
+        thoiGianKetThuc: new Date(Date.now() - 10000),
+        diemKyThuatToiThieu: 0,
+        trongSoKyThuat: 0.7,
+        trongSoGia: 0.3,
+      };
+
+      const mockSubmission = {
+        _id: 'sub1',
+        phienId: 'session1',
+        nguoiThamGiaId: 'user2',
+        giaDeXuat: 100,
+        trangThai: TrangThaiDeXuat.HOP_LE,
+      };
+
+      const mockCriteria = [
+        {
+          _id: 'cri1',
+          phienId: 'session1',
+          tenTieuChi: 'Price',
+          maTieuChi: 'PRICE',
+          nhom: 'ky_thuat',
+          loai: LoaiTieuChi.SO,
+          trongSo: 1.0,
+          huongToiUu: HuongToiUu.THAP_HON,
+        },
+      ];
+
+      const mockSubmissionValues = [
+        {
+          _id: 'val1',
+          deXuatId: 'sub1',
+          tieuChiId: 'cri1',
+          giaTriSo: 100,
+        },
+      ];
+
+      sessionRepo.getOne.mockResolvedValue(session);
+      criteriaRepo.getMany.mockResolvedValue(mockCriteria);
+      submissionRepo.getMany.mockResolvedValue([mockSubmission]);
+      submissionValueRepo.getMany.mockResolvedValue(mockSubmissionValues);
+      submissionValueRepo.updateOne.mockResolvedValue({});
+      submissionRepo.updateOne.mockResolvedValue({});
+
+      const res = await service.evaluateSession('user1', 'session1');
+
+      expect(res).toBeDefined();
+      expect(auditLogService.logAction).toHaveBeenCalledWith(
+        'user1',
+        'EVALUATE_TENDER_SESSION',
+        'TenderSession',
+        'session1',
+        null,
+        null,
+      );
     });
   });
 
@@ -219,7 +340,7 @@ describe('TenderService', () => {
     });
 
     it('should return ranking representation', async () => {
-      const mockSession = { _id: 'session1', trangThai: TrangThaiPhien.MO, anDanh: true, chuPhienId: 'host1' };
+      const mockSession = { _id: 'session1', trangThai: TrangThaiPhien.DONG, anDanh: true, chuPhienId: 'host1' };
       const mockSubmissions = [
         { _id: 'sub1', nguoiThamGiaId: 'user1', diemTongHop: 90, thuHang: 1, trangThai: TrangThaiDeXuat.HOP_LE },
         { _id: 'sub2', nguoiThamGiaId: 'user2', diemTongHop: 80, thuHang: 2, trangThai: TrangThaiDeXuat.HOP_LE }
@@ -230,8 +351,8 @@ describe('TenderService', () => {
       const res = await service.getRanking('user1', 'session1');
       expect(res.phienId).toBe('session1');
       expect(res.danhSach).toHaveLength(2);
-      expect(res.danhSach[0].bietDanh).toBe('user1'); // self is exposed
-      expect(res.danhSach[1].bietDanh).toBe('Bidder B'); // others anonymized
+      expect(res.danhSach[0].nguoiThamGiaId).toBe('user1'); // self is exposed
+      expect(res.danhSach[1].nguoiThamGiaId).toBe('ANONYMOUS'); // others anonymized
     });
   });
 
@@ -245,6 +366,27 @@ describe('TenderService', () => {
       const mockSession = { _id: 'session1', chuPhienId: 'host2' };
       sessionRepo.getOne.mockResolvedValue(mockSession);
       await expect(service.closeSession('user1', 'session1')).rejects.toThrow(ApiError);
+    });
+
+    it('should close session successfully and log audit', async () => {
+      const mockSession = { _id: 'session1', trangThai: TrangThaiPhien.MO, chuPhienId: 'host1' };
+      sessionRepo.getOne.mockResolvedValue(mockSession);
+      sessionRepo.updateOne.mockResolvedValue({ ...mockSession, trangThai: TrangThaiPhien.DONG });
+      submissionRepo.getMany.mockResolvedValue([]);
+
+      // Stub evaluateSession since closeSession delegates to it
+      jest.spyOn(service, 'evaluateSession').mockResolvedValue(mockSession as any);
+
+      const res = await service.closeSession('host1', 'session1');
+      expect(res).toBeDefined();
+      expect(auditLogService.logAction).toHaveBeenCalledWith(
+        'host1',
+        'CLOSE_TENDER_SESSION',
+        'TenderSession',
+        'session1',
+        { trangThai: TrangThaiPhien.MO },
+        { trangThai: TrangThaiPhien.DONG },
+      );
     });
   });
 });

@@ -16,6 +16,7 @@ import { Public } from '@/common/decorators/public.decorator';
 import { TenderSession, TenderSessionDetails } from '../entities/tender-session.entity';
 import { TenderSubmission } from '../entities/tender-submission.entity';
 import { PageableDto } from '@/common/dto/pageable.dto';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Tender')
 @Controller('tender-sessions')
@@ -95,6 +96,7 @@ export class TenderController {
 
   @Post('submissions')
   @Auth()
+  @Throttle({ default: { limit: 5, ttl: 10000 } })
   @ApiOperation({ summary: 'Nop ho so de xuat' })
   @ApiCreatedResponse({ type: TenderSubmission })
   async submitProposal(
@@ -112,7 +114,7 @@ export class TenderController {
     @ReqUser() user: AuthUser,
     @Param('id') id: string,
   ): Promise<TenderSessionDetails | { message: string }> {
-    return this.tenderService.evaluateSession(user.id, id);
+    return this.tenderService.evaluateSession(user.id, id, false, false, user.role);
   }
 
   @Public()
@@ -155,7 +157,7 @@ export class TenderController {
     @ReqUser() user: AuthUser,
     @Param('id') id: string,
   ): Promise<any> {
-    return this.tenderService.getRanking(user.id, id);
+    return this.tenderService.getRanking(user.id, id, user.role);
   }
 
   @Post(':id/close')
@@ -166,7 +168,7 @@ export class TenderController {
     @ReqUser() user: AuthUser,
     @Param('id') id: string,
   ): Promise<TenderSessionDetails> {
-    return this.tenderService.closeSession(user.id, id);
+    return this.tenderService.closeSession(user.id, id, false, user.role);
   }
 
   @Get(':id/submissions')
@@ -177,6 +179,6 @@ export class TenderController {
     @ReqUser() user: AuthUser,
     @Param('id') id: string,
   ): Promise<any[]> {
-    return this.tenderService.getSessionSubmissions(user.id, id);
+    return this.tenderService.getSessionSubmissions(user.id, id, user.role);
   }
 }
