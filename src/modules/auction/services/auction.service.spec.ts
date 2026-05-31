@@ -4,13 +4,14 @@ import { AuctionSessionRepository } from '../repositories/auction-session.reposi
 import { AuctionBidRepository } from '../repositories/auction-bid.repository';
 import { ScoringService } from '@/modules/scoring/services/scoring.service';
 import { ApiError } from '@/common/exceptions/api-error';
-import { TrangThaiPhien } from '@/modules/scoring/common/constants';
+import { TrangThaiPhien, TrangThaiDeXuat } from '@/modules/scoring/common/constants';
 import { AuditLogService } from '@/modules/audit-log/services/audit-log.service';
 
 describe('AuctionService', () => {
   let service: AuctionService;
   let sessionRepo: any;
   let bidRepo: any;
+  let auditLogService: any;
 
   const mockSessionRepo = {
     create: jest.fn(),
@@ -46,6 +47,7 @@ describe('AuctionService', () => {
     service = module.get<AuctionService>(AuctionService);
     sessionRepo = module.get<AuctionSessionRepository>(AuctionSessionRepository);
     bidRepo = module.get<AuctionBidRepository>(AuctionBidRepository);
+    auditLogService = module.get<AuditLogService>(AuditLogService);
   });
 
   afterEach(() => {
@@ -86,7 +88,7 @@ describe('AuctionService', () => {
       await expect(service.createSession('user1', dto as any)).rejects.toThrow(ApiError);
     });
 
-    it('should create session successfully', async () => {
+    it('should create session successfully and log audit', async () => {
       const dto = {
         tieuDe: 'Phien test',
         thoiGianBatDau: '2026-06-01T00:00:00.000Z',
@@ -105,6 +107,14 @@ describe('AuctionService', () => {
       expect(sessionRepo.create).toHaveBeenCalledWith(expect.objectContaining({
         danhSachHinhAnh: ['img1.jpg', 'img2.jpg'],
       }));
+      expect(auditLogService.logAction).toHaveBeenCalledWith(
+        'user1',
+        'CREATE_AUCTION_SESSION',
+        'AuctionSession',
+        'session1',
+        null,
+        mockSession,
+      );
     });
   });
 
@@ -125,6 +135,30 @@ describe('AuctionService', () => {
       sessionRepo.getOne.mockResolvedValue(session);
       await expect(service.publishSession('user1', 'session1')).rejects.toThrow(ApiError);
     });
+
+    it('should publish draft session successfully and log audit', async () => {
+      const session = {
+        _id: 'session1',
+        chuPhienId: 'user1',
+        trangThai: TrangThaiPhien.NHAP,
+        thoiGianBatDau: new Date(),
+        thoiGianKetThuc: new Date(Date.now() + 10000),
+      };
+      const mockResult = { ...session, trangThai: TrangThaiPhien.MO };
+      sessionRepo.getOne.mockResolvedValue(session);
+      sessionRepo.updateOne.mockResolvedValue(mockResult);
+
+      await service.publishSession('user1', 'session1');
+      expect(sessionRepo.updateOne).toHaveBeenCalled();
+      expect(auditLogService.logAction).toHaveBeenCalledWith(
+        'user1',
+        'PUBLISH_AUCTION_SESSION',
+        'AuctionSession',
+        'session1',
+        { trangThai: TrangThaiPhien.NHAP },
+        { trangThai: TrangThaiPhien.MO },
+      );
+    });
   });
 
   describe('placeBid', () => {
@@ -132,12 +166,82 @@ describe('AuctionService', () => {
       sessionRepo.getOne.mockResolvedValue(null);
       await expect(service.placeBid('user1', { phienId: 'session1', giaDat: 200 })).rejects.toThrow(ApiError);
     });
+
+    it('should place bid successfully and log audit', async () => {
+      const session = {
+        _id: 'session1',
+        chuPhienId: 'host1',
+        trangThai: TrangThaiPhien.MO,
+        giaKhoiDiem: 100,
+        buocGia: 10,
+        giaCaoNhat: 150,
+      };
+      const mockBid = {
+        _id: 'bid1',
+        phienId: 'session1',
+        nguoiThamGiaId: 'user1',
+        giaDat: 200,
+      };
+      sessionRepo.getOne.mockResolvedValue(session);
+      bidRepo.create.mockResolvedValue(mockBid);
+      sessionRepo.updateOne.mockResolvedValue({});
+
+      const res = await service.placeBid('user1', { phienId: 'session1', giaDat: 200 });
+
+      expect(res).toEqual(mockBid);
+      expect(auditLogService.logAction).toHaveBeenCalledWith(
+        'user1',
+        'PLACE_AUCTION_BID',
+        'AuctionBid',
+        'bid1',
+        null,
+        mockBid,
+      );
+    });
   });
 
   describe('evaluateSession', () => {
     it('should throw NotFound if session does not exist', async () => {
       sessionRepo.getOne.mockResolvedValue(null);
       await expect(service.evaluateSession('user1', 'session1')).rejects.toThrow(ApiError);
+    });
+
+    it('should evaluate session successfully and log audit', async () => {
+      const session = {
+        _id: 'session1',
+        trangThai: TrangThaiPhien.MO,
+        chuPhienId: 'user1',
+        thoiGianBatDau: new Date(Date.now() - 20000),
+        thoiGianKetThuc: new Date(Date.now() - 10000),
+        trongSoGia: 0.8,
+        trongSoUyTin: 0.2,
+        trongSoCamKet: 0.0,
+      };
+      const mockBids = [
+        {
+          _id: 'bid1',
+          phienId: 'session1',
+          nguoiThamGiaId: 'user2',
+          giaDat: 200,
+          diemUyTin: 100,
+          thoiDiemDat: new Date(),
+        },
+      ];
+      sessionRepo.getOne.mockResolvedValue(session);
+      bidRepo.getMany.mockResolvedValue(mockBids);
+      bidRepo.updateOne.mockResolvedValue({});
+      sessionRepo.updateOne.mockResolvedValue({});
+
+      const res = await service.evaluateSession('user1', 'session1');
+      expect(res).toBeDefined();
+      expect(auditLogService.logAction).toHaveBeenCalledWith(
+        'user1',
+        'EVALUATE_AUCTION_SESSION',
+        'AuctionSession',
+        'session1',
+        null,
+        null,
+      );
     });
   });
 
@@ -185,6 +289,30 @@ describe('AuctionService', () => {
       const mockSession = { _id: 'session1', chuPhienId: 'host2' };
       sessionRepo.getOne.mockResolvedValue(mockSession);
       await expect(service.closeSession('user1', 'session1')).rejects.toThrow(ApiError);
+    });
+
+    it('should close session successfully and log audit', async () => {
+      const session = {
+        _id: 'session1',
+        trangThai: TrangThaiPhien.MO,
+        chuPhienId: 'host1',
+      };
+      sessionRepo.getOne.mockResolvedValue(session);
+      sessionRepo.updateOne.mockResolvedValue({});
+      
+      // Stub evaluateSession since closeSession delegates to it
+      jest.spyOn(service, 'evaluateSession').mockResolvedValue(session as any);
+
+      const res = await service.closeSession('host1', 'session1');
+      expect(res).toBeDefined();
+      expect(auditLogService.logAction).toHaveBeenCalledWith(
+        'host1',
+        'CLOSE_AUCTION_SESSION',
+        'AuctionSession',
+        'session1',
+        { trangThai: TrangThaiPhien.MO },
+        { trangThai: TrangThaiPhien.DONG },
+      );
     });
   });
 });

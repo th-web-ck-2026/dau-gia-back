@@ -64,7 +64,7 @@ describe('TenderController', () => {
   it('should call service.evaluateSession', async () => {
     const user = { id: 'user1' };
     await controller.evaluateSession(user as any, 'session1');
-    expect(service.evaluateSession).toHaveBeenCalledWith('user1', 'session1');
+    expect(service.evaluateSession).toHaveBeenCalledWith('user1', 'session1', false, false, undefined);
   });
 
   it('should call service.getSessionDetails', async () => {
@@ -75,7 +75,7 @@ describe('TenderController', () => {
   it('should call service.getSessionSubmissions', async () => {
     const user = { id: 'user1' };
     await controller.getSessionSubmissions(user as any, 'session1');
-    expect(service.getSessionSubmissions).toHaveBeenCalledWith('user1', 'session1');
+    expect(service.getSessionSubmissions).toHaveBeenCalledWith('user1', 'session1', undefined);
   });
 
   it('should call service.getPage', async () => {
@@ -87,13 +87,13 @@ describe('TenderController', () => {
   it('should call service.getRanking', async () => {
     const user = { id: 'user1' };
     await controller.getRanking(user as any, 'session1');
-    expect(service.getRanking).toHaveBeenCalledWith('user1', 'session1');
+    expect(service.getRanking).toHaveBeenCalledWith('user1', 'session1', undefined);
   });
 
   it('should call service.closeSession', async () => {
     const user = { id: 'user1' };
     await controller.closeSession(user as any, 'session1');
-    expect(service.closeSession).toHaveBeenCalledWith('user1', 'session1');
+    expect(service.closeSession).toHaveBeenCalledWith('user1', 'session1', false, undefined);
   });
 });
 
