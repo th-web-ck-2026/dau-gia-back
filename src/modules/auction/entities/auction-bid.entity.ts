@@ -33,9 +33,6 @@ export class AuctionBid implements BaseEntity {
   @ApiPropertyOptional()
   thuHang?: number;
 
-  @ApiPropertyOptional()
-  thuTuServer?: number;
-
   @ApiProperty()
   thoiDiemDat: Date;
 

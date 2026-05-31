@@ -83,7 +83,7 @@ Báo cáo: `docs/html-tailwind/module-review-report.html`
 - [x] `auth.controller.ts` — bỏ `@Public()` ở class scope, áp per-method; logout-all/change-password được protect đúng
 - [x] `auth.service.ts` — `register` không spread password vào user table; `resetPassword` update credential qua `AuthProviderService.updateCredentials` (trước đó update sai bảng → reset không có hiệu lực)
 - [x] `auction.service.ts::placeBid` — bọc `sequelize.transaction` + `LOCK.UPDATE` chống race condition; throw `ConflictException(409)` với `{giaCaoNhat, giaToiThieuKeTiep}`
-- [x] `auction-bid.model/entity` — thêm `thuTuServer` (autoIncrement) cho tie-break theo thứ tự server nhận
+- [x] `auction-bid.model/entity` — tie-break theo `thoiDiemDat` ASC (đã bỏ field `thuTuServer` autoIncrement vì Sequelize sync alter không hỗ trợ chuyển INTEGER → SERIAL trên Postgres, gây boot fail `type "serial" does not exist`). Cần chạy thủ công: `ALTER TABLE "gia_dau_gia" DROP COLUMN IF EXISTS "thuTuServer";` để dọn cột rác trên DB hiện hữu.
 
 **P1 - Integration:**
 - [x] Notification hooks: `AUCTION_OUTBID/AUCTION_WON/AUCTION_CLOSED`, `TENDER_NEW_SUBMISSION/TENDER_WON/TENDER_CLOSED`
@@ -118,4 +118,4 @@ Sau mỗi task/phase hoàn thành, AI worker cập nhật:
 2. Cập nhật chi tiết phase tương ứng (tick checkbox, ghi chú file đã tạo)
 3. Cập nhật dòng "Đang ở:" để chỉ phase tiếp theo
 
-_Last updated: 2026-06-01_
+_Last updated: 2026-06-01 (revert `thuTuServer` autoIncrement → tie-break by `thoiDiemDat`)_
