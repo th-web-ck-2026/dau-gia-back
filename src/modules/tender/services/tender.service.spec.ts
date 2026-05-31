@@ -8,6 +8,7 @@ import { ScoringService } from '@/modules/scoring/services/scoring.service';
 import { ApiError } from '@/common/exceptions/api-error';
 import { TrangThaiPhien, TrangThaiDeXuat, LoaiTieuChi, HuongToiUu } from '@/modules/scoring/common/constants';
 import { AuditLogService } from '@/modules/audit-log/services/audit-log.service';
+import { NotificationService } from '@/modules/notification/services/notification.service';
 
 describe('TenderService', () => {
   let service: TenderService;
@@ -20,7 +21,7 @@ describe('TenderService', () => {
   const mockSessionRepo = {
     create: jest.fn(),
     getOne: jest.fn(),
-    getMany: jest.fn(),
+    getMany: jest.fn().mockResolvedValue([]),
     updateOne: jest.fn(),
     updateAtomic: jest.fn(),
   };
@@ -35,6 +36,7 @@ describe('TenderService', () => {
     getOne: jest.fn(),
     getMany: jest.fn(),
     updateOne: jest.fn(),
+    count: jest.fn().mockResolvedValue(0),
   };
 
   const mockSubmissionValueRepo = {
@@ -56,6 +58,12 @@ describe('TenderService', () => {
           provide: AuditLogService,
           useValue: {
             logAction: jest.fn().mockResolvedValue({}),
+          },
+        },
+        {
+          provide: NotificationService,
+          useValue: {
+            createNotification: jest.fn().mockResolvedValue({}),
           },
         },
       ],

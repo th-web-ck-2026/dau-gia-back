@@ -105,15 +105,17 @@ export class TenderController {
     return this.tenderService.publishSession(user.id, id);
   }
 
-  @Post('submissions')
+  @Post(':id/submissions')
   @Auth()
   @Throttle({ default: { limit: 5, ttl: 10000 } })
   @ApiOperation({ summary: 'Nop ho so de xuat' })
   @ApiCreatedResponse({ type: TenderSubmission })
   async submitProposal(
     @ReqUser() user: AuthUser,
+    @Param('id') id: string,
     @Body() dto: SubmitTenderProposalDto,
   ): Promise<TenderSubmission> {
+    dto.phienId = id;
     return this.tenderService.submitProposal(user.id, dto);
   }
 

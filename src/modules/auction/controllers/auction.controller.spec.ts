@@ -81,7 +81,10 @@ describe('AuctionController', () => {
   it('should call service.getPage', async () => {
     const query = { page: 1, limit: 10 };
     await controller.getSessions({}, query);
-    expect(service.getPage).toHaveBeenCalledWith({ where: {} }, query);
+    expect(service.getPage).toHaveBeenCalledWith(
+      expect.objectContaining({ where: {}, include: expect.any(Array) }),
+      query,
+    );
   });
 
   it('should call service.getSessionStatus', async () => {

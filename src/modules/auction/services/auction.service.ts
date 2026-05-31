@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, ConflictException } from '@nestjs/common';
 import { BaseService } from '@/common/base/base.service';
 import { AuctionSession } from '../entities/auction-session.entity';
 import { AuctionSessionRepository } from '../repositories/auction-session.repository';
@@ -6,11 +6,14 @@ import { AuctionBidRepository } from '../repositories/auction-bid.repository';
 import { AuctionBid } from '../entities/auction-bid.entity';
 import { ScoringService } from '@/modules/scoring/services/scoring.service';
 import { AuditLogService } from '@/modules/audit-log/services/audit-log.service';
+import { NotificationService } from '@/modules/notification/services/notification.service';
 import { UserRoles } from '@/modules/user/common/constant';
 import { CreateAuctionSessionDto } from '../dto/create-auction-session.dto';
 import { PlaceAuctionBidDto } from '../dto/place-auction-bid.dto';
 import { ApiError } from '@/common/exceptions/api-error';
 import { TrangThaiPhien, TrangThaiDeXuat } from '@/modules/scoring/common/constants';
+import { Op, Transaction } from 'sequelize';
+import { Sequelize } from 'sequelize-typescript';
 import { AuctionSessionStatusDto } from '../dto/auction-session-status.dto';
 import { UserModel } from '@/modules/user/models/user.model';
 import { AuctionBidModel } from '../models/auction-bid.model';
@@ -22,6 +25,8 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
     private readonly auctionBidRepository: AuctionBidRepository,
     private readonly scoringService: ScoringService,
     private readonly auditLogService: AuditLogService,
+    private readonly notificationService: NotificationService,
+    private readonly sequelize: Sequelize,
   ) {
     super(auctionSessionRepository);
   }
@@ -70,7 +75,7 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
       if (affected > 0) {
         session.trangThai = TrangThaiPhien.DONG;
         session.thoiDiemDong = now;
-        await this.evaluateSession('SYSTEM', session._id, true, true);
+        await this.evaluateSession(null, session._id, true, true);
       }
     }
 
@@ -148,7 +153,6 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
 
     return this.getSessionDetails(sessionId);
   }
-
   async placeBid(userId: string, dto: PlaceAuctionBidDto): Promise<AuctionBid> {
     let session = await this.auctionSessionRepository.getOne({ where: { _id: dto.phienId } });
     if (!session) {
@@ -168,52 +172,90 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
       throw ApiError.Forbidden('Chu phien khong duoc dat gia cho phien cua minh');
     }
 
-    if (session.giaTran && dto.giaDat > session.giaTran) {
-      throw ApiError.BadRequest(`Gia dat vuot qua gia tran cua phien (${session.giaTran})`);
-    }
+    const bid = await this.sequelize.transaction(async (t) => {
+      const lockedSession = await this.auctionSessionRepository.getOne({
+        where: { _id: dto.phienId },
+        lock: Transaction.LOCK.UPDATE,
+        transaction: t,
+      } as any);
 
-    // Step verification
-    const currentMax = Number(session.giaCaoNhat ?? session.giaKhoiDiem);
-    const minRequiredBid = currentMax === Number(session.giaKhoiDiem) && !session.deXuatThangId
-      ? Number(session.giaKhoiDiem)
-      : currentMax + Number(session.buocGia);
+      if (lockedSession.giaTran && dto.giaDat > lockedSession.giaTran) {
+        throw ApiError.BadRequest(
+          `Gia dat vuot qua gia tran cua phien (${lockedSession.giaTran})`,
+        );
+      }
 
-    if (dto.giaDat < minRequiredBid) {
-      throw ApiError.BadRequest(`Gia dat phai toi thieu la ${minRequiredBid}`);
-    }
+      const currentMax = Number(lockedSession.giaCaoNhat ?? lockedSession.giaKhoiDiem);
+      const minRequiredBid =
+        currentMax === Number(lockedSession.giaKhoiDiem) && !lockedSession.deXuatThangId
+          ? Number(lockedSession.giaKhoiDiem)
+          : currentMax + Number(lockedSession.buocGia);
 
-    const now = new Date();
+      if (dto.giaDat < minRequiredBid) {
+        throw new ConflictException({
+          message: `Gia dat phai toi thieu la ${minRequiredBid}`,
+          giaCaoNhat: currentMax,
+          giaToiThieuKeTiep: minRequiredBid,
+        });
+      }
 
-    const bid = await this.auctionBidRepository.create({
-      phienId: dto.phienId,
-      nguoiThamGiaId: userId,
-      giaDat: dto.giaDat,
-      diemUyTin: dto.diemUyTin ?? 100,
-      diemCamKet: dto.diemCamKet ?? 100,
-      trangThai: TrangThaiDeXuat.CHO_DUYET,
-      thoiDiemDat: now,
+      const now = new Date();
+
+      const newBid = await this.auctionBidRepository.create({
+        phienId: dto.phienId,
+        nguoiThamGiaId: userId,
+        giaDat: dto.giaDat,
+        diemUyTin: dto.diemUyTin ?? 100,
+        diemCamKet: dto.diemCamKet ?? 100,
+        trangThai: TrangThaiDeXuat.CHO_DUYET,
+        thoiDiemDat: now,
+      }, { transaction: t } as any);
+
+      const uniqueParticipantsCount = await this.auctionBidRepository.count({
+        where: { phienId: dto.phienId },
+        distinct: true,
+        col: 'nguoiThamGiaId',
+        transaction: t,
+      } as any);
+
+      await this.auctionSessionRepository.updateOne(
+        {
+          giaCaoNhat: dto.giaDat,
+          soLuongNguoiThamGia: uniqueParticipantsCount,
+        },
+        { where: { _id: lockedSession._id }, transaction: t } as any,
+      );
+
+      return newBid;
     });
-
-    const uniqueParticipantsCount = await this.auctionBidRepository.count({
-      where: { phienId: dto.phienId },
-      distinct: true,
-      col: 'nguoiThamGiaId',
-    } as any);
-
-    await this.auctionSessionRepository.updateOne(
-      { 
-        giaCaoNhat: dto.giaDat,
-        soLuongNguoiThamGia: uniqueParticipantsCount,
-      },
-      { where: { _id: session._id } },
-    );
 
     await this.auditLogService.logAction(userId, 'PLACE_AUCTION_BID', 'AuctionBid', bid._id, null, bid);
 
+    try {
+      const previousLeader = await this.auctionBidRepository.getOne({
+        where: {
+          phienId: dto.phienId,
+          nguoiThamGiaId: { [Op.ne]: userId },
+          _id: { [Op.ne]: bid._id },
+        },
+        order: [['giaDat', 'DESC']],
+      });
+      if (previousLeader) {
+        await this.notificationService.createNotification({
+          userIds: [previousLeader.nguoiThamGiaId],
+          type: 'AUCTION_OUTBID',
+          title: 'Bạn đã bị vượt giá',
+          content: `Có người vừa đặt giá cao hơn bạn ở phiên "${session.tieuDe}".`,
+          metadata: { phienId: session._id, bidId: bid._id, giaMoi: dto.giaDat },
+        } as any);
+      }
+    } catch (err) {
+      console.error('Failed to send AUCTION_OUTBID notification:', err);
+    }
+
     return bid;
   }
-
-  async evaluateSession(userId: string, sessionId: string, force = false, isSystem = false, userRole?: string): Promise<AuctionSession | { message: string }> {
+  async evaluateSession(userId: string | null, sessionId: string, force = false, isSystem = false, userRole?: string): Promise<AuctionSession | { message: string }> {
     const session = await this.auctionSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau gia khong ton tai');
@@ -239,10 +281,8 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
       return { message: 'Khong co luot dat gia nao de danh gia' };
     }
 
-    // Step 1: Find highest bid Gmax
     const highestBidPrice = Math.max(...bids.map((b) => Number(b.giaDat)));
 
-    // Step 2: Score all bids
     const scoredBids: any[] = [];
     for (const bid of bids) {
       const priceScore = this.scoringService.calculateAuctionPriceScore(Number(bid.giaDat), highestBidPrice);
@@ -264,7 +304,6 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
       });
     }
 
-    // Sort by final score desc, then by bid timestamp asc (earlier is better in case of tie)
     scoredBids.sort((a, b) => {
       if (Math.abs(b.finalScore - a.finalScore) > 1e-9) {
         return b.finalScore - a.finalScore;
@@ -273,6 +312,8 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
     });
 
     let rank = 1;
+    let winnerUserId: string | null = null;
+    const loserUserIds: string[] = [];
     for (const item of scoredBids) {
       const isWinner = rank === 1;
       await this.auctionBidRepository.updateOne(
@@ -290,11 +331,42 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
           { deXuatThangId: item.bid._id },
           { where: { _id: sessionId } },
         );
+        winnerUserId = item.bid.nguoiThamGiaId;
+      } else {
+        loserUserIds.push(item.bid.nguoiThamGiaId);
       }
       rank++;
     }
 
     await this.auditLogService.logAction(userId, 'EVALUATE_AUCTION_SESSION', 'AuctionSession', sessionId, null, null);
+
+    try {
+      if (winnerUserId) {
+        await this.notificationService.createNotification({
+          userIds: [winnerUserId],
+          type: 'AUCTION_WON',
+          title: 'Bạn đã thắng phiên đấu giá',
+          content: `Chúc mừng! Bạn đã thắng phiên "${session.tieuDe}".`,
+          metadata: { phienId: sessionId },
+        } as any);
+      }
+      if (loserUserIds.length > 0) {
+        const uniqueLosers = Array.from(
+          new Set(loserUserIds.filter((id) => id !== winnerUserId)),
+        );
+        if (uniqueLosers.length > 0) {
+          await this.notificationService.createNotification({
+            userIds: uniqueLosers,
+            type: 'AUCTION_CLOSED',
+            title: 'Phiên đấu giá đã kết thúc',
+            content: `Phiên "${session.tieuDe}" đã kết thúc. Bạn không phải là người thắng.`,
+            metadata: { phienId: sessionId },
+          } as any);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to send auction result notifications:', err);
+    }
 
     return this.getSessionDetails(sessionId);
   }

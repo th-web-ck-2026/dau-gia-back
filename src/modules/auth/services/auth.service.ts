@@ -170,7 +170,12 @@ export class AuthService {
     }
 
     const user = await this.userRepository.create({
-      ...registerDto,
+      email: registerDto.email,
+      fullname: registerDto.fullname,
+      phone: registerDto.phone,
+      soCccd: registerDto.soCccd,
+      role: UserRoles.USER,
+      userRoles: registerDto.userRoles,
     });
 
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
@@ -274,12 +279,7 @@ export class AuthService {
     if (!user) {
       throw ApiError.NotFound('Người dùng không tồn tại');
     }
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    await this.userRepository.updateOne(
-      { password: hashedPassword },
-      { where: { _id: user._id } },
-    );
+    await this.authProviderService.updateCredentials(user._id, AuthProvider.EMAIL, newPassword);
     return { message: 'Cập nhật mật khẩu thành công' };
   }
 

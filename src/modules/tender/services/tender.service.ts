@@ -8,6 +8,7 @@ import { TenderSubmission, TenderSubmissionDetails } from '../entities/tender-su
 import { TenderSubmissionValueRepository } from '../repositories/tender-submission-value.repository';
 import { ScoringService } from '@/modules/scoring/services/scoring.service';
 import { AuditLogService } from '@/modules/audit-log/services/audit-log.service';
+import { NotificationService } from '@/modules/notification/services/notification.service';
 import { UserRoles } from '@/modules/user/common/constant';
 import { CreateTenderSessionDto } from '../dto/create-tender-session.dto';
 import { SubmitTenderProposalDto } from '../dto/submit-tender-proposal.dto';
@@ -28,6 +29,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
     private readonly tenderSubmissionValueRepository: TenderSubmissionValueRepository,
     private readonly scoringService: ScoringService,
     private readonly auditLogService: AuditLogService,
+    private readonly notificationService: NotificationService,
   ) {
     super(tenderSessionRepository);
   }
@@ -76,7 +78,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
       if (affected > 0) {
         session.trangThai = TrangThaiPhien.DONG;
         session.thoiDiemDong = now;
-        await this.evaluateSession('SYSTEM', session._id, true, true);
+        await this.evaluateSession(null, session._id, true, true);
 
         const submissions = await this.tenderSubmissionRepository.getMany({
           where: { phienId: session._id },
@@ -275,10 +277,22 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
 
     await this.auditLogService.logAction(userId, 'SUBMIT_TENDER_PROPOSAL', 'TenderSubmission', submission._id, null, submission);
 
+    try {
+      await this.notificationService.createNotification({
+        userIds: [session.chuPhienId],
+        type: 'TENDER_NEW_SUBMISSION',
+        title: 'Đề xuất mới',
+        content: `Phiên "${session.tieuDe}" có một đề xuất mới được gửi.`,
+        metadata: { phienId: session._id, deXuatId: submission._id },
+      } as any);
+    } catch (err) {
+      console.error('Failed to send TENDER_NEW_SUBMISSION notification:', err);
+    }
+
     return submission;
   }
 
-  async evaluateSession(userId: string, sessionId: string, force = false, isSystem = false, userRole?: string): Promise<TenderSessionDetails | { message: string }> {
+  async evaluateSession(userId: string | null, sessionId: string, force = false, isSystem = false, userRole?: string): Promise<TenderSessionDetails | { message: string }> {
     const session = await this.tenderSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau thau khong ton tai');
@@ -408,17 +422,49 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
     scoredSubmissions.sort((a, b) => b.finalScore - a.finalScore);
 
     let rank = 1;
+    let winnerUserId: string | null = null;
+    const loserUserIds: string[] = [];
     for (const item of scoredSubmissions) {
       const isWinner = rank === 1;
       await this.tenderSubmissionRepository.updateOne(
         { trangThai: isWinner ? TrangThaiDeXuat.THANG : TrangThaiDeXuat.HOP_LE, diemKyThuat: item.technicalScore, diemGia: item.priceScore, diemTongHop: item.finalScore, thuHang: rank },
         { where: { _id: item.sub._id } },
       );
-      if (isWinner) await this.tenderSessionRepository.updateOne({ deXuatThangId: item.sub._id }, { where: { _id: sessionId } });
+      if (isWinner) {
+        await this.tenderSessionRepository.updateOne({ deXuatThangId: item.sub._id }, { where: { _id: sessionId } });
+        winnerUserId = item.sub.nguoiThamGiaId;
+      } else {
+        loserUserIds.push(item.sub.nguoiThamGiaId);
+      }
       rank++;
     }
 
     await this.auditLogService.logAction(userId, 'EVALUATE_TENDER_SESSION', 'TenderSession', sessionId, null, null);
+
+    try {
+      if (winnerUserId) {
+        await this.notificationService.createNotification({
+          userIds: [winnerUserId],
+          type: 'TENDER_WON',
+          title: 'Bạn đã thắng phiên đấu thầu',
+          content: `Chúc mừng! Bạn đã thắng phiên "${session.tieuDe}".`,
+          metadata: { phienId: sessionId },
+        } as any);
+      }
+      if (loserUserIds.length > 0) {
+        const uniqueLosers = Array.from(new Set(loserUserIds));
+        await this.notificationService.createNotification({
+          userIds: uniqueLosers,
+          type: 'TENDER_CLOSED',
+          title: 'Phiên đấu thầu đã kết thúc',
+          content: `Phiên "${session.tieuDe}" đã kết thúc. Đề xuất của bạn không được chọn.`,
+          metadata: { phienId: sessionId },
+        } as any);
+      }
+    } catch (err) {
+      console.error('Failed to send tender result notifications:', err);
+    }
+
     return this.getSessionDetails(sessionId);
   }
 

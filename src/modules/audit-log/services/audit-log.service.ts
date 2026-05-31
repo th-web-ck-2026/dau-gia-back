@@ -10,7 +10,7 @@ export class AuditLogService extends BaseService<AuditLog> {
   }
 
   async logAction(
-    nguoiThucHienId: string | undefined,
+    nguoiThucHienId: string | null | undefined,
     hanhDong: string,
     loaiDoiTuong: string,
     doiTuongId: string,
@@ -19,7 +19,7 @@ export class AuditLogService extends BaseService<AuditLog> {
     duLieuBoSung?: any,
   ): Promise<AuditLog> {
     return this.create({
-      nguoiThucHienId,
+      nguoiThucHienId: nguoiThucHienId ?? undefined,
       hanhDong,
       loaiDoiTuong,
       doiTuongId,

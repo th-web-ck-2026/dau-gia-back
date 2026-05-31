@@ -81,6 +81,12 @@ export class AuctionBidModel extends Model implements AuctionBid {
   thuHang?: number;
 
   @Column({
+    type: DataType.INTEGER,
+    autoIncrement: true,
+  })
+  thuTuServer?: number;
+
+  @Column({
     type: DataType.DATE,
     allowNull: false,
   })

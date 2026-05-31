@@ -6,6 +6,8 @@ import { ScoringService } from '@/modules/scoring/services/scoring.service';
 import { ApiError } from '@/common/exceptions/api-error';
 import { TrangThaiPhien, TrangThaiDeXuat } from '@/modules/scoring/common/constants';
 import { AuditLogService } from '@/modules/audit-log/services/audit-log.service';
+import { NotificationService } from '@/modules/notification/services/notification.service';
+import { Sequelize } from 'sequelize-typescript';
 
 describe('AuctionService', () => {
   let service: AuctionService;
@@ -18,6 +20,7 @@ describe('AuctionService', () => {
     getOne: jest.fn(),
     updateOne: jest.fn(),
     updateAtomic: jest.fn(),
+    getMany: jest.fn().mockResolvedValue([]),
   };
 
   const mockBidRepo = {
@@ -26,6 +29,10 @@ describe('AuctionService', () => {
     updateOne: jest.fn(),
     getOne: jest.fn(),
     count: jest.fn(),
+  };
+
+  const mockSequelize = {
+    transaction: jest.fn().mockImplementation(async (cb: any) => cb({})),
   };
 
   beforeEach(async () => {
@@ -40,6 +47,16 @@ describe('AuctionService', () => {
           useValue: {
             logAction: jest.fn().mockResolvedValue({}),
           },
+        },
+        {
+          provide: NotificationService,
+          useValue: {
+            createNotification: jest.fn().mockResolvedValue({}),
+          },
+        },
+        {
+          provide: Sequelize,
+          useValue: mockSequelize,
         },
       ],
     }).compile();

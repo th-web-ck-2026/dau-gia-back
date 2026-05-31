@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsNumber, IsArray, ValidateNested } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsArray, ValidateNested, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class SubmissionValueDto {
@@ -12,7 +12,7 @@ export class SubmissionValueDto {
 
 export class SubmitTenderProposalDto {
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   phienId: string;
 
   @IsNumber()

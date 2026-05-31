@@ -14,6 +14,7 @@ export class AuditLogModel extends Model implements AuditLog {
   @ForeignKey(() => UserModel)
   @Column({
     type: DataType.STRING,
+    allowNull: true,
   })
   nguoiThucHienId?: string;
 

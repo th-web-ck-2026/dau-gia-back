@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Báo Cáo Rà Soát Module - dau-gia-back</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .gradient-header { background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); }
+    .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    .status-ok { @apply bg-green-100 text-green-800 border-green-300; }
+    .status-warn { @apply bg-yellow-100 text-yellow-800 border-yellow-300; }
+    .status-error { @apply bg-red-100 text-red-800 border-red-300; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+<!-- Header -->
+<header class="gradient-header text-white py-8 px-6 shadow-lg">
+  <div class="max-w-7xl mx-auto">
+    <h1 class="text-3xl font-bold">📋 Báo Cáo Rà Soát Module Backend</h1>
+    <p class="mt-2 text-blue-100">Project: dau-gia-back | NestJS 11 + Sequelize + PostgreSQL</p>
+    <p class="text-sm text-blue-200 mt-1">Ngày tạo: 2026-06-01 | Branch: develop</p>
+  </div>
+</header>
+
+<!-- Summary Cards -->
+<section class="max-w-7xl mx-auto px-6 -mt-6">
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="bg-white rounded-lg shadow p-5 border-l-4 border-green-500">
+      <p class="text-sm text-gray-500">Tổng Module</p>
+      <p class="text-3xl font-bold text-green-600">13</p>
+      <p class="text-xs text-gray-400">Tất cả đã register</p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-5 border-l-4 border-red-500">
+      <p class="text-sm text-gray-500">Bug P0 (Critical)</p>
+      <p class="text-3xl font-bold text-red-600">3</p>
+      <p class="text-xs text-gray-400">Cần fix ngay</p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-5 border-l-4 border-yellow-500">
+      <p class="text-sm text-gray-500">Bug P1 (Major)</p>
+      <p class="text-3xl font-bold text-yellow-600">5</p>
+      <p class="text-xs text-gray-400">Cần fix sớm</p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-5 border-l-4 border-blue-500">
+      <p class="text-sm text-gray-500">Module OK</p>
+      <p class="text-3xl font-bold text-blue-600">6/13</p>
+      <p class="text-xs text-gray-400">Hoạt động đầy đủ</p>
+    </div>
+  </div>
+</section>
+
+<!-- Flow Assessment -->
+<section class="max-w-7xl mx-auto px-6 mt-8">
+  <h2 class="text-2xl font-bold mb-4 text-gray-700">🔄 Đánh Giá Flow End-to-End</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="bg-white rounded-lg shadow p-4 border border-yellow-200">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xl">⚠️</span>
+        <h3 class="font-semibold">Đăng ký / Đăng nhập</h3>
+      </div>
+      <p class="text-sm text-gray-600">Register + Login hoạt động. Nhưng <code>reset-password</code> update sai bảng, <code>change-password</code> và <code>logout-all</code> crash do thiếu auth context.</p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 border border-green-200">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xl">✅</span>
+        <h3 class="font-semibold">Flow Đấu Thầu</h3>
+      </div>
+      <p class="text-sm text-gray-600">Create → Publish → Submit → Evaluate → Close đầy đủ. Route submit khác spec REST nhưng chạy được.</p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 border border-red-200">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xl">🔴</span>
+        <h3 class="font-semibold">Flow Đấu Giá</h3>
+      </div>
+      <p class="text-sm text-gray-600">Đầy đủ chức năng nhưng <code>placeBid</code> KHÔNG có transaction → race condition khi concurrent bidding.</p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 border border-green-200">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xl">✅</span>
+        <h3 class="font-semibold">Audit Log</h3>
+      </div>
+      <p class="text-sm text-gray-600">Hook đầy đủ vào tender (5 actions) và auction (5 actions). Cron dùng userId='SYSTEM' → FK orphan nhỏ.</p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 border border-green-200">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xl">✅</span>
+        <h3 class="font-semibold">Cron Job</h3>
+      </div>
+      <p class="text-sm text-gray-600">Mỗi phút quét CONG_BO→MO và MO→DONG. Có fallback inline khi user gọi API.</p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 border border-red-200">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xl">❌</span>
+        <h3 class="font-semibold">Notification</h3>
+      </div>
+      <p class="text-sm text-gray-600">Module CRUD có nhưng KHÔNG có nơi nào gọi <code>createNotification</code>. User không nhận thông báo gì.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Module Detail Section -->
+<section class="max-w-7xl mx-auto px-6 mt-8">
+  <h2 class="text-2xl font-bold mb-4 text-gray-700">📦 Chi Tiết Từng Module</h2>
+
+  <!-- Module: Scoring -->
+  <div class="bg-white rounded-lg shadow mb-4 card-hover transition-all duration-200">
+    <div class="p-5 border-l-4 border-green-500">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-700">1. scoring</h3>
+        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">✅ Đầy đủ</span>
+      </div>
+      <p class="text-sm text-gray-500 mt-1">Scoring engine cho cả đấu thầu và đấu giá</p>
+      <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+        <span class="bg-gray-100 rounded px-2 py-1">✅ module.ts</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ scoring.service.ts</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ constants.ts (enums)</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ spec test</span>
+      </div>
+      <div class="mt-3 text-sm text-gray-600">
+        <p><strong>Functions:</strong> normalizeNumber, normalizeBoolean, normalizeEnum, calculateWeightedScore, calculateTenderPriceScore, calculateAuctionPriceScore, calculateTenderFinalScore, calculateAuctionFinalScore</p>
+        <p class="mt-1 text-green-700">→ Đáp ứng đầy đủ scoring formula theo PLAN.md</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module: Tender -->
+  <div class="bg-white rounded-lg shadow mb-4 card-hover transition-all duration-200">
+    <div class="p-5 border-l-4 border-yellow-500">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-700">2. tender</h3>
+        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">⚠️ Có vấn đề</span>
+      </div>
+      <p class="text-sm text-gray-500 mt-1">Module đấu thầu - chạy được nhưng có drift spec</p>
+      <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+        <span class="bg-gray-100 rounded px-2 py-1">✅ module.ts</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ controller.ts</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ service.ts (495 dòng)</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ 4 entity</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ 4 model</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ 4 repository</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ 3 DTO</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ spec test</span>
+      </div>
+      <div class="mt-3 text-sm">
+        <p class="font-semibold text-yellow-700 mb-1">Issues:</p>
+        <ul class="list-disc list-inside text-gray-600 space-y-1">
+          <li><code>POST /submissions</code> route khác spec REST (plan: <code>POST /:id/submissions</code>)</li>
+          <li>DTO dùng <code>tieuChiId</code> thay vì <code>maTieuChi</code> như PLAN</li>
+          <li><code>getRanking</code> trước khi evaluate → điểm null, sort không ổn định</li>
+          <li>Duplicate logic chuyển HOP_LE→THUA ở cả closeSession và evaluateSession</li>
+        </ul>
+        <p class="mt-2 text-sm text-blue-600"><strong>Đề xuất:</strong> Đổi route submit về <code>POST /:id/submissions</code>. Thống nhất naming với FE.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module: Auction -->
+  <div class="bg-white rounded-lg shadow mb-4 card-hover transition-all duration-200">
+    <div class="p-5 border-l-4 border-red-500">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-700">3. auction</h3>
+        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">🔴 Bug nghiêm trọng</span>
+      </div>
+      <p class="text-sm text-gray-500 mt-1">Module đấu giá - có race condition</p>
+      <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+        <span class="bg-gray-100 rounded px-2 py-1">✅ module.ts</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ controller.ts</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ service.ts (303 dòng)</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ 2 entity</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ 2 model</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ 2 repository</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ 4 DTO</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ spec test</span>
+      </div>
+      <div class="mt-3 text-sm">
+        <p class="font-semibold text-red-700 mb-1">Issues:</p>
+        <ul class="list-disc list-inside text-gray-600 space-y-1">
+          <li><strong class="text-red-600">[P0]</strong> <code>placeBid</code> KHÔNG dùng transaction/row-lock → race condition concurrent bidding</li>
+          <li>Thiếu field <code>thuTuServer</code> trong AuctionBid model (PLAN mục 3.7)</li>
+          <li>Trả <code>BadRequest</code> thay vì <code>409 Conflict</code> khi giá bị vượt</li>
+          <li>Naming drift: DTO dùng <code>giaDat</code>, PLAN dùng <code>giaTrao</code></li>
+        </ul>
+        <p class="mt-2 text-sm text-blue-600"><strong>Đề xuất:</strong> Bọc placeBid trong transaction SERIALIZABLE + row lock. Thêm thuTuServer. Đổi BadRequest → 409.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module: Cron Job -->
+  <div class="bg-white rounded-lg shadow mb-4 card-hover transition-all duration-200">
+    <div class="p-5 border-l-4 border-green-500">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-700">4. cron-job</h3>
+        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">✅ Đầy đủ</span>
+      </div>
+      <p class="text-sm text-gray-500 mt-1">Tự động mở/đóng phiên theo thời gian</p>
+      <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+        <span class="bg-gray-100 rounded px-2 py-1">✅ module.ts</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ service.ts</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ @Cron(EVERY_MINUTE)</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ ScheduleModule</span>
+      </div>
+      <div class="mt-3 text-sm text-gray-600">
+        <p>Quét sessions <code>CONG_BO|MO</code> mỗi phút → tự transition state. Có try/catch không fail toàn bộ batch.</p>
+        <p class="mt-2 text-yellow-700"><strong>Lưu ý nhỏ:</strong> Dùng <code>userId='SYSTEM'</code> giả → AuditLog có FK orphan. Nên đổi thành <code>null</code>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module: Audit Log -->
+  <div class="bg-white rounded-lg shadow mb-4 card-hover transition-all duration-200">
+    <div class="p-5 border-l-4 border-green-500">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-700">5. audit-log</h3>
+        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">✅ Đầy đủ</span>
+      </div>
+      <p class="text-sm text-gray-500 mt-1">Module @Global() ghi nhật ký kiểm toán</p>
+      <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+        <span class="bg-gray-100 rounded px-2 py-1">✅ module.ts (@Global)</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ controller.ts</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ service.ts</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ entity + model + repo</span>
+      </div>
+      <div class="mt-3 text-sm text-gray-600">
+        <p><strong>Hook đã tích hợp:</strong></p>
+        <ul class="list-disc list-inside mt-1">
+          <li>Tender: CREATE, PUBLISH, SUBMIT, EVALUATE, CLOSE ✅</li>
+          <li>Auction: CREATE, PUBLISH, PLACE_BID, EVALUATE, CLOSE ✅</li>
+        </ul>
+        <p class="mt-2 text-yellow-700"><strong>Còn thiếu:</strong> Hook ở Auth (login/logout/register) và User (update profile).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module: Auth -->
+  <div class="bg-white rounded-lg shadow mb-4 card-hover transition-all duration-200">
+    <div class="p-5 border-l-4 border-red-500">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-700">6. auth</h3>
+        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">🔴 Có lỗ hổng bảo mật</span>
+      </div>
+      <p class="text-sm text-gray-500 mt-1">Authentication - JWT + Google + Email</p>
+      <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+        <span class="bg-gray-100 rounded px-2 py-1">✅ controller</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ 3 services</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ 6 DTO</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ jwt strategy</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ 2 entity</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ 2 model</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ repositories</span>
+      </div>
+      <div class="mt-3 text-sm">
+        <p class="font-semibold text-red-700 mb-1">Issues nghiêm trọng:</p>
+        <ul class="list-disc list-inside text-gray-600 space-y-1">
+          <li><strong class="text-red-600">[P0]</strong> Controller có <code>@Public()</code> ở scope toàn bộ → <code>change-password</code>, <code>logout-all</code> crash do <code>request.user</code> undefined</li>
+          <li><strong class="text-red-600">[P0]</strong> <code>resetPassword</code> update password vào bảng <code>user</code> thay vì <code>auth_provider</code> → reset xong không login được</li>
+          <li><strong class="text-yellow-600">[P1]</strong> <code>register</code> tạo user với plain password (chưa hash) trước khi tạo auth_provider</li>
+          <li>Route <code>reset-password/token</code> và <code>reset-password/password</code> trùng logic</li>
+          <li>Không kiểm tra token expire trên DB (chỉ JWT signature)</li>
+        </ul>
+        <p class="mt-2 text-sm text-blue-600"><strong>Đề xuất:</strong> Bỏ <code>@Public()</code> ở scope controller, chỉ đặt cho từng endpoint cụ thể. Sửa resetPassword update đúng bảng auth_provider.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module: User -->
+  <div class="bg-white rounded-lg shadow mb-4 card-hover transition-all duration-200">
+    <div class="p-5 border-l-4 border-yellow-500">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-700">7. user</h3>
+        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">⚠️ Đủ cho user, thiếu admin</span>
+      </div>
+      <p class="text-sm text-gray-500 mt-1">Quản lý profile user</p>
+      <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+        <span class="bg-gray-100 rounded px-2 py-1">✅ controller</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ service</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ 5 DTO</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ entity + model + repo</span>
+      </div>
+      <div class="mt-3 text-sm text-gray-600">
+        <p><strong>Endpoints:</strong> GET /user/info/:id, GET /user/me, PUT /user/me</p>
+        <p class="mt-1 text-yellow-700"><strong>Thiếu:</strong> Không có admin endpoints (block user, list users, change role).</p>
+        <p class="mt-1 text-yellow-700"><strong>Naming nhầm:</strong> Entity dùng cả <code>userRoles</code> (TO_CHUC/CA_NHAN) và <code>role</code> (ADMIN/USER).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module: Notification -->
+  <div class="bg-white rounded-lg shadow mb-4 card-hover transition-all duration-200">
+    <div class="p-5 border-l-4 border-red-500">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-700">8. notification</h3>
+        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">❌ Không tích hợp</span>
+      </div>
+      <p class="text-sm text-gray-500 mt-1">Module có nhưng không có nơi nào trigger</p>
+      <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+        <span class="bg-gray-100 rounded px-2 py-1">✅ controller</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ service</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ 2 DTO</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ entity + model + repo</span>
+      </div>
+      <div class="mt-3 text-sm">
+        <p class="font-semibold text-red-700 mb-1">Vấn đề lớn:</p>
+        <p class="text-gray-600">CRUD đầy đủ (createNotification, getMyNotifications, markAsRead) nhưng <strong>KHÔNG có chỗ nào trong tender/auction/cron-job/auth gọi <code>createNotification</code></strong>.</p>
+        <p class="mt-2 text-sm text-blue-600"><strong>Đề xuất hook:</strong></p>
+        <ul class="list-disc list-inside text-gray-600 space-y-1 text-sm">
+          <li><code>placeBid</code> → noti cho leading-cũ "Bạn đã bị vượt giá"</li>
+          <li><code>closeSession</code> → noti cho winner và losers</li>
+          <li><code>submitProposal</code> → noti cho host về đề xuất mới</li>
+          <li><code>publishSession</code> → noti cho user quan tâm</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module: File -->
+  <div class="bg-white rounded-lg shadow mb-4 card-hover transition-all duration-200">
+    <div class="p-5 border-l-4 border-green-500">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-700">9. file</h3>
+        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">✅ OK</span>
+      </div>
+      <p class="text-sm text-gray-500 mt-1">Upload file qua external API (freimage.host, gofile.io)</p>
+      <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+        <span class="bg-gray-100 rounded px-2 py-1">✅ controller</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ service</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ DTO</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ Rate limit 15/60s</span>
+      </div>
+      <div class="mt-3 text-sm text-yellow-700">
+        <p><strong>Lưu ý:</strong> Phụ thuộc API key external. Nếu env thiếu key → upload fail. Cần fallback hoặc check env tại bootstrap.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module: Mail Config -->
+  <div class="bg-white rounded-lg shadow mb-4 card-hover transition-all duration-200">
+    <div class="p-5 border-l-4 border-green-500">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-700">10. mail-config</h3>
+        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">✅ OK</span>
+      </div>
+      <p class="text-sm text-gray-500 mt-1">CRUD config SMTP cho SendMailService</p>
+      <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+        <span class="bg-gray-100 rounded px-2 py-1">✅ controller</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ service</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ 2 DTO</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ entity + model + repo</span>
+      </div>
+      <div class="mt-3 text-sm text-gray-500">
+        <p>Module có <code>SequelizeModule.forFeature</code> dư thừa (đã register global ở RepositoryModule). Không gây lỗi.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module: Send Mail -->
+  <div class="bg-white rounded-lg shadow mb-4 card-hover transition-all duration-200">
+    <div class="p-5 border-l-4 border-yellow-500">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-700">11. send-mail</h3>
+        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">⚠️ Cần tối ưu</span>
+      </div>
+      <p class="text-sm text-gray-500 mt-1">Gửi email với round-robin transporter</p>
+      <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+        <span class="bg-gray-100 rounded px-2 py-1">✅ service</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ 2 DTO</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ Templates folder</span>
+      </div>
+      <div class="mt-3 text-sm">
+        <ul class="list-disc list-inside text-gray-600 space-y-1">
+          <li><span class="text-yellow-700"><strong>Hiệu năng:</strong></span> <code>loadMailConfigs</code> query DB mỗi lần sendMail → nên cache</li>
+          <li><span class="text-yellow-700"><strong>Hardcode:</strong></span> URL <code>example.com/auth/confirm</code> chưa hoàn thiện</li>
+          <li><span class="text-yellow-700"><strong>Build:</strong></span> Cần đảm bảo <code>templates/</code> được copy vào dist khi build</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module: Recaptcha -->
+  <div class="bg-white rounded-lg shadow mb-4 card-hover transition-all duration-200">
+    <div class="p-5 border-l-4 border-gray-400">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-700">12. recaptcha</h3>
+        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">⚪ Chưa dùng</span>
+      </div>
+      <p class="text-sm text-gray-500 mt-1">Google reCAPTCHA module</p>
+      <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+        <span class="bg-gray-100 rounded px-2 py-1">✅ module</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ strategy</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ guard</span>
+        <span class="bg-gray-100 rounded px-2 py-1">✅ decorator</span>
+      </div>
+      <div class="mt-3 text-sm text-gray-600">
+        <p>Module sẵn sàng nhưng chưa có endpoint nào dùng <code>@UseGuards(RecaptchaGuard)</code>. Plan không bắt buộc.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module: Repository -->
+  <div class="bg-white rounded-lg shadow mb-4 card-hover transition-all duration-200">
+    <div class="p-5 border-l-4 border-green-500">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-700">13. repository</h3>
+        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">✅ OK</span>
+      </div>
+      <p class="text-sm text-gray-500 mt-1">Module @Global() đăng ký toàn bộ Sequelize models</p>
+      <div class="mt-3 text-sm text-gray-600">
+        <p>Đã register: User, Notification, MailConfig, TenderSession, TenderCriteria, TenderSubmission, TenderSubmissionValue, AuctionSession, AuctionBid, AuditLog</p>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- Bootstrap Issues -->
+<section class="max-w-7xl mx-auto px-6 mt-8">
+  <h2 class="text-2xl font-bold mb-4 text-gray-700">⚙️ Bootstrap & Cấu Hình</h2>
+  <div class="bg-white rounded-lg shadow p-5 border-l-4 border-yellow-500">
+    <h3 class="font-bold text-lg mb-2">main.ts + app.module.ts</h3>
+    <ul class="list-disc list-inside text-gray-600 space-y-1 text-sm">
+      <li><strong>CORS:</strong> <code>origin: '*'</code> + <code>credentials: true</code> → cấu hình KHÔNG hợp lệ về spec CORS, browser sẽ chặn</li>
+      <li><strong>AuthGuard global bị comment</strong> ở <code>app.module.ts:68-71</code> → mỗi controller phải tự thêm <code>@Auth()</code>, dễ quên = endpoint public</li>
+      <li><strong>Global prefix:</strong> <code>api/</code> ✅</li>
+      <li><strong>Swagger:</strong> <code>/api/docs</code> ✅</li>
+      <li><strong>ValidationPipe:</strong> whitelist + transform + skipMissingProperties ✅</li>
+      <li><strong>ThrottlerGuard global:</strong> ttl=10s, limit=10 ✅</li>
+    </ul>
+  </div>
+</section>
+
+<!-- Bug Priority Table -->
+<section class="max-w-7xl mx-auto px-6 mt-8">
+  <h2 class="text-2xl font-bold mb-4 text-gray-700">🐛 Danh Sách Bug Theo Mức Độ</h2>
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mức</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vấn đề</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">File:Line</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hướng giải quyết</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200 text-sm">
+        <tr class="bg-red-50">
+          <td class="px-4 py-3"><span class="px-2 py-1 bg-red-600 text-white rounded text-xs font-bold">P0</span></td>
+          <td class="px-4 py-3 font-medium">placeBid không có transaction → race condition</td>
+          <td class="px-4 py-3 text-gray-500"><code>auction.service.ts:152-214</code></td>
+          <td class="px-4 py-3 text-blue-600">Bọc trong <code>sequelize.transaction({ isolationLevel: SERIALIZABLE })</code> + lock UPDATE</td>
+        </tr>
+        <tr class="bg-red-50">
+          <td class="px-4 py-3"><span class="px-2 py-1 bg-red-600 text-white rounded text-xs font-bold">P0</span></td>
+          <td class="px-4 py-3 font-medium">resetPassword update sai bảng (user thay vì auth_provider)</td>
+          <td class="px-4 py-3 text-gray-500"><code>auth.service.ts:271-284</code></td>
+          <td class="px-4 py-3 text-blue-600">Update qua <code>authProviderRepository</code></td>
+        </tr>
+        <tr class="bg-red-50">
+          <td class="px-4 py-3"><span class="px-2 py-1 bg-red-600 text-white rounded text-xs font-bold">P0</span></td>
+          <td class="px-4 py-3 font-medium">@Public() global ở auth.controller → endpoint cần auth crash</td>
+          <td class="px-4 py-3 text-gray-500"><code>auth.controller.ts:12</code></td>
+          <td class="px-4 py-3 text-blue-600">Bỏ @Public() scope, đặt cho từng endpoint</td>
+        </tr>
+        <tr class="bg-yellow-50">
+          <td class="px-4 py-3"><span class="px-2 py-1 bg-yellow-500 text-white rounded text-xs font-bold">P1</span></td>
+          <td class="px-4 py-3 font-medium">register lưu password vào user table không hash</td>
+          <td class="px-4 py-3 text-gray-500"><code>auth.service.ts:172-186</code></td>
+          <td class="px-4 py-3 text-blue-600">Bỏ password khỏi userRepository.create</td>
+        </tr>
+        <tr class="bg-yellow-50">
+          <td class="px-4 py-3"><span class="px-2 py-1 bg-yellow-500 text-white rounded text-xs font-bold">P1</span></td>
+          <td class="px-4 py-3 font-medium">Notification chưa được hook vào tender/auction/cron</td>
+          <td class="px-4 py-3 text-gray-500">Toàn project</td>
+          <td class="px-4 py-3 text-blue-600">Inject NotificationService vào các module</td>
+        </tr>
+        <tr class="bg-yellow-50">
+          <td class="px-4 py-3"><span class="px-2 py-1 bg-yellow-500 text-white rounded text-xs font-bold">P1</span></td>
+          <td class="px-4 py-3 font-medium">CORS '*' + credentials true không hợp lệ</td>
+          <td class="px-4 py-3 text-gray-500"><code>main.ts:22-26</code></td>
+          <td class="px-4 py-3 text-blue-600">Đặt origin whitelist hoặc tắt credentials</td>
+        </tr>
+        <tr class="bg-yellow-50">
+          <td class="px-4 py-3"><span class="px-2 py-1 bg-yellow-500 text-white rounded text-xs font-bold">P1</span></td>
+          <td class="px-4 py-3 font-medium">Tender submit route không match REST spec</td>
+          <td class="px-4 py-3 text-gray-500"><code>tender.controller.ts:108</code></td>
+          <td class="px-4 py-3 text-blue-600">Đổi về <code>POST /:id/submissions</code></td>
+        </tr>
+        <tr class="bg-yellow-50">
+          <td class="px-4 py-3"><span class="px-2 py-1 bg-yellow-500 text-white rounded text-xs font-bold">P1</span></td>
+          <td class="px-4 py-3 font-medium">AuthGuard global bị comment</td>
+          <td class="px-4 py-3 text-gray-500"><code>app.module.ts:68-71</code></td>
+          <td class="px-4 py-3 text-blue-600">Bật lại + thêm @Public() cho endpoint public</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3"><span class="px-2 py-1 bg-blue-500 text-white rounded text-xs font-bold">P2</span></td>
+          <td class="px-4 py-3 font-medium">reset-password/password trùng logic với token route</td>
+          <td class="px-4 py-3 text-gray-500"><code>auth.controller.ts:55-61</code></td>
+          <td class="px-4 py-3 text-blue-600">Xóa route trùng</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3"><span class="px-2 py-1 bg-blue-500 text-white rounded text-xs font-bold">P2</span></td>
+          <td class="px-4 py-3 font-medium">nguoiThucHienId='SYSTEM' FK orphan</td>
+          <td class="px-4 py-3 text-gray-500">cron-job, tender, auction</td>
+          <td class="px-4 py-3 text-blue-600">Chuyển thành <code>null</code> khi system action</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3"><span class="px-2 py-1 bg-blue-500 text-white rounded text-xs font-bold">P2</span></td>
+          <td class="px-4 py-3 font-medium">AuctionBid thiếu thuTuServer (PLAN mục 3.7)</td>
+          <td class="px-4 py-3 text-gray-500"><code>auction-bid.model.ts</code></td>
+          <td class="px-4 py-3 text-blue-600">Thêm field thuTuServer auto-increment</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3"><span class="px-2 py-1 bg-blue-500 text-white rounded text-xs font-bold">P2</span></td>
+          <td class="px-4 py-3 font-medium">placeBid trả BadRequest thay vì Conflict 409</td>
+          <td class="px-4 py-3 text-gray-500"><code>auction.service.ts:181</code></td>
+          <td class="px-4 py-3 text-blue-600">Throw <code>ConflictException</code> với giaCaoNhat + giaToiThieuKeTiep</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3"><span class="px-2 py-1 bg-gray-400 text-white rounded text-xs font-bold">P3</span></td>
+          <td class="px-4 py-3 font-medium">Submit DTO dùng tieuChiId khác PLAN maTieuChi</td>
+          <td class="px-4 py-3 text-gray-500"><code>submit-tender-proposal.dto.ts</code></td>
+          <td class="px-4 py-3 text-blue-600">Thống nhất với FE</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3"><span class="px-2 py-1 bg-gray-400 text-white rounded text-xs font-bold">P3</span></td>
+          <td class="px-4 py-3 font-medium">MailConfigModule redundant SequelizeModule.forFeature</td>
+          <td class="px-4 py-3 text-gray-500"><code>mail-config.module.ts:9</code></td>
+          <td class="px-4 py-3 text-blue-600">Bỏ vì đã có ở RepositoryModule global</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3"><span class="px-2 py-1 bg-gray-400 text-white rounded text-xs font-bold">P3</span></td>
+          <td class="px-4 py-3 font-medium">RecaptchaModule chưa được dùng ở đâu</td>
+          <td class="px-4 py-3 text-gray-500">Toàn project</td>
+          <td class="px-4 py-3 text-blue-600">Dùng cho login/register hoặc remove module</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- Roadmap -->
+<section class="max-w-7xl mx-auto px-6 mt-8">
+  <h2 class="text-2xl font-bold mb-4 text-gray-700">🗺️ Lộ Trình Đề Xuất</h2>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-white rounded-lg shadow p-5 border-t-4 border-red-500">
+      <h3 class="font-bold mb-3 text-red-700">Sprint 1: Hotfix P0 (1-2 ngày)</h3>
+      <ol class="list-decimal list-inside text-sm text-gray-600 space-y-2">
+        <li>Bọc <code>placeBid</code> trong transaction + row lock</li>
+        <li>Sửa <code>resetPassword</code> update đúng bảng auth_provider</li>
+        <li>Bỏ <code>@Public()</code> scope ở auth.controller</li>
+        <li>Hash password đúng chỗ trong register</li>
+      </ol>
+    </div>
+    <div class="bg-white rounded-lg shadow p-5 border-t-4 border-yellow-500">
+      <h3 class="font-bold mb-3 text-yellow-700">Sprint 2: P1 + Integration (3-5 ngày)</h3>
+      <ol class="list-decimal list-inside text-sm text-gray-600 space-y-2">
+        <li>Hook NotificationService vào placeBid, closeSession, submitProposal</li>
+        <li>Sửa CORS config</li>
+        <li>Bật AuthGuard global</li>
+        <li>Đổi route REST tender submit</li>
+        <li>Thêm <code>thuTuServer</code> cho AuctionBid</li>
+        <li>BadRequest → Conflict 409</li>
+      </ol>
+    </div>
+    <div class="bg-white rounded-lg shadow p-5 border-t-4 border-blue-500">
+      <h3 class="font-bold mb-3 text-blue-700">Sprint 3: Hardening (1 tuần)</h3>
+      <ol class="list-decimal list-inside text-sm text-gray-600 space-y-2">
+        <li>WebSocket/SSE cho realtime auction</li>
+        <li>Cache mail config thay vì query mỗi lần</li>
+        <li>E2E test happy path tender + auction</li>
+        <li>Admin endpoints quản lý user</li>
+        <li>Recaptcha cho login/register</li>
+        <li>Audit log cho auth actions</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- Conclusion -->
+<section class="max-w-7xl mx-auto px-6 mt-8 mb-12">
+  <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-lg shadow-lg p-8">
+    <h2 class="text-2xl font-bold mb-4">📌 Kết Luận</h2>
+    <div class="space-y-3 text-blue-50">
+      <p><strong class="text-white">Trạng thái tổng quan:</strong> STATE.md đánh dấu 8/8 phase DONE, nhưng review thực tế cho thấy <strong>BACK-6 thiếu integration notification</strong> và <strong>BACK-7 thiếu transaction/concurrency cho đấu giá</strong>.</p>
+      <p><strong class="text-white">Code chạy được:</strong> Build sạch, không có TODO/FIXME. Tất cả 13 module đã register và có thể boot up. Flow tender + auction chạy được end-to-end.</p>
+      <p><strong class="text-white">Production ready?</strong> <span class="text-yellow-300">CHƯA</span>. Phải fix 3 P0 bug (race condition, reset password sai bảng, auth controller @Public) trước khi deploy.</p>
+      <p><strong class="text-white">Khoảng cách so với spec:</strong> ~85% đầy đủ. Phần còn thiếu chủ yếu là notification integration, transaction cho đấu giá, một vài drift naming với PLAN.md.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="bg-gray-800 text-gray-400 py-6 text-center text-sm">
+  <p>Báo cáo tự động sinh bởi Claude Code | dau-gia-back module review</p>
+  <p class="mt-1">Để hành động: hỏi Claude "fix các P0 bug" hoặc "implement notification hook"</p>
+</footer>
+
+</body>
+</html>

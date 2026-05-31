@@ -55,10 +55,13 @@ describe('TenderController', () => {
   });
 
   it('should call service.submitProposal', async () => {
-    const dto = { phienId: 'session1', giaDeXuat: 100, giaTriTieuChi: [] };
+    const dto = { giaDeXuat: 100, giaTriTieuChi: [] } as any;
     const user = { id: 'user1' };
-    await controller.submitProposal(user as any, dto);
-    expect(service.submitProposal).toHaveBeenCalledWith('user1', dto);
+    await controller.submitProposal(user as any, 'session1', dto);
+    expect(service.submitProposal).toHaveBeenCalledWith(
+      'user1',
+      expect.objectContaining({ phienId: 'session1', giaDeXuat: 100 }),
+    );
   });
 
   it('should call service.evaluateSession', async () => {
@@ -81,7 +84,10 @@ describe('TenderController', () => {
   it('should call service.getPage', async () => {
     const query = { page: 1, limit: 10 };
     await controller.getSessions({}, query);
-    expect(service.getPage).toHaveBeenCalledWith({ where: {} }, query);
+    expect(service.getPage).toHaveBeenCalledWith(
+      expect.objectContaining({ where: {}, include: expect.any(Array) }),
+      query,
+    );
   });
 
   it('should call service.getRanking', async () => {

@@ -48,7 +48,10 @@ describe('AuditLogController', () => {
       const query = { page: 1, limit: 10 } as any;
       const result = await controller.getLogs(query);
 
-      expect(service.getPage).toHaveBeenCalledWith({}, query);
+      expect(service.getPage).toHaveBeenCalledWith(
+        expect.objectContaining({ include: expect.any(Array) }),
+        query,
+      );
       expect(result).toEqual(mockResult);
     });
   });

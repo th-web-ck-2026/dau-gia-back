@@ -65,10 +65,10 @@ import { AuditLogModule } from './modules/audit-log/audit-log.module';
       provide: APP_INTERCEPTOR,
       useClass: ResponseInterceptor,
     },
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: AuthGuard,
-    // },
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,

@@ -4,9 +4,10 @@ import { AuctionService } from './services/auction.service';
 import { AuctionSessionRepository } from './repositories/auction-session.repository';
 import { AuctionBidRepository } from './repositories/auction-bid.repository';
 import { ScoringModule } from '@/modules/scoring/scoring.module';
+import { NotificationModule } from '@/modules/notification/notification.module';
 
 @Module({
-  imports: [ScoringModule],
+  imports: [ScoringModule, NotificationModule],
   controllers: [AuctionController],
   providers: [
     AuctionService,

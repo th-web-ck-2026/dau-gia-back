@@ -6,9 +6,10 @@ import { TenderCriteriaRepository } from './repositories/tender-criteria.reposit
 import { TenderSubmissionRepository } from './repositories/tender-submission.repository';
 import { TenderSubmissionValueRepository } from './repositories/tender-submission-value.repository';
 import { ScoringModule } from '@/modules/scoring/scoring.module';
+import { NotificationModule } from '@/modules/notification/notification.module';
 
 @Module({
-  imports: [ScoringModule],
+  imports: [ScoringModule, NotificationModule],
   controllers: [TenderController],
   providers: [
     TenderService,
