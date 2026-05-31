@@ -17,6 +17,7 @@ import { AuctionSession } from '../entities/auction-session.entity';
 import { AuctionBid } from '../entities/auction-bid.entity';
 import { AuctionSessionStatusDto } from '../dto/auction-session-status.dto';
 import { PageableDto } from '@/common/dto/pageable.dto';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Auction')
 @Controller('auction-sessions')
@@ -95,6 +96,7 @@ export class AuctionController {
 
   @Post(':id/bids')
   @Auth()
+  @Throttle({ default: { limit: 5, ttl: 10000 } })
   @ApiOperation({ summary: 'Dat gia dau gia' })
   @ApiCreatedResponse({ type: AuctionBid })
   async placeBid(
@@ -114,7 +116,7 @@ export class AuctionController {
     @ReqUser() user: AuthUser,
     @Param('id') id: string,
   ): Promise<AuctionSession | { message: string }> {
-    return this.auctionService.evaluateSession(user.id, id);
+    return this.auctionService.evaluateSession(user.id, id, false, false, user.role);
   }
 
   @Public()
@@ -141,7 +143,7 @@ export class AuctionController {
     @ReqUser() user: AuthUser,
     @Param('id') id: string,
   ): Promise<AuctionSession | { message: string }> {
-    return this.auctionService.closeSession(user.id, id);
+    return this.auctionService.closeSession(user.id, id, false, user.role);
   }
 
   @Get(':id/bids')
@@ -152,6 +154,6 @@ export class AuctionController {
     @ReqUser() user: AuthUser,
     @Param('id') id: string,
   ): Promise<AuctionBid[]> {
-    return this.auctionService.getSessionBids(user.id, id);
+    return this.auctionService.getSessionBids(user.id, id, user.role);
   }
 }

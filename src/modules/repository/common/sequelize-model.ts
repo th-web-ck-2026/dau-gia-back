@@ -7,6 +7,7 @@ import { TenderSubmissionModel } from '@/modules/tender/models/tender-submission
 import { TenderSubmissionValueModel } from '@/modules/tender/models/tender-submission-value.model';
 import { AuctionSessionModel } from '@/modules/auction/models/auction-session.model';
 import { AuctionBidModel } from '@/modules/auction/models/auction-bid.model';
+import { AuditLogModel } from '@/modules/audit-log/models/audit-log.model';
 import { Model, ModelCtor } from 'sequelize-typescript';
 
 export const SequelizeModel: ModelCtor<Model>[] = [
@@ -19,4 +20,5 @@ export const SequelizeModel: ModelCtor<Model>[] = [
   TenderSubmissionValueModel,
   AuctionSessionModel,
   AuctionBidModel,
+  AuditLogModel,
 ];

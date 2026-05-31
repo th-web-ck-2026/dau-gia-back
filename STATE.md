@@ -15,9 +15,9 @@
 | BACK-4 | Auction Data Layer | ✅ DONE |
 | BACK-5 | Auction Service/API | ✅ DONE |
 | BACK-6 | Cron & Realtime Fallback | ✅ DONE |
-| BACK-7 | Audit & Hardening | ❌ NOT STARTED |
+| BACK-7 | Audit & Hardening | ✅ DONE |
 
-**Đang ở:** Bắt đầu BACK-7.
+**Đang ở:** Backend phases are completed! Ready for frontend integration.
 
 ---
 
@@ -59,14 +59,14 @@
   - [x] 3. Endpoint status/ranking tối ưu cho polling (đã có GET :id/status và GET :id/ranking)
   - [x] 4. WebSocket/SSE (optional nếu có thời gian)
 
-### ❌ BACK-7: Audit & Hardening
-- Chưa có `audit-log` module
+### ✅ BACK-7: Audit & Hardening
+- `src/modules/audit-log` — Đã hoàn thành triển khai AuditLog module và tích hợp hooks.
 - Cần làm:
-  - [ ] Tạo audit-log module (entity, model, repo, service)
-  - [ ] Hook `createAuditLog()` vào các action quan trọng (bid, submit, publish, close)
-  - [ ] Rate limit endpoint bid/submit
-  - [ ] Permission check Host/Admin/Bidder
-  - [ ] Ẩn danh participant theo `isAnonymous`
+  - [x] Tạo audit-log module (entity, model, repo, service)
+  - [x] Hook `createAuditLog()` vào các action quan trọng (bid, submit, publish, close)
+  - [x] Rate limit endpoint bid/submit
+  - [x] Permission check Host/Admin/Bidder
+  - [x] Ẩn danh participant theo `isAnonymous` / `anDanh`
 
 ---
 
@@ -84,4 +84,4 @@ Sau mỗi task/phase hoàn thành, AI worker cập nhật:
 2. Cập nhật chi tiết phase tương ứng (tick checkbox, ghi chú file đã tạo)
 3. Cập nhật dòng "Đang ở:" để chỉ phase tiếp theo
 
-_Last updated: 2026-05-30_
+_Last updated: 2026-05-31_

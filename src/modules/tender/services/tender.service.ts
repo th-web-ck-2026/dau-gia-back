@@ -4,9 +4,11 @@ import { TenderSession, TenderSessionDetails } from '../entities/tender-session.
 import { TenderSessionRepository } from '../repositories/tender-session.repository';
 import { TenderCriteriaRepository } from '../repositories/tender-criteria.repository';
 import { TenderSubmissionRepository } from '../repositories/tender-submission.repository';
-import { TenderSubmission } from '../entities/tender-submission.entity';
+import { TenderSubmission, TenderSubmissionDetails } from '../entities/tender-submission.entity';
 import { TenderSubmissionValueRepository } from '../repositories/tender-submission-value.repository';
 import { ScoringService } from '@/modules/scoring/services/scoring.service';
+import { AuditLogService } from '@/modules/audit-log/services/audit-log.service';
+import { UserRoles } from '@/modules/user/common/constant';
 import { CreateTenderSessionDto } from '../dto/create-tender-session.dto';
 import { SubmitTenderProposalDto } from '../dto/submit-tender-proposal.dto';
 import { ApiError } from '@/common/exceptions/api-error';
@@ -21,6 +23,7 @@ export class TenderService extends BaseService<TenderSession> {
     private readonly tenderSubmissionRepository: TenderSubmissionRepository,
     private readonly tenderSubmissionValueRepository: TenderSubmissionValueRepository,
     private readonly scoringService: ScoringService,
+    private readonly auditLogService: AuditLogService,
   ) {
     super(tenderSessionRepository);
   }
@@ -50,7 +53,6 @@ export class TenderService extends BaseService<TenderSession> {
         session.thoiDiemDong = now;
         await this.evaluateSession('SYSTEM', session._id, true, true);
 
-        // Update non-winning valid submissions to THUA instead of HOP_LE
         const submissions = await this.tenderSubmissionRepository.getMany({
           where: { phienId: session._id },
         });
@@ -115,6 +117,8 @@ export class TenderService extends BaseService<TenderSession> {
       });
     }
 
+    await this.auditLogService.logAction(userId, 'CREATE_TENDER_SESSION', 'TenderSession', session._id, null, session);
+
     return this.getSessionDetails(session._id);
   }
 
@@ -141,6 +145,15 @@ export class TenderService extends BaseService<TenderSession> {
       { where: { _id: sessionId } },
     );
 
+    await this.auditLogService.logAction(
+      userId,
+      'PUBLISH_TENDER_SESSION',
+      'TenderSession',
+      sessionId,
+      { trangThai: TrangThaiPhien.NHAP },
+      { trangThai: newStatus },
+    );
+
     return this.getSessionDetails(sessionId);
   }
 
@@ -157,6 +170,10 @@ export class TenderService extends BaseService<TenderSession> {
         throw ApiError.BadRequest('Phien dau thau da dong');
       }
       throw ApiError.BadRequest('Phien dau thau khong trong trang thai nhan de xuat');
+    }
+
+    if (session.chuPhienId === userId) {
+      throw ApiError.Forbidden('Chu phien khong duoc nop de xuat cho phien cua minh');
     }
 
     if (session.giaToiDa && dto.giaDeXuat > session.giaToiDa) {
@@ -176,7 +193,6 @@ export class TenderService extends BaseService<TenderSession> {
 
     const criteriaMap = new Map(criteriaList.map((c) => [c._id, c]));
 
-    // Validate inputs
     for (const valDto of dto.giaTriTieuChi) {
       const criteria = criteriaMap.get(valDto.tieuChiId);
       if (!criteria) {
@@ -186,22 +202,9 @@ export class TenderService extends BaseService<TenderSession> {
       if (criteria.batBuoc && (valDto.giaTriGoc === undefined || valDto.giaTriGoc === null || valDto.giaTriGoc === '')) {
         throw ApiError.BadRequest(`Tieu chi "${criteria.tenTieuChi}" la bat buoc`);
       }
-
-      if (criteria.rangBuocCung) {
-        if (criteria.loai === LoaiTieuChi.SO || criteria.loai === LoaiTieuChi.PHAN_TRAM) {
-          const numVal = Number(valDto.giaTriGoc);
-          if (criteria.giaTriToiThieu !== undefined && numVal < criteria.giaTriToiThieu) {
-            throw ApiError.BadRequest(`Gia tri tieu chi "${criteria.tenTieuChi}" phai lon hon hoac bang ${criteria.giaTriToiThieu}`);
-          }
-          if (criteria.giaTriToiDa !== undefined && numVal > criteria.giaTriToiDa) {
-            throw ApiError.BadRequest(`Gia tri tieu chi "${criteria.tenTieuChi}" phai nho hon hoac bang ${criteria.giaTriToiDa}`);
-          }
-        }
-      }
     }
 
-    const now = new Date()
-
+    const now = new Date();
     const submission = await this.tenderSubmissionRepository.create({
       phienId: dto.phienId,
       nguoiThamGiaId: userId,
@@ -234,15 +237,19 @@ export class TenderService extends BaseService<TenderSession> {
       });
     }
 
+    await this.auditLogService.logAction(userId, 'SUBMIT_TENDER_PROPOSAL', 'TenderSubmission', submission._id, null, submission);
+
     return submission;
   }
 
-  async evaluateSession(userId: string, sessionId: string, force = false, isSystem = false): Promise<TenderSessionDetails | { message: string }> {
+  async evaluateSession(userId: string, sessionId: string, force = false, isSystem = false, userRole?: string): Promise<TenderSessionDetails | { message: string }> {
     const session = await this.tenderSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau thau khong ton tai');
     }
-    if (!isSystem && session.chuPhienId !== userId) {
+    const isOwner = session.chuPhienId === userId;
+    const isAdmin = userRole === UserRoles.ADMIN;
+    if (!isSystem && !isOwner && !isAdmin) {
       throw ApiError.Forbidden('Ban khong co quyen danh gia phien nay');
     }
 
@@ -263,7 +270,6 @@ export class TenderService extends BaseService<TenderSession> {
       return { message: 'Khong co de xuat nao de danh gia' };
     }
 
-    // Step 1: Pre-screening on pass/fail (sang_loc) and hard constraints
     const validSubmissions: any[] = [];
     for (const sub of submissions) {
       let isRejected = false;
@@ -300,17 +306,12 @@ export class TenderService extends BaseService<TenderSession> {
       return { message: 'Tat ca de xuat deu khong vuot qua vong sang loc' };
     }
 
-    // Step 2: Calculate technical score (chuan hoa tung tieu chi va nhan trong so)
-    // Gather all numeric criteria bounds from valid submissions
     const technicalCriteria = criteriaList.filter((c) => c.nhom !== 'sang_loc');
-
     const criteriaMinMax = new Map<string, { min: number; max: number }>();
     for (const cri of technicalCriteria) {
       if (cri.loai === LoaiTieuChi.SO || cri.loai === LoaiTieuChi.PHAN_TRAM) {
         let min = cri.giaTriToiThieu ?? Infinity;
         let max = cri.giaTriToiDa ?? -Infinity;
-
-        // If min/max are not defined in criteria, calculate from actual submissions
         for (const item of validSubmissions) {
           const valObj = item.valuesMap.get(cri._id);
           if (valObj && valObj.giaTriSo !== undefined) {
@@ -318,7 +319,6 @@ export class TenderService extends BaseService<TenderSession> {
             if (valObj.giaTriSo > max) max = valObj.giaTriSo;
           }
         }
-
         if (min === Infinity) min = 0;
         if (max === -Infinity) max = 100;
         criteriaMinMax.set(cri._id, { min, max });
@@ -326,44 +326,30 @@ export class TenderService extends BaseService<TenderSession> {
     }
 
     const scoredSubmissions: any[] = [];
-
     for (const item of validSubmissions) {
       const technicalScores: Array<{ score: number; weight: number }> = [];
-
       for (const cri of technicalCriteria) {
         const valObj = item.valuesMap.get(cri._id);
         if (!valObj) continue;
-
         let score = 0;
         if (cri.loai === LoaiTieuChi.SO || cri.loai === LoaiTieuChi.PHAN_TRAM) {
           const { min, max } = criteriaMinMax.get(cri._id) || { min: 0, max: 100 };
-          const value = valObj.giaTriSo ?? 0;
-          score = this.scoringService.normalizeNumber(value, min, max, cri.huongToiUu === HuongToiUu.THAP_HON);
+          score = this.scoringService.normalizeNumber(valObj.giaTriSo ?? 0, min, max, cri.huongToiUu === HuongToiUu.THAP_HON);
         } else if (cri.loai === LoaiTieuChi.DUNG_SAI) {
           score = this.scoringService.normalizeBoolean(Boolean(valObj.giaTriDungSai));
         } else if (cri.loai === LoaiTieuChi.LUA_CHON) {
           score = this.scoringService.normalizeEnum(valObj.giaTriChuoi || '', cri.cacLuaChon || []);
         }
-
-        // Save normalized scores
         await this.tenderSubmissionValueRepository.updateOne(
           { diemChuanHoa: score, diemCoTrongSo: score * cri.trongSo },
           { where: { _id: valObj._id } },
         );
-
         technicalScores.push({ score, weight: cri.trongSo });
       }
-
-      // Sum tech weights using weighted average
       const technicalScore = this.scoringService.calculateWeightedScore(technicalScores);
-
       if (technicalScore < session.diemKyThuatToiThieu) {
         await this.tenderSubmissionRepository.updateOne(
-          {
-            trangThai: TrangThaiDeXuat.BI_TU_CHOI,
-            diemKyThuat: technicalScore,
-            lyDoTuChoi: `Diem ky thuat (${technicalScore.toFixed(2)}) thap hon muc toi thieu (${session.diemKyThuatToiThieu})`,
-          },
+          { trangThai: TrangThaiDeXuat.BI_TU_CHOI, diemKyThuat: technicalScore, lyDoTuChoi: 'Khong dat diem toi thieu' },
           { where: { _id: item.sub._id } },
         );
       } else {
@@ -371,126 +357,100 @@ export class TenderService extends BaseService<TenderSession> {
       }
     }
 
-    if (scoredSubmissions.length === 0) {
-      return { message: 'Khong co de xuat nao dat muc diem ky thuat toi thieu' };
-    }
+    if (scoredSubmissions.length === 0) return { message: 'Khong co de xuat nao dat muc diem ky thaut toi thieu' };
 
-    // Step 3: Calculate price score & final composite score
     const lowestPrice = Math.min(...scoredSubmissions.map((item) => Number(item.sub.giaDeXuat)));
-
     for (const item of scoredSubmissions) {
       const priceScore = this.scoringService.calculateTenderPriceScore(Number(item.sub.giaDeXuat), lowestPrice);
       const finalScore = this.scoringService.calculateTenderFinalScore(item.technicalScore, priceScore, {
         trongSoKyThuat: session.trongSoKyThuat,
         trongSoGia: session.trongSoGia,
       });
-
       item.priceScore = priceScore;
       item.finalScore = finalScore;
     }
-
-    // Step 4: Sort and rank
     scoredSubmissions.sort((a, b) => b.finalScore - a.finalScore);
 
     let rank = 1;
     for (const item of scoredSubmissions) {
       const isWinner = rank === 1;
       await this.tenderSubmissionRepository.updateOne(
-        {
-          trangThai: isWinner ? TrangThaiDeXuat.THANG : TrangThaiDeXuat.HOP_LE,
-          diemKyThuat: item.technicalScore,
-          diemGia: item.priceScore,
-          diemTongHop: item.finalScore,
-          thuHang: rank,
-        },
+        { trangThai: isWinner ? TrangThaiDeXuat.THANG : TrangThaiDeXuat.HOP_LE, diemKyThuat: item.technicalScore, diemGia: item.priceScore, diemTongHop: item.finalScore, thuHang: rank },
         { where: { _id: item.sub._id } },
       );
-
-      if (isWinner) {
-        await this.tenderSessionRepository.updateOne(
-          { deXuatThangId: item.sub._id },
-          { where: { _id: sessionId } },
-        );
-      }
+      if (isWinner) await this.tenderSessionRepository.updateOne({ deXuatThangId: item.sub._id }, { where: { _id: sessionId } });
       rank++;
     }
 
+    await this.auditLogService.logAction(userId, 'EVALUATE_TENDER_SESSION', 'TenderSession', sessionId, null, null);
     return this.getSessionDetails(sessionId);
   }
 
   async getSessionDetails(sessionId: string): Promise<TenderSessionDetails> {
     let session = await this.tenderSessionRepository.getOne({ where: { _id: sessionId } });
-    if (!session) {
-      throw ApiError.NotFound('Phien dau thau khong ton tai');
-    }
+    if (!session) throw ApiError.NotFound('Phien dau thau khong ton tai');
     session = await this.checkAndTransitionStateInternal(session);
     const criteria = await this.tenderCriteriaRepository.getMany({ where: { phienId: sessionId } });
-    return {
-      ...session,
-      tieuChi: criteria,
-    };
+    return { ...session, tieuChi: criteria };
   }
 
-  async getSessionSubmissions(userId: string, sessionId: string): Promise<any[]> {
+  async getSessionSubmissions(userId: string, sessionId: string, userRole?: string): Promise<TenderSubmissionDetails[]> {
     let session = await this.tenderSessionRepository.getOne({ where: { _id: sessionId } });
-    if (!session) {
-      throw ApiError.NotFound('Phien dau thau khong ton tai');
-    }
-
+    if (!session) throw ApiError.NotFound('Phien dau thau khong ton tai');
     session = await this.checkAndTransitionStateInternal(session);
 
     const isOwner = session.chuPhienId === userId;
-    const submissions = await this.tenderSubmissionRepository.getMany({
+    const isAdmin = userRole === UserRoles.ADMIN;
+    let submissions = await this.tenderSubmissionRepository.getMany({
       where: { phienId: sessionId },
       order: [['diemTongHop', 'DESC']],
     });
+
+    if (!isOwner && !isAdmin) {
+      if (session.trangThai !== TrangThaiPhien.DONG) {
+        submissions = submissions.filter((sub) => sub.nguoiThamGiaId === userId);
+      }
+    }
 
     const result: any[] = [];
     for (const sub of submissions) {
       const values = await this.tenderSubmissionValueRepository.getMany({ where: { deXuatId: sub._id } });
       const plainSub = { ...sub } as any;
-
-      if (session.anDanh && !isOwner && sub.nguoiThamGiaId !== userId) {
+      if (session.anDanh && !isOwner && !isAdmin && sub.nguoiThamGiaId !== userId) {
         plainSub.nguoiThamGiaId = 'ANONYMOUS';
       }
-
-      result.push({
-        ...plainSub,
-        giaTriTieuChi: values,
-      });
+      result.push({ ...plainSub, giaTriTieuChi: values });
     }
-
     return result;
   }
 
-  async getRanking(userId: string, sessionId: string): Promise<any> {
+  async getRanking(userId: string, sessionId: string, userRole?: string): Promise<{ phienId: string; trangThai: string; danhSach: any[] }> {
     let session = await this.tenderSessionRepository.getOne({ where: { _id: sessionId } });
-    if (!session) {
-      throw ApiError.NotFound('Phien dau thau khong ton tai');
-    }
-
+    if (!session) throw ApiError.NotFound('Phien dau thau khong ton tai');
     session = await this.checkAndTransitionStateInternal(session);
 
     const isOwner = session.chuPhienId === userId;
-    const submissions = await this.tenderSubmissionRepository.getMany({
+    const isAdmin = userRole === UserRoles.ADMIN;
+    const isClosed = session.trangThai === TrangThaiPhien.DONG;
+
+    let submissions = await this.tenderSubmissionRepository.getMany({
       where: { phienId: sessionId },
       order: [['diemTongHop', 'DESC']],
     });
 
+    if (!isOwner && !isAdmin && !isClosed) {
+      submissions = submissions.filter((sub) => sub.nguoiThamGiaId === userId);
+    }
+
     const resultList = submissions.map((sub, index) => {
-      const isSelf = sub.nguoiThamGiaId === userId;
-      let bietDanh = `Bidder ${String.fromCharCode(65 + index)}`; // e.g. Bidder A, Bidder B
       let participantId = sub.nguoiThamGiaId;
-      if (session.anDanh && !isOwner && !isSelf) {
+      if (session.anDanh && !isOwner && !isAdmin && sub.nguoiThamGiaId !== userId) {
         participantId = 'ANONYMOUS';
-      } else {
-        bietDanh = sub.nguoiThamGiaId;
       }
       return {
         thuHang: sub.thuHang || index + 1,
         deXuatId: sub._id,
         nguoiThamGiaId: participantId,
-        bietDanh,
         diemKyThuat: sub.diemKyThuat,
         diemGia: sub.diemGia,
         diemTongHop: sub.diemTongHop,
@@ -498,19 +458,17 @@ export class TenderService extends BaseService<TenderSession> {
       };
     });
 
-    return {
-      phienId: session._id,
-      trangThai: session.trangThai,
-      danhSach: resultList,
-    };
+    return { phienId: session._id, trangThai: session.trangThai, danhSach: resultList };
   }
 
-  async closeSession(userId: string, sessionId: string, isSystem = false): Promise<TenderSessionDetails> {
+  async closeSession(userId: string, sessionId: string, isSystem = false, userRole?: string): Promise<TenderSessionDetails> {
     let session = await this.tenderSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau thau khong ton tai');
     }
-    if (!isSystem && session.chuPhienId !== userId) {
+    const isOwner = session.chuPhienId === userId;
+    const isAdmin = userRole === UserRoles.ADMIN;
+    if (!isSystem && !isOwner && !isAdmin) {
       throw ApiError.Forbidden('Ban khong co quyen dong phien nay');
     }
     if (session.trangThai === TrangThaiPhien.DONG) {
@@ -522,9 +480,8 @@ export class TenderService extends BaseService<TenderSession> {
       { where: { _id: sessionId } },
     );
 
-    await this.evaluateSession(userId, sessionId, true, isSystem);
+    await this.evaluateSession(userId, sessionId, true, isSystem, userRole);
 
-    // Update non-winning valid submissions to THUA instead of HOP_LE
     const submissions = await this.tenderSubmissionRepository.getMany({
       where: { phienId: sessionId },
     });
@@ -536,6 +493,15 @@ export class TenderService extends BaseService<TenderSession> {
         );
       }
     }
+
+    await this.auditLogService.logAction(
+      userId,
+      'CLOSE_TENDER_SESSION',
+      'TenderSession',
+      sessionId,
+      { trangThai: session.trangThai },
+      { trangThai: TrangThaiPhien.DONG },
+    );
 
     return this.getSessionDetails(sessionId);
   }

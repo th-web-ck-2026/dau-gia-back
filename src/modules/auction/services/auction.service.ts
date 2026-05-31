@@ -5,6 +5,8 @@ import { AuctionSessionRepository } from '../repositories/auction-session.reposi
 import { AuctionBidRepository } from '../repositories/auction-bid.repository';
 import { AuctionBid } from '../entities/auction-bid.entity';
 import { ScoringService } from '@/modules/scoring/services/scoring.service';
+import { AuditLogService } from '@/modules/audit-log/services/audit-log.service';
+import { UserRoles } from '@/modules/user/common/constant';
 import { CreateAuctionSessionDto } from '../dto/create-auction-session.dto';
 import { PlaceAuctionBidDto } from '../dto/place-auction-bid.dto';
 import { ApiError } from '@/common/exceptions/api-error';
@@ -17,6 +19,7 @@ export class AuctionService extends BaseService<AuctionSession> {
     private readonly auctionSessionRepository: AuctionSessionRepository,
     private readonly auctionBidRepository: AuctionBidRepository,
     private readonly scoringService: ScoringService,
+    private readonly auditLogService: AuditLogService,
   ) {
     super(auctionSessionRepository);
   }
@@ -65,7 +68,7 @@ export class AuctionService extends BaseService<AuctionSession> {
       throw ApiError.BadRequest('Thoi gian bat dau phai truoc thoi gian ket thuc');
     }
 
-    return this.auctionSessionRepository.create({
+    const session = await this.auctionSessionRepository.create({
       tieuDe: dto.tieuDe,
       moTa: dto.moTa,
       chuPhienId: userId,
@@ -82,6 +85,10 @@ export class AuctionService extends BaseService<AuctionSession> {
       anDanh: dto.anDanh ?? false,
       danhSachHinhAnh: dto.danhSachHinhAnh ?? [],
     });
+
+    await this.auditLogService.logAction(userId, 'CREATE_AUCTION_SESSION', 'AuctionSession', session._id, null, session);
+
+    return session;
   }
 
   async publishSession(userId: string, sessionId: string): Promise<AuctionSession> {
@@ -102,10 +109,21 @@ export class AuctionService extends BaseService<AuctionSession> {
       newStatus = TrangThaiPhien.MO;
     }
 
-    return this.auctionSessionRepository.updateOne(
+    await this.auctionSessionRepository.updateOne(
       { trangThai: newStatus, thoiDiemCongBo: now },
       { where: { _id: sessionId } },
-    ).then(() => this.getSessionDetails(sessionId));
+    );
+
+    await this.auditLogService.logAction(
+      userId,
+      'PUBLISH_AUCTION_SESSION',
+      'AuctionSession',
+      sessionId,
+      { trangThai: TrangThaiPhien.NHAP },
+      { trangThai: newStatus },
+    );
+
+    return this.getSessionDetails(sessionId);
   }
 
   async placeBid(userId: string, dto: PlaceAuctionBidDto): Promise<AuctionBid> {
@@ -121,6 +139,10 @@ export class AuctionService extends BaseService<AuctionSession> {
         throw ApiError.BadRequest('Phien dau gia da dong');
       }
       throw ApiError.BadRequest('Phien dau gia khong trong trang thai nhan gia dat');
+    }
+
+    if (session.chuPhienId === userId) {
+      throw ApiError.Forbidden('Chu phien khong duoc dat gia cho phien cua minh');
     }
 
     if (session.giaTran && dto.giaDat > session.giaTran) {
@@ -154,15 +176,19 @@ export class AuctionService extends BaseService<AuctionSession> {
       { where: { _id: session._id } },
     );
 
+    await this.auditLogService.logAction(userId, 'PLACE_AUCTION_BID', 'AuctionBid', bid._id, null, bid);
+
     return bid;
   }
 
-  async evaluateSession(userId: string, sessionId: string, force = false, isSystem = false): Promise<AuctionSession | { message: string }> {
+  async evaluateSession(userId: string, sessionId: string, force = false, isSystem = false, userRole?: string): Promise<AuctionSession | { message: string }> {
     const session = await this.auctionSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau gia khong ton tai');
     }
-    if (!isSystem && session.chuPhienId !== userId) {
+    const isOwner = session.chuPhienId === userId;
+    const isAdmin = userRole === UserRoles.ADMIN;
+    if (!isSystem && !isOwner && !isAdmin) {
       throw ApiError.Forbidden('Ban khong co quyen danh gia phien nay');
     }
 
@@ -236,6 +262,8 @@ export class AuctionService extends BaseService<AuctionSession> {
       rank++;
     }
 
+    await this.auditLogService.logAction(userId, 'EVALUATE_AUCTION_SESSION', 'AuctionSession', sessionId, null, null);
+
     return this.getSessionDetails(sessionId);
   }
 
@@ -248,7 +276,7 @@ export class AuctionService extends BaseService<AuctionSession> {
     return session;
   }
 
-  async getSessionBids(userId: string, sessionId: string): Promise<AuctionBid[]> {
+  async getSessionBids(userId: string, sessionId: string, userRole?: string): Promise<AuctionBid[]> {
     let session = await this.auctionSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau gia khong ton tai');
@@ -257,6 +285,7 @@ export class AuctionService extends BaseService<AuctionSession> {
     session = await this.checkAndTransitionStateInternal(session);
 
     const isOwner = session.chuPhienId === userId;
+    const isAdmin = userRole === UserRoles.ADMIN;
     const bids = await this.auctionBidRepository.getMany({
       where: { phienId: sessionId },
       order: [['giaDat', 'DESC']],
@@ -264,7 +293,7 @@ export class AuctionService extends BaseService<AuctionSession> {
 
     return bids.map((bid) => {
       const plainBid = { ...bid } as any;
-      if (session.anDanh && !isOwner && bid.nguoiThamGiaId !== userId) {
+      if (session.anDanh && !isOwner && !isAdmin && bid.nguoiThamGiaId !== userId) {
         plainBid.nguoiThamGiaId = 'ANONYMOUS';
       }
       return plainBid;
@@ -324,12 +353,14 @@ export class AuctionService extends BaseService<AuctionSession> {
     };
   }
 
-  async closeSession(userId: string, sessionId: string, isSystem = false): Promise<AuctionSession | { message: string }> {
+  async closeSession(userId: string, sessionId: string, isSystem = false, userRole?: string): Promise<AuctionSession | { message: string }> {
     let session = await this.auctionSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau gia khong ton tai');
     }
-    if (!isSystem && session.chuPhienId !== userId) {
+    const isOwner = session.chuPhienId === userId;
+    const isAdmin = userRole === UserRoles.ADMIN;
+    if (!isSystem && !isOwner && !isAdmin) {
       throw ApiError.Forbidden('Ban khong co quyen dong phien nay');
     }
     if (session.trangThai === TrangThaiPhien.DONG) {
@@ -341,6 +372,15 @@ export class AuctionService extends BaseService<AuctionSession> {
       { where: { _id: sessionId } },
     );
 
-    return this.evaluateSession(userId, sessionId, true, isSystem);
+    await this.auditLogService.logAction(
+      userId,
+      'CLOSE_AUCTION_SESSION',
+      'AuctionSession',
+      sessionId,
+      { trangThai: session.trangThai },
+      { trangThai: TrangThaiPhien.DONG },
+    );
+
+    return this.evaluateSession(userId, sessionId, true, isSystem, userRole);
   }
 }

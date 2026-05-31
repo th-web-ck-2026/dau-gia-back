@@ -7,6 +7,7 @@ import { TenderSubmissionValueRepository } from '../repositories/tender-submissi
 import { ScoringService } from '@/modules/scoring/services/scoring.service';
 import { ApiError } from '@/common/exceptions/api-error';
 import { TrangThaiPhien, TrangThaiDeXuat, LoaiTieuChi, HuongToiUu } from '@/modules/scoring/common/constants';
+import { AuditLogService } from '@/modules/audit-log/services/audit-log.service';
 
 describe('TenderService', () => {
   let service: TenderService;
@@ -50,6 +51,12 @@ describe('TenderService', () => {
         { provide: TenderCriteriaRepository, useValue: mockCriteriaRepo },
         { provide: TenderSubmissionRepository, useValue: mockSubmissionRepo },
         { provide: TenderSubmissionValueRepository, useValue: mockSubmissionValueRepo },
+        {
+          provide: AuditLogService,
+          useValue: {
+            logAction: jest.fn().mockResolvedValue({}),
+          },
+        },
       ],
     }).compile();
 

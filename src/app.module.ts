@@ -22,6 +22,7 @@ import { RepositoryModule } from './modules/repository/repository.module';
 import { ScoringModule } from './modules/scoring/scoring.module';
 import { TenderModule } from './modules/tender/tender.module';
 import { AuctionModule } from './modules/auction/auction.module';
+import { AuditLogModule } from './modules/audit-log/audit-log.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { AuctionModule } from './modules/auction/auction.module';
     ScoringModule,
     TenderModule,
     AuctionModule,
+    AuditLogModule,
   ],
   controllers: [AppController, ExampleController],
   providers: [
