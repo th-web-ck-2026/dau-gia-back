@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { BaseService } from '@/common/base/base.service';
 import { TenderSession, TenderSessionDetails } from '../entities/tender-session.entity';
 import { TenderSessionRepository } from '../repositories/tender-session.repository';
@@ -20,7 +20,7 @@ import { TenderSubmissionModel } from '../models/tender-submission.model';
 import { TenderSubmissionValueModel } from '../models/tender-submission-value.model';
 
 @Injectable()
-export class TenderService extends BaseService<TenderSession> {
+export class TenderService extends BaseService<TenderSession> implements OnModuleInit {
   constructor(
     private readonly tenderSessionRepository: TenderSessionRepository,
     private readonly tenderCriteriaRepository: TenderCriteriaRepository,
@@ -30,6 +30,27 @@ export class TenderService extends BaseService<TenderSession> {
     private readonly auditLogService: AuditLogService,
   ) {
     super(tenderSessionRepository);
+  }
+
+  async onModuleInit() {
+    try {
+      const sessions = await this.tenderSessionRepository.getMany();
+      for (const session of sessions) {
+        const count = await this.tenderSubmissionRepository.count({
+          where: { phienId: session._id },
+          distinct: true,
+          col: 'nguoiThamGiaId',
+        } as any);
+        if (session.soLuongNguoiThamGia !== count) {
+          await this.tenderSessionRepository.updateOne(
+            { soLuongNguoiThamGia: count },
+            { where: { _id: session._id } },
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Failed to sync soLuongNguoiThamGia for tender sessions:', error);
+    }
   }
 
   async checkAndTransitionStateInternal(session: TenderSession): Promise<TenderSession> {
@@ -240,6 +261,17 @@ export class TenderService extends BaseService<TenderSession> {
         giaTriGoc: valDto.giaTriGoc,
       });
     }
+
+    const uniqueParticipantsCount = await this.tenderSubmissionRepository.count({
+      where: { phienId: dto.phienId },
+      distinct: true,
+      col: 'nguoiThamGiaId',
+    } as any);
+
+    await this.tenderSessionRepository.updateOne(
+      { soLuongNguoiThamGia: uniqueParticipantsCount },
+      { where: { _id: dto.phienId } },
+    );
 
     await this.auditLogService.logAction(userId, 'SUBMIT_TENDER_PROPOSAL', 'TenderSubmission', submission._id, null, submission);
 

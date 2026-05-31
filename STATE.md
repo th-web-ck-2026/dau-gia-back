@@ -16,6 +16,7 @@
 | BACK-5 | Auction Service/API | ✅ DONE |
 | BACK-6 | Cron & Realtime Fallback | ✅ DONE |
 | BACK-7 | Audit & Hardening | ✅ DONE |
+| BACK-8 | Unique Participant Count | ✅ DONE |
 
 **Đang ở:** Backend phases are completed! Ready for frontend integration.
 
@@ -67,6 +68,10 @@
   - [x] Rate limit endpoint bid/submit
   - [x] Permission check Host/Admin/Bidder
   - [x] Ẩn danh participant theo `isAnonymous` / `anDanh`
+
+### ✅ BACK-8: Unique Participant Count
+- [x] Thêm `soLuongNguoiThamGia` cho đấu giá (model, entity, status DTO, placeBid logic, onModuleInit self-healing)
+- [x] Thêm `soLuongNguoiThamGia` cho đấu thầu (model, entity, submitProposal logic, onModuleInit self-healing)
 
 ---
 

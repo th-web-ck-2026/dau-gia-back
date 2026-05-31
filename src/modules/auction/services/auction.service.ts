@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { BaseService } from '@/common/base/base.service';
 import { AuctionSession } from '../entities/auction-session.entity';
 import { AuctionSessionRepository } from '../repositories/auction-session.repository';
@@ -16,7 +16,7 @@ import { UserModel } from '@/modules/user/models/user.model';
 import { AuctionBidModel } from '../models/auction-bid.model';
 
 @Injectable()
-export class AuctionService extends BaseService<AuctionSession> {
+export class AuctionService extends BaseService<AuctionSession> implements OnModuleInit {
   constructor(
     private readonly auctionSessionRepository: AuctionSessionRepository,
     private readonly auctionBidRepository: AuctionBidRepository,
@@ -24,6 +24,27 @@ export class AuctionService extends BaseService<AuctionSession> {
     private readonly auditLogService: AuditLogService,
   ) {
     super(auctionSessionRepository);
+  }
+
+  async onModuleInit() {
+    try {
+      const sessions = await this.auctionSessionRepository.getMany();
+      for (const session of sessions) {
+        const count = await this.auctionBidRepository.count({
+          where: { phienId: session._id },
+          distinct: true,
+          col: 'nguoiThamGiaId',
+        } as any);
+        if (session.soLuongNguoiThamGia !== count) {
+          await this.auctionSessionRepository.updateOne(
+            { soLuongNguoiThamGia: count },
+            { where: { _id: session._id } },
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Failed to sync soLuongNguoiThamGia for auction sessions:', error);
+    }
   }
 
   async checkAndTransitionStateInternal(session: AuctionSession): Promise<AuctionSession> {
@@ -173,8 +194,17 @@ export class AuctionService extends BaseService<AuctionSession> {
       thoiDiemDat: now,
     });
 
+    const uniqueParticipantsCount = await this.auctionBidRepository.count({
+      where: { phienId: dto.phienId },
+      distinct: true,
+      col: 'nguoiThamGiaId',
+    } as any);
+
     await this.auctionSessionRepository.updateOne(
-      { giaCaoNhat: dto.giaDat },
+      { 
+        giaCaoNhat: dto.giaDat,
+        soLuongNguoiThamGia: uniqueParticipantsCount,
+      },
       { where: { _id: session._id } },
     );
 
@@ -357,6 +387,7 @@ export class AuctionService extends BaseService<AuctionSession> {
       giaHienTai: currentMax,
       bietDanhNguoiDanDau,
       tongSoLuotDat: count,
+      soLuongNguoiThamGia: session.soLuongNguoiThamGia,
       buocGia: session.buocGia,
       giaHopLeKeTiep: minRequiredBid,
       thoiGianServer: new Date(),

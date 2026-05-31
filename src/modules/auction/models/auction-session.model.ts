@@ -124,6 +124,13 @@ export class AuctionSessionModel extends Model implements AuctionSession {
   anDanh: boolean;
 
   @Column({
+    type: DataType.INTEGER,
+    defaultValue: 0,
+    allowNull: false,
+  })
+  soLuongNguoiThamGia: number;
+
+  @Column({
     type: DataType.DATE,
   })
   thoiDiemDong?: Date;

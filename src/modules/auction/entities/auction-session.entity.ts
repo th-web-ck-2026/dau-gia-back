@@ -54,6 +54,9 @@ export class AuctionSession implements BaseEntity {
   @ApiProperty()
   anDanh: boolean;
 
+  @ApiProperty()
+  soLuongNguoiThamGia: number;
+
   @ApiPropertyOptional()
   thoiDiemDong?: Date;
 

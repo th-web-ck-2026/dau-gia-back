@@ -96,6 +96,13 @@ export class TenderSessionModel extends Model implements TenderSession {
   anDanh: boolean;
 
   @Column({
+    type: DataType.INTEGER,
+    defaultValue: 0,
+    allowNull: false,
+  })
+  soLuongNguoiThamGia: number;
+
+  @Column({
     type: DataType.DATE,
   })
   thoiDiemCongBo?: Date;

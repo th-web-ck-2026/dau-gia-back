@@ -14,6 +14,9 @@ export class AuctionSessionStatusDto {
   @ApiProperty({ description: 'Tổng số lượt đặt giá' })
   tongSoLuotDat: number;
 
+  @ApiProperty({ description: 'Số lượng người tham gia unique' })
+  soLuongNguoiThamGia: number;
+
   @ApiProperty({ description: 'Bước giá' })
   buocGia: number;
 
