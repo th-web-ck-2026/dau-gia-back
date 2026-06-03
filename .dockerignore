@@ -3,3 +3,5 @@ dist
 npm-debug.log
 Dockerfile
 docker-compose.yml
+postgres/data
+postgres/data/**
