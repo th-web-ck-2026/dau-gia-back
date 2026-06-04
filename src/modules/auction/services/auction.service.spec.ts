@@ -205,8 +205,8 @@ describe('AuctionService', () => {
       expect(res.danhSach).toHaveLength(2);
       expect(res.danhSach[0].bietDanh).toBe('user1'); // self is exposed
       expect(res.danhSach[1].bietDanh).toBe('Bidder B'); // others anonymized
-      expect(res.danhSach[0].diemUyTin).toBeUndefined();
-      expect(res.danhSach[0].diemCamKet).toBeUndefined();
+      expect((res.danhSach[0] as any).diemUyTin).toBeUndefined();
+      expect((res.danhSach[0] as any).diemCamKet).toBeUndefined();
     });
   });
 });

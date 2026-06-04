@@ -316,7 +316,7 @@ export class AuctionService extends BaseService<AuctionSession> {
     };
   }
 
-  async getRanking(userId: string, sessionId: string): Promise<any> {
+  async getRanking(userId: string, sessionId: string): Promise<AuctionRankingResponse> {
     let session = await this.auctionSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau gia khong ton tai');
@@ -359,7 +359,7 @@ export class AuctionService extends BaseService<AuctionSession> {
     };
   }
 
-  async closeSession(userId: string, sessionId: string, isSystem = false): Promise<any> {
+  async closeSession(userId: string, sessionId: string, isSystem = false): Promise<AuctionRankingOrMessage> {
     let session = await this.auctionSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau gia khong ton tai');

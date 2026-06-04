@@ -17,6 +17,7 @@ import { AuctionSession } from '../entities/auction-session.entity';
 import { AuctionBid } from '../entities/auction-bid.entity';
 import { AuctionSessionStatusDto } from '../dto/auction-session-status.dto';
 import { PageableDto } from '@/common/dto/pageable.dto';
+import { AuctionRankingResponse, AuctionRankingOrMessage } from '../dto/auction-ranking.dto';
 
 @ApiTags('Auction')
 @Controller('auction-sessions')
@@ -138,7 +139,7 @@ export class AuctionController {
   async evaluateSession(
     @ReqUser() user: AuthUser,
     @Param('id') id: string,
-  ): Promise<any> {
+  ): Promise<AuctionRankingOrMessage> {
     return this.auctionService.evaluateSession(user.id, id);
   }
 
@@ -182,7 +183,7 @@ export class AuctionController {
   async getRanking(
     @ReqUser() user: AuthUser,
     @Param('id') id: string,
-  ): Promise<any> {
+  ): Promise<AuctionRankingResponse> {
     return this.auctionService.getRanking(user.id, id);
   }
 
@@ -226,7 +227,7 @@ export class AuctionController {
   async closeSession(
     @ReqUser() user: AuthUser,
     @Param('id') id: string,
-  ): Promise<any> {
+  ): Promise<AuctionRankingOrMessage> {
     return this.auctionService.closeSession(user.id, id);
   }
 
