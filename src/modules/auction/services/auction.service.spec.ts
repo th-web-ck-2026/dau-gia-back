@@ -4,7 +4,7 @@ import { AuctionSessionRepository } from '../repositories/auction-session.reposi
 import { AuctionBidRepository } from '../repositories/auction-bid.repository';
 import { ScoringService } from '@/modules/scoring/services/scoring.service';
 import { ApiError } from '@/common/exceptions/api-error';
-import { TrangThaiPhien } from '@/modules/scoring/common/constants';
+import { TrangThaiPhien, TrangThaiDeXuat } from '@/modules/scoring/common/constants';
 
 describe('AuctionService', () => {
   let service: AuctionService;
@@ -50,7 +50,7 @@ describe('AuctionService', () => {
       const dto = {
         tieuDe: 'Phien test',
         thoiGianBatDau: '2020-01-01T00:00:00.000Z',
-        thoiGianKetThuc: '2026-06-02T00:00:00.000Z',
+        thoiGianKetThuc: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
         giaKhoiDiem: 100,
         buocGia: 10,
       };
@@ -60,7 +60,7 @@ describe('AuctionService', () => {
     it('should throw BadRequest if end date is in the past', async () => {
       const dto = {
         tieuDe: 'Phien test',
-        thoiGianBatDau: '2026-06-01T00:00:00.000Z',
+        thoiGianBatDau: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         thoiGianKetThuc: '2020-01-01T00:00:00.000Z',
         giaKhoiDiem: 100,
         buocGia: 10,
@@ -69,10 +69,12 @@ describe('AuctionService', () => {
     });
 
     it('should throw BadRequest if start date is after end date', async () => {
+      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      const dayAfterTomorrow = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
       const dto = {
         tieuDe: 'Phien test',
-        thoiGianBatDau: '2026-06-02T00:00:00.000Z',
-        thoiGianKetThuc: '2026-06-01T00:00:00.000Z',
+        thoiGianBatDau: dayAfterTomorrow,
+        thoiGianKetThuc: tomorrow,
         giaKhoiDiem: 100,
         buocGia: 10,
       };
@@ -80,10 +82,12 @@ describe('AuctionService', () => {
     });
 
     it('should create session successfully', async () => {
+      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      const dayAfterTomorrow = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
       const dto = {
         tieuDe: 'Phien test',
-        thoiGianBatDau: '2026-06-01T00:00:00.000Z',
-        thoiGianKetThuc: '2026-06-02T00:00:00.000Z',
+        thoiGianBatDau: tomorrow,
+        thoiGianKetThuc: dayAfterTomorrow,
         giaKhoiDiem: 100,
         buocGia: 10,
         danhSachHinhAnh: ['img1.jpg', 'img2.jpg'],
@@ -178,6 +182,31 @@ describe('AuctionService', () => {
       const mockSession = { _id: 'session1', chuPhienId: 'host2' };
       sessionRepo.getOne.mockResolvedValue(mockSession);
       await expect(service.closeSession('user1', 'session1')).rejects.toThrow(ApiError);
+    });
+  });
+
+  describe('getRanking', () => {
+    it('should throw NotFound if session does not exist', async () => {
+      sessionRepo.getOne.mockResolvedValue(null);
+      await expect(service.getRanking('user1', 'session1')).rejects.toThrow(ApiError);
+    });
+
+    it('should return ranking representation', async () => {
+      const mockSession = { _id: 'session1', trangThai: TrangThaiPhien.MO, anDanh: true, chuPhienId: 'host1' };
+      const mockBids = [
+        { _id: 'bid1', nguoiThamGiaId: 'user1', diemChuanHoaGia: 90, diemUyTin: 90, diemCamKet: 90, diemTongHop: 90, thuHang: 1, trangThai: TrangThaiDeXuat.THANG, giaDat: 1000, thoiDiemDat: new Date() },
+        { _id: 'bid2', nguoiThamGiaId: 'user2', diemChuanHoaGia: 80, diemUyTin: 80, diemCamKet: 80, diemTongHop: 80, thuHang: 2, trangThai: TrangThaiDeXuat.THUA, giaDat: 900, thoiDiemDat: new Date() }
+      ];
+      sessionRepo.getOne.mockResolvedValue(mockSession);
+      bidRepo.getMany.mockResolvedValue(mockBids);
+
+      const res = await service.getRanking('user1', 'session1');
+      expect(res.phienId).toBe('session1');
+      expect(res.danhSach).toHaveLength(2);
+      expect(res.danhSach[0].bietDanh).toBe('user1'); // self is exposed
+      expect(res.danhSach[1].bietDanh).toBe('Bidder B'); // others anonymized
+      expect(res.danhSach[0].diemUyTin).toBeUndefined();
+      expect(res.danhSach[0].diemCamKet).toBeUndefined();
     });
   });
 });
