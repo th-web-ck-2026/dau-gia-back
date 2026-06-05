@@ -22,6 +22,7 @@ export const databaseConfig = (
   synchronize: configService.get<boolean>('DB_SYNC', false),
   sync: {
     alter: true,
+    // force: true,
   },
   logging:
     configService.get<string>('NODE_ENV') === 'development'
