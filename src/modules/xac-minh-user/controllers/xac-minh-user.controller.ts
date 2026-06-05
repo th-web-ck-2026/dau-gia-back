@@ -29,6 +29,7 @@ import { RequestCondition } from '@/common/decorators/request-condition.decotato
 import { RequestQuery } from '@/common/decorators/request-query.decorator';
 import { QueryOption } from '@/common/pipe/query-option.interface';
 import { Roles } from '@/common/decorators/roles.decorator';
+import { UserModel } from '@/modules/user/models/user.model';
 
 @ApiTags('XacMinhUser')
 @Auth()
@@ -57,7 +58,18 @@ export class XacMinhUserController {
     @RequestCondition(XacMinhUser) condition: XacMinhUser,
     @RequestQuery() query: QueryOption,
   ) {
-    return this.xacMinhUserService.getPage({ where: { ...condition } }, query);
+    return this.xacMinhUserService.getPage(
+      {
+        where: { ...condition },
+        include: [
+          {
+            model: UserModel,
+            as: 'user',
+          },
+        ],
+      },
+      query,
+    );
   }
 
   @Post('admin/:id/duyet')

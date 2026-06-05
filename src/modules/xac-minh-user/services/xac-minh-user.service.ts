@@ -58,7 +58,7 @@ export class XacMinhUserService extends BaseService<XacMinhUser> {
       }, {
         where: {
           _id: userXacMinh.userId,
-        }
+        },
       })
     }
     return this.xacMinhUserRepository.updateOne(
