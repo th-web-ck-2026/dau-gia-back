@@ -24,6 +24,7 @@ import { TenderModule } from './modules/tender/tender.module';
 import { AuctionModule } from './modules/auction/auction.module';
 import { AuditLogModule } from './modules/audit-log/audit-log.module';
 import { DonViHanhChinhModule } from './modules/don-vi-hanh-chinh/don-vi-hanh-chinh.module';
+import { ToChucProfileModule } from './modules/to-chuc-profile/to-chuc-profile.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { DonViHanhChinhModule } from './modules/don-vi-hanh-chinh/don-vi-hanh-ch
     AuctionModule,
     AuditLogModule,
     DonViHanhChinhModule,
+    ToChucProfileModule,
   ],
   controllers: [AppController, ExampleController],
   providers: [
