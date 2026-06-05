@@ -12,4 +12,5 @@ export const EntityTable = {
   AUCTION_SESSION: 'phien_dau_gia',
   AUCTION_BID: 'gia_dau_gia',
   AUDIT_LOG: 'nhat_ky_kiem_toan',
+  DON_VI_HANH_CHINH: "don_vi_hanh_chinh",
 } as const;

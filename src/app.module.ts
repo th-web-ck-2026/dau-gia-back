@@ -23,6 +23,7 @@ import { ScoringModule } from './modules/scoring/scoring.module';
 import { TenderModule } from './modules/tender/tender.module';
 import { AuctionModule } from './modules/auction/auction.module';
 import { AuditLogModule } from './modules/audit-log/audit-log.module';
+import { DonViHanhChinhModule } from './modules/don-vi-hanh-chinh/don-vi-hanh-chinh.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { AuditLogModule } from './modules/audit-log/audit-log.module';
     TenderModule,
     AuctionModule,
     AuditLogModule,
+    DonViHanhChinhModule,
   ],
   controllers: [AppController, ExampleController],
   providers: [
