@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
@@ -12,11 +12,11 @@ import { v4 as uuidv4 } from 'uuid';
 import * as bcrypt from 'bcrypt';
 import { Op } from 'sequelize';
 import { RegisterDto } from '../dto/register.dto';
-import { UserRoles } from '@/modules/user/common/constant';
+import { UserRoles, UserStatus } from '@/modules/user/common/constant';
 import { EmailCredentials, GoogleCredentials } from '../common/interface';
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleInit {
   constructor(
     private authProviderService: AuthProviderService,
     private authSessionService: AuthSessionService,
@@ -25,6 +25,27 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
+
+  // init Admin
+  async onModuleInit() {
+    const admin = await this.userRepository.findByEmail(process.env.ADMIN_EMAIL);
+    if (!admin) {
+      const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
+      const adminUser = await this.userRepository.create({
+        email: process.env.ADMIN_EMAIL,
+        password: hashedPassword,
+        role: UserRoles.ADMIN,
+        userStatus: UserStatus.ACTIVE,
+        fullname: 'Admin',
+      });
+      await this.authProviderService.createProvider(
+        adminUser._id,
+        AuthProvider.EMAIL,
+        adminUser.email,
+        hashedPassword,
+      );
+    }
+  }
 
   // Login method - delegates to provider-specific handlers
   async login(provider: string, credentials: GoogleCredentials | EmailCredentials, request: Request) {
