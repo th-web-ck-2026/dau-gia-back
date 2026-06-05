@@ -1,8 +1,9 @@
 import { EntityTable } from '@/common/constants/entity.constant';
-import { Column, DataType, Model, Table } from 'sequelize-typescript';
+import { Column, DataType, HasOne, Model, Table } from 'sequelize-typescript';
 import { User } from '../entities/user.entity';
 import { Gender, UserRoles, UserRoleType, UserStatus } from '../common/constant';
 import { StrObjectId } from '@/common/constants/base.constant';
+import { ToChucProfileModel } from '@/modules/to-chuc-profile/models/to-chuc-profile.model';
 @Table({
   tableName: EntityTable.USER,
 })
@@ -61,4 +62,10 @@ export class UserModel extends Model implements User {
   @Column
   noiCapCccd?: string;
 
+
+  @Column
+  tenToChuc?: string;
+
+  @HasOne(() => ToChucProfileModel)
+  toChucProfile: ToChucProfileModel;
 }
