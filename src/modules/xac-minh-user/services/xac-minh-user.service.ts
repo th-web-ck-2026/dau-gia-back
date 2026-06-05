@@ -7,10 +7,13 @@ import { User } from '@/modules/user/entities/user.entity';
 import { TrangThaiXacMinhUser } from '../common/constant';
 import { ApiError } from '@/common/exceptions/api-error';
 import { AdminDuyetDonXacMinhDto } from '../dto/admin-duyet.dto';
+import { UsersService } from '@/modules/user/services/user.service';
 
 @Injectable()
 export class XacMinhUserService extends BaseService<XacMinhUser> {
-  constructor(private readonly xacMinhUserRepository: XacMinhUserRepository) {
+  constructor(private readonly xacMinhUserRepository: XacMinhUserRepository,
+    private readonly userService: UsersService
+  ) {
     super(xacMinhUserRepository);
   }
   async getMe(user: User) {
@@ -18,6 +21,7 @@ export class XacMinhUserService extends BaseService<XacMinhUser> {
       where: {
         userId: user._id,
       },
+      order: [['createdAt', 'desc']]
     });
   }
   async createMe(
@@ -47,6 +51,15 @@ export class XacMinhUserService extends BaseService<XacMinhUser> {
     const userXacMinh = await this.xacMinhUserRepository.getById(id);
     if (!userXacMinh) {
       throw ApiError.NotFound('error-user-not-found');
+    }
+    if(dto.trangThai === TrangThaiXacMinhUser.DUYET){
+      await this.userService.updateOne({
+        isVerified: true,
+      }, {
+        where: {
+          _id: userXacMinh.userId,
+        }
+      })
     }
     return this.xacMinhUserRepository.updateOne(
       {
