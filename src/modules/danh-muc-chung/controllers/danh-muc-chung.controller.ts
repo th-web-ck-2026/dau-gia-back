@@ -23,6 +23,7 @@ import { LoaiDanhMuc } from '../entities/loai-danh-muc.entity';
 import { DanhMuc } from '../entities/danh-muc.entity';
 import { PageableDto } from '@/common/dto/pageable.dto';
 import { LoaiDanhMucModel } from '../models/loai-danh-muc.model';
+import { ApiGet } from '@/common/decorators/swagger';
 
 @ApiTags('DanhMucChung')
 @Controller('danh-muc-chung')
@@ -39,10 +40,13 @@ export class DanhMucChungController {
     return this.danhMucChungService.createLoai(dto);
   }
 
-  @Get('loai')
+  @ApiGet({
+    mode: 'page',
+    path: 'loai',
+    summary: 'Lấy danh sách loại danh mục',
+    responseType: LoaiDanhMuc,
+  })
   @Public()
-  @ApiOperation({ summary: 'Lấy danh sách loại danh mục' })
-  @ApiOkResponse({ type: PageableDto })
   async findAllLoai(
     @RequestQuery() query: QueryOption,
   ): Promise<PageableDto<LoaiDanhMuc>> {
@@ -86,10 +90,12 @@ export class DanhMucChungController {
     return this.danhMucChungService.createDanhMuc(dto);
   }
 
-  @Get()
+  @ApiGet({
+    mode: 'page',
+    summary: 'Lấy danh sách danh mục',
+    responseType: DanhMuc,
+  })
   @Public()
-  @ApiOperation({ summary: 'Lấy danh sách danh mục' })
-  @ApiOkResponse({ type: PageableDto })
   async findAllDanhMuc(
     @RequestQuery() query: QueryOption,
     @Query('maLoai') maLoai?: string,
