@@ -150,7 +150,7 @@ export class Create${Name}Dto extends OmitType(${Name}, ['_id']) {
 
 console.log(`📄 Tạo update-${kebabName}.dto.ts...`);
 fs.writeFileSync(`${basePath}/dto/update-${kebabName}.dto.ts`, 
-`import { PartialType } from '@nestjs/mapped-types';
+`import { PartialType } from '@nestjs/swagger';
 import { Create${Name}Dto } from './create-${kebabName}.dto';
 
 export class Update${Name}Dto extends PartialType(Create${Name}Dto) {}
