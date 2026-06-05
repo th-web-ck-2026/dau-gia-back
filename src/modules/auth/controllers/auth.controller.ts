@@ -4,6 +4,7 @@ import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { ChangePasswordDto } from '../dto/change-password.dto';
+import { SelectRoleDto } from '../dto/select-role.dto';
 import { Public } from '../../../common/decorators/public.decorator';
 import { Auth } from '../../../common/decorators/auth.decorator';
 import { Throttle } from '@nestjs/throttler';
@@ -84,5 +85,15 @@ export class AuthController {
       changePasswordDto.newPassword,
       changePasswordDto.logoutOtherDevices || false,
     );
+  }
+
+  @Auth()
+  @Post('select-role')
+  async selectRole(
+    @Req() request: any,
+    @Body() selectRoleDto: SelectRoleDto,
+  ) {
+    const userId = request.user.id;
+    return this.authService.selectRole(userId, selectRoleDto.userRoles);
   }
 }

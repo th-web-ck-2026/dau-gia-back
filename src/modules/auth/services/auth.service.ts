@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import * as bcrypt from 'bcrypt';
 import { Op } from 'sequelize';
 import { RegisterDto } from '../dto/register.dto';
-import { UserRoles, UserStatus } from '@/modules/user/common/constant';
+import { UserRoles, UserRoleType, UserStatus } from '@/modules/user/common/constant';
 import { EmailCredentials, GoogleCredentials } from '../common/interface';
 
 @Injectable()
@@ -94,6 +94,7 @@ export class AuthService implements OnModuleInit {
         fullname: user.fullname,
         avatar: user.avatar,
         role: user.role,
+        userRoles: user.userRoles,
       },
     };
   }
@@ -120,6 +121,12 @@ export class AuthService implements OnModuleInit {
       user = await this.userRepository.findByEmail(googleData.email);
 
       if (user) {
+        if (!user.userRoles && credentials.userRoles) {
+          user.userRoles = credentials.userRoles;
+          await this.userRepository.updateOne({ userRoles: credentials.userRoles }, {
+            where: { _id: user._id }
+          });
+        }
         authProvider = await this.authProviderService.createProvider(
           user._id,
           AuthProvider.GOOGLE,
@@ -131,6 +138,7 @@ export class AuthService implements OnModuleInit {
           fullname: googleData.name,
           avatar: googleData.avatar,
           role: UserRoles.USER,
+          userRoles: credentials.userRoles || null,
         });
         authProvider = await this.authProviderService.createProvider(
           user._id,
@@ -149,10 +157,19 @@ export class AuthService implements OnModuleInit {
             fullname: googleData.name,
             avatar: googleData.avatar,
             role: UserRoles.USER,
+            userRoles: credentials.userRoles || null,
+          });
+        } else if (!user.userRoles && credentials.userRoles) {
+          user.userRoles = credentials.userRoles;
+          await this.userRepository.updateOne({ userRoles: credentials.userRoles }, {
+            where: { _id: user._id }
           });
         }
-        // Update provider with new userId if it changed (unlikely but safe)
-        // For now just assign it
+      } else if (!user.userRoles && credentials.userRoles) {
+        user.userRoles = credentials.userRoles;
+        await this.userRepository.updateOne({ userRoles: credentials.userRoles }, {
+          where: { _id: user._id }
+        });
       }
     }
 
@@ -170,6 +187,7 @@ export class AuthService implements OnModuleInit {
         fullname: user.fullname,
         avatar: user.avatar,
         role: user.role,
+        userRoles: user.userRoles,
       },
     };
   }
@@ -268,6 +286,36 @@ export class AuthService implements OnModuleInit {
     return { message: 'Password changed successfully' };
   }
 
+  // Select user role (one-time choice)
+  async selectRole(userId: string, userRoles: UserRoleType) {
+    const user = await this.userRepository.getById(userId);
+    if (!user) {
+      throw ApiError.NotFound('Người dùng không tồn tại');
+    }
+    if (user.userRoles) {
+      throw ApiError.BadRequest('Tài khoản đã được thiết lập vai trò');
+    }
+
+    user.userRoles = userRoles;
+    await this.userRepository.updateOne({ userRoles }, {
+      where: { _id: userId },
+    });
+
+    const accessToken = this.generateAccessToken(user);
+
+    return {
+      access_token: accessToken,
+      user: {
+        id: user._id,
+        email: user.email,
+        fullname: user.fullname,
+        avatar: user.avatar,
+        role: user.role,
+        userRoles: user.userRoles,
+      },
+    };
+  }
+
   // Generate access token
   private generateAccessToken(user: any): string {
     const payload = {
@@ -277,6 +325,7 @@ export class AuthService implements OnModuleInit {
       fullname: user.fullname,
       avatar: user.avatar,
       role: user.role,
+      userRoles: user.userRoles,
     };
     return this.jwtService.sign(payload);
   }

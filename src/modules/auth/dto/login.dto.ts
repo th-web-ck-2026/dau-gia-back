@@ -1,4 +1,5 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { UserRoleType } from '@/modules/user/common/constant';
 
 export class LoginDto {
   @IsOptional()
@@ -17,4 +18,9 @@ export class LoginDto {
   @IsOptional()
   @IsString()
   code?: string;
+
+  @IsOptional()
+  @IsEnum(UserRoleType)
+  userRoles?: UserRoleType;
 }
+
