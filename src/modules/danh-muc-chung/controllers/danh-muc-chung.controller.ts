@@ -23,7 +23,10 @@ import { LoaiDanhMuc } from '../entities/loai-danh-muc.entity';
 import { DanhMuc } from '../entities/danh-muc.entity';
 import { PageableDto } from '@/common/dto/pageable.dto';
 import { LoaiDanhMucModel } from '../models/loai-danh-muc.model';
-import { ApiGet } from '@/common/decorators/swagger';
+import { ApiGet, ApiCondition } from '@/common/decorators/swagger';
+import { RequestCondition } from '@/common/decorators/request-condition.decotator';
+import { ConditionLoaiDanhMucDto } from '../dto/condition-loai-danh-muc.dto';
+import { ConditionDanhMucDto } from '../dto/condition-danh-muc.dto';
 
 @ApiTags('DanhMucChung')
 @Controller('danh-muc-chung')
@@ -46,11 +49,20 @@ export class DanhMucChungController {
     summary: 'Lấy danh sách loại danh mục',
     responseType: LoaiDanhMuc,
   })
+  @ApiCondition({
+    fields: [
+      { name: '_id', type: 'string', description: 'Mã ID loại danh mục' },
+      { name: 'ten', type: 'string', description: 'Tên loại danh mục' },
+      { name: 'ma', type: 'string', description: 'Mã loại danh mục' },
+      { name: 'isDefault', type: 'boolean', description: 'Có phải mặc định không' },
+    ],
+  })
   @Public()
   async findAllLoai(
+    @RequestCondition(ConditionLoaiDanhMucDto) condition: ConditionLoaiDanhMucDto,
     @RequestQuery() query: QueryOption,
   ): Promise<PageableDto<LoaiDanhMuc>> {
-    return this.danhMucChungService.findAllLoai({}, query);
+    return this.danhMucChungService.findAllLoai({ where: { ...condition } }, query);
   }
 
   @Get('loai/:id')
@@ -95,18 +107,26 @@ export class DanhMucChungController {
     summary: 'Lấy danh sách danh mục',
     responseType: DanhMuc,
   })
+  @ApiCondition({
+    fields: [
+      { name: '_id', type: 'string', description: 'Mã ID danh mục' },
+      { name: 'ten', type: 'string', description: 'Tên danh mục' },
+      { name: 'maLoai', type: 'string', description: 'Mã loại danh mục' },
+    ],
+  })
   @Public()
   async findAllDanhMuc(
+    @RequestCondition(ConditionDanhMucDto) condition: ConditionDanhMucDto,
     @RequestQuery() query: QueryOption,
     @Query('maLoai') maLoai?: string,
   ): Promise<PageableDto<DanhMuc>> {
-    const condition: any = {};
+    const whereCondition: any = { ...condition };
     if (maLoai) {
-      condition.maLoai = maLoai;
+      whereCondition.maLoai = maLoai;
     }
     return this.danhMucChungService.findAllDanhMuc(
       {
-        where: condition,
+        where: whereCondition,
         include: [{ model: LoaiDanhMucModel, as: 'loaiDanhMuc', attributes: ['_id', 'ma', 'ten', 'isDefault'] }],
       },
       query,
