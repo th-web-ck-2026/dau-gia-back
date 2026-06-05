@@ -25,6 +25,9 @@ import {
   ApiCreatedResponse,
 } from '@nestjs/swagger';
 import { XacMinhUser } from '../entities/xac-minh-user.entity';
+import { RequestCondition } from '@/common/decorators/request-condition.decotator';
+import { RequestQuery } from '@/common/decorators/request-query.decorator';
+import { QueryOption } from '@/common/pipe/query-option.interface';
 
 @ApiTags('XacMinhUser')
 @Auth()
@@ -44,6 +47,15 @@ export class XacMinhUserController {
   @ApiCreatedResponse({ type: XacMinhUser })
   async createMe(@ReqUser() user: AuthUser, @Body() dto: CreateXacMinhUserDto) {
     return this.xacMinhUserService.createMe({ _id: user.id } as User, dto);
+  }
+
+  @Get('admin/page')
+  @ApiOperation({ summary: 'Admin lấy danh sách yêu cầu xác minh' })
+  async getDanhSach(
+    @RequestCondition(XacMinhUser) condition: XacMinhUser,
+    @RequestQuery() query: QueryOption,
+  ) {
+    return this.xacMinhUserService.getPage({ where: { ...condition } }, query);
   }
 
   @Post('admin/:id/duyet')
