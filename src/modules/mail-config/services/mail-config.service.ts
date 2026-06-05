@@ -13,15 +13,16 @@ export class MailConfigService extends BaseService<MailConfig> implements OnModu
 
   async onModuleInit() {
     const mailConfig = await this.mailConfigRepository.getOne({
-      where: { type: 'default' },
+      where: { name: 'default' },
     });
     if (!mailConfig) {
       await this.mailConfigRepository.create({
+        name: 'default',
         host: process.env.MAIL_HOST,
-        port: parseInt(process.env.MAIL_PORT),
+        port: parseInt(process.env.MAIL_PORT) || 587,
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASSWORD,
-        from: process.env.MAIL_FROM,
+        is_active: true,
       });
     }
   }
