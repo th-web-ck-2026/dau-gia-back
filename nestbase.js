@@ -34,6 +34,19 @@ function toPlural(str) {
   }
 }
 
+// Helper function để chèn dòng mới trước dấu ngoặc đóng (ngoặc nhọn hoặc vuông) của một danh sách/mảng
+function insertBeforeClosingBrace(content, index, insertStr) {
+  const beforeBrace = content.slice(0, index);
+  const afterBrace = content.slice(index);
+  
+  const lastNewlineIndex = beforeBrace.lastIndexOf('\n');
+  const indentation = lastNewlineIndex !== -1 ? beforeBrace.slice(lastNewlineIndex + 1) : '';
+  const cleanBefore = beforeBrace.slice(0, lastNewlineIndex + 1);
+  const itemIndentation = indentation + '  ';
+  
+  return cleanBefore + itemIndentation + insertStr + '\n' + indentation + afterBrace;
+}
+
 const Name = rawName; // PascalCase: StudentProfile
 const name = toCamelCase(rawName); // camelCase: studentProfile
 const kebabName = toKebabCase(rawName); // kebab-case: student-profile
@@ -167,7 +180,7 @@ import { ${Name}Service } from './services/${kebabName}.service';
 import { ${Name}Repository } from './repositories/${kebabName}.repository';
 
 @Module({
-  imports: [SequelizeModule.forFeature([${Name}Model])],
+  imports: [],
   controllers: [${Name}Controller],
   providers: [${Name}Service, ${Name}Repository],
   exports: [${Name}Service, ${Name}Repository],
@@ -175,7 +188,125 @@ import { ${Name}Repository } from './repositories/${kebabName}.repository';
 export class ${Name}Module {}
 `);
 
-console.log(`✅ Đã tạo thành công base module cho ${Name}`);
+// -------------------------------------------------------------
+// TỰ ĐỘNG ĐĂNG KÝ VÀO CÁC FILE HỆ THỐNG
+// -------------------------------------------------------------
+console.log(`\n🔗 Bắt đầu đăng ký ${Name} vào hệ thống...`);
+
+// 1. Thêm vào src/common/constants/entity.constant.ts
+const entityConstantPath = path.join(__dirname, 'src', 'common', 'constants', 'entity.constant.ts');
+if (fs.existsSync(entityConstantPath)) {
+  let content = fs.readFileSync(entityConstantPath, 'utf8');
+  const constantName = kebabName.toUpperCase().replace(/-/g, '_');
+  const tableName = kebabNames.replace(/-/g, '_');
+  
+  if (!content.includes(`${constantName}:`)) {
+    const lastBraceIndex = content.lastIndexOf('}');
+    if (lastBraceIndex !== -1) {
+      content = insertBeforeClosingBrace(content, lastBraceIndex, `${constantName}: '${tableName}',`);
+      fs.writeFileSync(entityConstantPath, content, 'utf8');
+      console.log(`   ✅ Đã thêm Table Name: '${tableName}' vào entity.constant.ts`);
+    }
+  } else {
+    console.log(`   ℹ️ ${constantName} đã tồn tại trong entity.constant.ts`);
+  }
+}
+
+// 2. Thêm vào src/modules/repository/common/sequelize-model.ts
+const sequelizeModelPath = path.join(__dirname, 'src', 'modules', 'repository', 'common', 'sequelize-model.ts');
+if (fs.existsSync(sequelizeModelPath)) {
+  let content = fs.readFileSync(sequelizeModelPath, 'utf8');
+  const modelName = `${Name}Model`;
+  const importLine = `import { ${modelName} } from '@/modules/${kebabName}/models/${kebabName}.model';`;
+  
+  if (!content.includes(modelName)) {
+    const lines = content.split('\n');
+    let lastImportIndex = -1;
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].startsWith('import ')) {
+        lastImportIndex = i;
+      }
+    }
+    
+    if (lastImportIndex !== -1) {
+      lines.splice(lastImportIndex + 1, 0, importLine);
+    } else {
+      lines.unshift(importLine);
+    }
+    
+    content = lines.join('\n');
+    
+    const arrayStartIndex = content.indexOf('export const SequelizeModel');
+    if (arrayStartIndex !== -1) {
+      const closingBraceIndex = content.indexOf('];', arrayStartIndex);
+      if (closingBraceIndex !== -1) {
+        content = insertBeforeClosingBrace(content, closingBraceIndex, `${modelName},`);
+      }
+    }
+    
+    fs.writeFileSync(sequelizeModelPath, content, 'utf8');
+    console.log(`   ✅ Đã đăng ký Model: ${modelName} trong sequelize-model.ts`);
+  } else {
+    console.log(`   ℹ️ ${modelName} đã tồn tại trong sequelize-model.ts`);
+  }
+}
+
+// 3. Thêm vào src/app.module.ts
+const appModulePath = path.join(__dirname, 'src', 'app.module.ts');
+if (fs.existsSync(appModulePath)) {
+  let content = fs.readFileSync(appModulePath, 'utf8');
+  const moduleName = `${Name}Module`;
+  const importLine = `import { ${moduleName} } from './modules/${kebabName}/${kebabName}.module';`;
+  
+  if (!content.includes(moduleName)) {
+    const lines = content.split('\n');
+    let lastImportIndex = -1;
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].startsWith('import ')) {
+        lastImportIndex = i;
+      }
+    }
+    
+    if (lastImportIndex !== -1) {
+      lines.splice(lastImportIndex + 1, 0, importLine);
+    } else {
+      lines.unshift(importLine);
+    }
+    
+    content = lines.join('\n');
+    
+    const moduleDecoratorIndex = content.indexOf('@Module({');
+    if (moduleDecoratorIndex !== -1) {
+      const importsStartIndex = content.indexOf('imports: [', moduleDecoratorIndex);
+      if (importsStartIndex !== -1) {
+        let bracketCount = 1;
+        let index = importsStartIndex + 10;
+        while (bracketCount > 0 && index < content.length) {
+          if (content[index] === '[') {
+            bracketCount++;
+          } else if (content[index] === ']') {
+            bracketCount--;
+          }
+          if (bracketCount === 0) {
+            break;
+          }
+          index++;
+        }
+        
+        if (bracketCount === 0) {
+          content = insertBeforeClosingBrace(content, index, `${moduleName},`);
+        }
+      }
+    }
+    
+    fs.writeFileSync(appModulePath, content, 'utf8');
+    console.log(`   ✅ Đã đăng ký Module: ${moduleName} trong app.module.ts`);
+  } else {
+    console.log(`   ℹ️ ${moduleName} đã tồn tại trong app.module.ts`);
+  }
+}
+
+console.log(`\n✅ Đã tạo và đăng ký thành công base module cho ${Name}`);
 console.log(`📋 Cấu trúc được tạo:`);
 console.log(`   📁 src/modules/${kebabName}/`);
 console.log(`   ├── 📁 controllers/`);
@@ -191,11 +322,9 @@ console.log(`   │   ├── 📄 create-${kebabName}.dto.ts`);
 console.log(`   │   └── 📄 update-${kebabName}.dto.ts`);
 console.log(`   └── 📄 ${kebabName}.module.ts`);
 console.log(`\n🔧 Bước tiếp theo:`);
-console.log(`   1. Import ${Name}Module vào app.module.ts:`);
-console.log(`      import { ${Name}Module } from '@modules/${kebabName}/${kebabName}.module';`);
-console.log(`   2. Thêm vào imports array: ${Name}Module`);
-console.log(`   3. Chỉnh sửa entity theo nhu cầu cụ thể`);
-console.log(`   4. Cập nhật DTOs validation rules`);
-console.log(`   5. Thêm business logic vào service`);
+console.log(`   1. Chỉnh sửa entity theo nhu cầu cụ thể`);
+console.log(`   2. Cập nhật DTOs validation rules`);
+console.log(`   3. Thêm business logic vào service`);
 console.log(`\n📊 Database table: ${kebabNames.replace(/-/g, '_')}`);
 console.log(`🌐 API endpoints: /api/${kebabNames}`);
+
