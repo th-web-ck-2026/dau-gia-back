@@ -2,6 +2,7 @@ import { Gender, UserRoles, UserRoleType, UserStatus } from '../common/constant'
 import { IsDate, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { BaseEntity } from '@Common/interfaces/base-entity.interface';
 import { StrObjectId } from '@Common/constants/base.constant';
+import { AuthProvider } from '@/modules/auth/common/constants';
 
 export class User implements BaseEntity {
   @StrObjectId()
@@ -86,4 +87,6 @@ export class User implements BaseEntity {
   @IsString()
   @IsOptional()
   tenTaiKhoan?: string;
+
+  authProvider?: AuthProvider;
 }

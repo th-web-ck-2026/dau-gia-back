@@ -26,6 +26,7 @@ import { AuditLogModule } from './modules/audit-log/audit-log.module';
 import { DonViHanhChinhModule } from './modules/don-vi-hanh-chinh/don-vi-hanh-chinh.module';
 import { ToChucProfileModule } from './modules/to-chuc-profile/to-chuc-profile.module';
 import { XacMinhUserModule } from './modules/xac-minh-user/xac-minh-user.module';
+import { DanhMucChungModule } from './modules/danh-muc-chung/danh-muc-chung.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { XacMinhUserModule } from './modules/xac-minh-user/xac-minh-user.module'
     DonViHanhChinhModule,
     ToChucProfileModule,
     XacMinhUserModule,
+    DanhMucChungModule,
   ],
   controllers: [AppController, ExampleController],
   providers: [

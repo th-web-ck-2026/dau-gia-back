@@ -30,6 +30,7 @@ import { RequestQuery } from '@/common/decorators/request-query.decorator';
 import { QueryOption } from '@/common/pipe/query-option.interface';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { UserModel } from '@/modules/user/models/user.model';
+import { ApiGet } from '@/common/decorators/swagger';
 
 @ApiTags('XacMinhUser')
 @Auth()
@@ -51,9 +52,12 @@ export class XacMinhUserController {
     return this.xacMinhUserService.createMe({ _id: user.id } as User, dto);
   }
 
+  @ApiGet({
+    mode: 'page',
+    summary: 'Admin lấy danh sách yêu cầu xác minh',
+  })
   @Get('admin/page')
   @Roles(UserRoles.ADMIN)
-  @ApiOperation({ summary: 'Admin lấy danh sách yêu cầu xác minh' })
   async getDanhSach(
     @RequestCondition(XacMinhUser) condition: XacMinhUser,
     @RequestQuery() query: QueryOption,

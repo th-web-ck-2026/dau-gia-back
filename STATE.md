@@ -18,6 +18,7 @@
 | BACK-7 | Audit & Hardening | ✅ DONE |
 | BACK-8 | Unique Participant Count | ✅ DONE |
 | BACK-9 | Module Review & Hardening | ✅ DONE |
+| BACK-10 | Danh Muc Chung Relational | ✅ DONE |
 
 **Đang ở:** Backend phases + đợt rà soát hardening đã xong. Sẵn sàng cho frontend integration.
 
@@ -100,6 +101,12 @@ Báo cáo: `docs/html-tailwind/module-review-report.html`
 - [x] 3 controller spec — dùng `objectContaining` cho assertion `getPage`
 - [x] `tender.controller.spec` — cập nhật `submitProposal` test theo route mới
 - [x] Build pass, **83/83 unit tests pass**
+
+### ✅ BACK-10: Danh Muc Chung Relational
+- Entity: `loai-danh-muc`, `danh-muc`
+- Model Sequelize: `LoaiDanhMucModel`, `DanhMucModel`
+- Repository: `LoaiDanhMucRepository`, `DanhMucRepository`
+- Service/API: `DanhMucChungService`, `DanhMucChungController` (CRUD endpoints, seeding on start, delete prevention on default types)
 
 ---
 

@@ -4,6 +4,7 @@ import { User } from '../entities/user.entity';
 import { Gender, UserRoles, UserRoleType, UserStatus } from '../common/constant';
 import { StrObjectId } from '@/common/constants/base.constant';
 import { ToChucProfileModel } from '@/modules/to-chuc-profile/models/to-chuc-profile.model';
+import { AuthProvider } from '@/modules/auth/common/constants';
 @Table({
   tableName: EntityTable.USER,
 })
@@ -68,4 +69,9 @@ export class UserModel extends Model implements User {
 
   @HasOne(() => ToChucProfileModel)
   toChucProfile: ToChucProfileModel;
+
+  @Column({
+    type: DataType.ENUM(...Object.values(AuthProvider)),
+  })
+  authProvider?: AuthProvider;
 }

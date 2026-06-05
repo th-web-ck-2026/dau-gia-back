@@ -15,4 +15,6 @@ export const EntityTable = {
   DON_VI_HANH_CHINH: 'don_vi_hanh_chinh',
   TO_CHUC_PROFILE: 'to_chuc_profiles',
   XAC_MINH_USER: 'xac_minh_users',
+  LOAI_DANH_MUC: 'loai_danh_mucs',
+  DANH_MUC: 'danh_mucs',
 } as const;

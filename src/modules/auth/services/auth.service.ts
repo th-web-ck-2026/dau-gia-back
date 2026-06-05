@@ -37,6 +37,7 @@ export class AuthService implements OnModuleInit {
         email: process.env.ADMIN_EMAIL,
         password: hashedPassword,
         role: UserRoles.ADMIN,
+        authProvider: AuthProvider.EMAIL,
         userStatus: UserStatus.ACTIVE,
         fullname: 'Admin',
       });
@@ -139,6 +140,7 @@ export class AuthService implements OnModuleInit {
           email: googleData.email,
           fullname: googleData.name,
           avatar: googleData.avatar,
+          authProvider: AuthProvider.GOOGLE,
           role: UserRoles.USER,
           userRoles: credentials.userRoles || null,
         });
@@ -158,6 +160,7 @@ export class AuthService implements OnModuleInit {
             email: googleData.email,
             fullname: googleData.name,
             avatar: googleData.avatar,
+            authProvider: AuthProvider.GOOGLE,
             role: UserRoles.USER,
             userRoles: credentials.userRoles || null,
           });
@@ -215,6 +218,7 @@ export class AuthService implements OnModuleInit {
       fullname: registerDto.fullname,
       phone: registerDto.phone,
       soCccd: registerDto.soCccd,
+      authProvider: AuthProvider.EMAIL,
       role: UserRoles.USER,
       userRoles: registerDto.userRoles,
     });
