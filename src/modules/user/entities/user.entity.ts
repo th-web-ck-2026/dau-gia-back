@@ -19,8 +19,11 @@ export class User implements BaseEntity {
   @MaxLength(11)
   phone: string;
 
+  @IsString()
+  @IsOptional()
   birthday?: string;
 
+  @IsString()
   @IsOptional()
   avatar?: string;
 
@@ -40,4 +43,47 @@ export class User implements BaseEntity {
 
   @IsOptional()
   verifyScore?: number;
+
+  @IsString()
+  @IsOptional()
+  tenTinhTp?: string;
+
+  @IsString()
+  @IsOptional()
+  maTinhTp?: string;
+
+  @IsString()
+  @IsOptional()
+  tenXaPhuong?: string;
+
+  @IsString()
+  @IsOptional()
+  maXaPhuong?: string;
+
+  @IsString()
+  @IsOptional()
+  diaChi?: string;
+
+  @IsString()
+  @IsOptional()
+  soCccd?: string;
+  @IsString()
+  @IsOptional()
+  ngayCapCccd?: string;
+  @IsString()
+  @IsOptional()
+  noiCapCccd?: string;
+
+  // thong Tin ngan hang
+  @IsString()
+  @IsOptional()
+  tenNganHang?: string;
+
+  @IsString()
+  @IsOptional()
+  soTaiKhoan?: string;
+
+  @IsString()
+  @IsOptional()
+  tenTaiKhoan?: string;
 }

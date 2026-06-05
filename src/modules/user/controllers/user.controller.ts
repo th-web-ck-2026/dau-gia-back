@@ -31,17 +31,6 @@ export class UsersController {
     // console.log('Full user object:', user);
     return this.usersService.getOne({
       where: { _id: user.id },
-      attributes: [
-        '_id',
-        'fullname',
-        'email',
-        'phone',
-        'role',
-        'avatar',
-        'birthday',
-        'address',
-        'gender',
-      ],
     });
   }
   @ApiOperation({ summary: 'Cập nhật thông tin của tôi' })
