@@ -11,6 +11,7 @@ import { AuditLogModel } from '@/modules/audit-log/models/audit-log.model';
 import { Model, ModelCtor } from 'sequelize-typescript';
 import { DonViHanhChinhModel } from '@/modules/don-vi-hanh-chinh/models/don-vi-hanh-chinh.model';
 import { ToChucProfileModel } from '@/modules/to-chuc-profile/models/to-chuc-profile.model';
+import { XacMinhUserModel } from '@/modules/xac-minh-user/models/xac-minh-user.model';
 
 export const SequelizeModel: ModelCtor<Model>[] = [
   UserModel,
@@ -25,4 +26,5 @@ export const SequelizeModel: ModelCtor<Model>[] = [
   AuditLogModel,
   DonViHanhChinhModel,
   ToChucProfileModel,
+  XacMinhUserModel,
 ];

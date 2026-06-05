@@ -25,6 +25,7 @@ import { AuctionModule } from './modules/auction/auction.module';
 import { AuditLogModule } from './modules/audit-log/audit-log.module';
 import { DonViHanhChinhModule } from './modules/don-vi-hanh-chinh/don-vi-hanh-chinh.module';
 import { ToChucProfileModule } from './modules/to-chuc-profile/to-chuc-profile.module';
+import { XacMinhUserModule } from './modules/xac-minh-user/xac-minh-user.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { ToChucProfileModule } from './modules/to-chuc-profile/to-chuc-profile.m
     AuditLogModule,
     DonViHanhChinhModule,
     ToChucProfileModule,
+    XacMinhUserModule,
   ],
   controllers: [AppController, ExampleController],
   providers: [
