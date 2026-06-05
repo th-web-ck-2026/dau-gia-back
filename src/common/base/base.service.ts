@@ -13,11 +13,11 @@ export abstract class BaseService<T extends BaseEntity> {
     this.repository = repository;
   }
 
-  async getMany(condition?: any): Promise<T[]> {
+  async getMany(condition?: FindOptions): Promise<T[]> {
     return this.repository.getMany(condition);
   }
 
-  async getOne(condition: any): Promise<T | null> {
+  async getOne(condition: FindOptions): Promise<T | null> {
     return this.repository.getOne(condition);
   }
   async getPage(

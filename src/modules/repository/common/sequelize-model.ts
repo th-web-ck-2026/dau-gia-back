@@ -9,6 +9,7 @@ import { AuctionSessionModel } from '@/modules/auction/models/auction-session.mo
 import { AuctionBidModel } from '@/modules/auction/models/auction-bid.model';
 import { AuditLogModel } from '@/modules/audit-log/models/audit-log.model';
 import { Model, ModelCtor } from 'sequelize-typescript';
+import { DonViHanhChinhModel } from '@/modules/don-vi-hanh-chinh/models/don-vi-hanh-chinh.model';
 
 export const SequelizeModel: ModelCtor<Model>[] = [
   UserModel,
@@ -21,4 +22,5 @@ export const SequelizeModel: ModelCtor<Model>[] = [
   AuctionSessionModel,
   AuctionBidModel,
   AuditLogModel,
+  DonViHanhChinhModel,
 ];
