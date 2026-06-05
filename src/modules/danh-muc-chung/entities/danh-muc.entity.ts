@@ -1,12 +1,18 @@
 import { BaseEntity } from '@Common/interfaces/base-entity.interface';
-import { LoaiDanhMuc } from './loai-danh-muc.entity';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class DanhMuc implements BaseEntity {
+  @ApiProperty()
   _id: string;
+
+  @ApiProperty()
   maLoai: string;
+
+  @ApiProperty()
   ten: string;
+
+  @ApiPropertyOptional()
   anh?: string;
-  loaiDanhMuc?: LoaiDanhMuc;
-  createdAt?: Date;
-  updatedAt?: Date;
+
+  loaiDanhMuc?: any;
 }
