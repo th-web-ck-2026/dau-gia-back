@@ -7,10 +7,7 @@ import { UpdateUserAvatar } from '../dto/update-user-avatar.dto';
 import { Auth } from '@/common/decorators/auth.decorator';
 import { ApiOperation } from '@nestjs/swagger';
 import { Public } from '@/common/decorators/public.decorator';
-import { RequestCondition } from '@/common/decorators/request-condition.decotator';
-import { ConditionUserDto } from '../dto/condition-user.dto';
-import { QueryOption } from '@/common/pipe/query-option.interface';
-import { RequestQuery } from '@/common/decorators/request-query.decorator';
+import { ToChucProfileModel } from '@/modules/to-chuc-profile/models/to-chuc-profile.model';
 @Auth()
 @Controller('user')
 export class UsersController {
@@ -31,6 +28,13 @@ export class UsersController {
     // console.log('Full user object:', user);
     return this.usersService.getOne({
       where: { _id: user.id },
+      include: [
+        {
+          model: ToChucProfileModel,
+          as: 'toChucProfile',
+          
+        }
+      ]
     });
   }
   @ApiOperation({ summary: 'Cập nhật thông tin của tôi' })
