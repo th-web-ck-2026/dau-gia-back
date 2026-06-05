@@ -16,9 +16,8 @@ export class DonViHanhChinhService
   async onModuleInit() {
     const tinhThanh = await this.getMany({ where: { level: 1 } });
     if (tinhThanh.length === 0) {
-      const tinhThanhData = await import('../data/province.json').then(
-        (data) => data.default as DonViHanhChinh[],
-      );
+      const imported = (await import('../data/province.json')) as any;
+      const tinhThanhData = (Array.isArray(imported) ? imported : imported.default) as DonViHanhChinh[];
       await this.donViHanhChinhRepository.insertMany(tinhThanhData);
     }
   }
