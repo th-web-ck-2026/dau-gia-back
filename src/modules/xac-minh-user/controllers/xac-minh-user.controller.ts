@@ -28,6 +28,7 @@ import { XacMinhUser } from '../entities/xac-minh-user.entity';
 import { RequestCondition } from '@/common/decorators/request-condition.decotator';
 import { RequestQuery } from '@/common/decorators/request-query.decorator';
 import { QueryOption } from '@/common/pipe/query-option.interface';
+import { Roles } from '@/common/decorators/roles.decorator';
 
 @ApiTags('XacMinhUser')
 @Auth()
@@ -50,6 +51,7 @@ export class XacMinhUserController {
   }
 
   @Get('admin/page')
+  @Roles(UserRoles.ADMIN)
   @ApiOperation({ summary: 'Admin lấy danh sách yêu cầu xác minh' })
   async getDanhSach(
     @RequestCondition(XacMinhUser) condition: XacMinhUser,
@@ -59,7 +61,7 @@ export class XacMinhUserController {
   }
 
   @Post('admin/:id/duyet')
-  @Auth(UserRoles.ADMIN)
+  @Roles(UserRoles.ADMIN)
   @ApiOperation({ summary: 'Admin duyệt hoặc từ chối đơn xác minh' })
   @ApiOkResponse({ type: XacMinhUser })
   async adminDuyetDon(

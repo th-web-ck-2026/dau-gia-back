@@ -1,6 +1,6 @@
 import { BaseEntity } from '@Common/interfaces/base-entity.interface';
 import { StrObjectId } from '@/common/constants/base.constant';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsEnum, IsOptional, IsString } from 'class-validator';
 import { ETrangThaiXacMinh } from '../common/constant';
 
 export class ToChucProfile implements BaseEntity {
@@ -36,6 +36,17 @@ export class ToChucProfile implements BaseEntity {
   @IsOptional()
   diaChi?: string;
 
+  @IsString()
+  @IsOptional()
+  soDangKy?: string;
+
+  @IsDateString()
+  @IsOptional()
+  ngayDangKy?: Date;
+
+  @IsString()
+  @IsOptional()
+  anhDangKy?: string;
 
   // @IsEnum(ETrangThaiXacMinh)
   // trangThaiXacMinh?: ETrangThaiXacMinh;

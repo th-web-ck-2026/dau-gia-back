@@ -9,6 +9,14 @@ import { User } from '@/modules/user/entities/user.entity';
   tableName: EntityTable.TO_CHUC_PROFILE,
 })
 export class ToChucProfileModel extends Model implements ToChucProfile {
+
+  @Column
+  soDangKy: string;
+  @Column
+  ngayDangKy: Date;
+  @Column
+  anhDangKy: string;
+
   @Column
   @ForeignKey(() => UserModel)
   userId: string;
