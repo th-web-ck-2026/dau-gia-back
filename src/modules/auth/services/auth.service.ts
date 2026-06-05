@@ -14,6 +14,7 @@ import { Op } from 'sequelize';
 import { RegisterDto } from '../dto/register.dto';
 import { UserRoles, UserRoleType, UserStatus } from '@/modules/user/common/constant';
 import { EmailCredentials, GoogleCredentials } from '../common/interface';
+import { ToChucProfileService } from '@/modules/to-chuc-profile/services/to-chuc-profile.service';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -24,6 +25,7 @@ export class AuthService implements OnModuleInit {
     private sendMailService: SendMailService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private toChucProfileService: ToChucProfileService,
   ) {}
 
   // init Admin
@@ -217,6 +219,11 @@ export class AuthService implements OnModuleInit {
       userRoles: registerDto.userRoles,
     });
 
+    if (registerDto.userRoles === UserRoleType.TO_CHUC) {
+      await this.toChucProfileService.create({
+        userId: user._id,
+      })
+    }
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
     await this.authProviderService.createProvider(
       user._id,
@@ -300,6 +307,11 @@ export class AuthService implements OnModuleInit {
     await this.userRepository.updateOne({ userRoles }, {
       where: { _id: userId },
     });
+    if (userRoles === UserRoleType.TO_CHUC) {
+      await this.toChucProfileService.create({
+        userId: user._id,
+      })
+    }
 
     const accessToken = this.generateAccessToken(user);
 

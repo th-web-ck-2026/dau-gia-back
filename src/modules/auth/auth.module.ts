@@ -14,11 +14,13 @@ import { AuthProviderModel } from './models/auth-provider.model';
 import { AuthSessionModel } from './models/auth-session.model';
 import { AuthProviderRepository } from './repositories/auth-provider.repository';
 import { AuthSessionRepository } from './repositories/auth-session.repository';
+import { ToChucProfileModule } from '../to-chuc-profile/to-chuc-profile.module';
 
 @Module({
   imports: [
     SendMailModule,
     UsersModule,
+    ToChucProfileModule,
     PassportModule,
     SequelizeModule.forFeature([
       AuthProviderModel,
