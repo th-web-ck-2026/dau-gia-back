@@ -86,7 +86,7 @@ describe('TenderService', () => {
       const dto = {
         tieuDe: 'Phien test',
         thoiGianBatDau: '2020-01-01T00:00:00.000Z',
-        thoiGianKetThuc: '2026-06-02T00:00:00.000Z',
+        thoiGianKetThuc: '2030-06-02T00:00:00.000Z',
         tieuChi: [],
       };
       await expect(service.createSession('user1', dto as any)).rejects.toThrow(ApiError);
@@ -95,7 +95,7 @@ describe('TenderService', () => {
     it('should throw BadRequest if end date is in the past', async () => {
       const dto = {
         tieuDe: 'Phien test',
-        thoiGianBatDau: '2026-06-01T00:00:00.000Z',
+        thoiGianBatDau: '2030-06-01T00:00:00.000Z',
         thoiGianKetThuc: '2020-01-01T00:00:00.000Z',
         tieuChi: [],
       };
@@ -105,8 +105,8 @@ describe('TenderService', () => {
     it('should throw BadRequest if start date is after end date', async () => {
       const dto = {
         tieuDe: 'Phien test',
-        thoiGianBatDau: '2026-06-02T00:00:00.000Z',
-        thoiGianKetThuc: '2026-06-01T00:00:00.000Z',
+        thoiGianBatDau: '2030-06-02T00:00:00.000Z',
+        thoiGianKetThuc: '2030-06-01T00:00:00.000Z',
         tieuChi: [],
       };
       await expect(service.createSession('user1', dto as any)).rejects.toThrow(ApiError);
@@ -115,8 +115,8 @@ describe('TenderService', () => {
     it('should create session and criteria successfully and log audit', async () => {
       const dto = {
         tieuDe: 'Phien test',
-        thoiGianBatDau: '2026-06-01T00:00:00.000Z',
-        thoiGianKetThuc: '2026-06-02T00:00:00.000Z',
+        thoiGianBatDau: '2030-06-01T00:00:00.000Z',
+        thoiGianKetThuc: '2030-06-02T00:00:00.000Z',
         danhSachHinhAnh: ['img1.jpg', 'img2.jpg'],
         tieuChi: [
           {

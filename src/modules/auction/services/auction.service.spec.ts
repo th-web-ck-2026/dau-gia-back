@@ -76,7 +76,7 @@ describe('AuctionService', () => {
       const dto = {
         tieuDe: 'Phien test',
         thoiGianBatDau: '2020-01-01T00:00:00.000Z',
-        thoiGianKetThuc: '2026-06-02T00:00:00.000Z',
+        thoiGianKetThuc: '2030-06-02T00:00:00.000Z',
         giaKhoiDiem: 100,
         buocGia: 10,
       };
@@ -86,7 +86,7 @@ describe('AuctionService', () => {
     it('should throw BadRequest if end date is in the past', async () => {
       const dto = {
         tieuDe: 'Phien test',
-        thoiGianBatDau: '2026-06-01T00:00:00.000Z',
+        thoiGianBatDau: '2030-06-01T00:00:00.000Z',
         thoiGianKetThuc: '2020-01-01T00:00:00.000Z',
         giaKhoiDiem: 100,
         buocGia: 10,
@@ -97,8 +97,8 @@ describe('AuctionService', () => {
     it('should throw BadRequest if start date is after end date', async () => {
       const dto = {
         tieuDe: 'Phien test',
-        thoiGianBatDau: '2026-06-02T00:00:00.000Z',
-        thoiGianKetThuc: '2026-06-01T00:00:00.000Z',
+        thoiGianBatDau: '2030-06-02T00:00:00.000Z',
+        thoiGianKetThuc: '2030-06-01T00:00:00.000Z',
         giaKhoiDiem: 100,
         buocGia: 10,
       };
@@ -108,8 +108,8 @@ describe('AuctionService', () => {
     it('should create session successfully and log audit', async () => {
       const dto = {
         tieuDe: 'Phien test',
-        thoiGianBatDau: '2026-06-01T00:00:00.000Z',
-        thoiGianKetThuc: '2026-06-02T00:00:00.000Z',
+        thoiGianBatDau: '2030-06-01T00:00:00.000Z',
+        thoiGianKetThuc: '2030-06-02T00:00:00.000Z',
         giaKhoiDiem: 100,
         buocGia: 10,
         danhSachHinhAnh: ['img1.jpg', 'img2.jpg'],
