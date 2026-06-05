@@ -9,6 +9,24 @@ import { AuthProvider } from '@/modules/auth/common/constants';
   tableName: EntityTable.USER,
 })
 export class UserModel extends Model implements User {
+  @Column
+  verifyScore?: number;
+  @Column
+  tenTinhTp?: string;
+  @Column
+  maTinhTp?: string;
+  @Column
+  tenXaPhuong?: string;
+  @Column
+  maXaPhuong?: string;
+  @Column
+  diaChi?: string;
+  @Column
+  tenNganHang?: string;
+  @Column
+  soTaiKhoan?: string;
+  @Column
+  tenTaiKhoan: string;
   @Column({
     type: DataType.ENUM(...Object.values(UserRoleType)),
   })
@@ -39,14 +57,6 @@ export class UserModel extends Model implements User {
   @Column
   gender?: Gender;
 
-  @Column
-  provinceId?: string;
-  @Column
-  districtId?: string;
-  @Column
-  wardId?: string;
-  @Column
-  address?: string;
   @Column({
     defaultValue: false,
   })
