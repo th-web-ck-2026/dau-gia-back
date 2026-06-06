@@ -6,6 +6,7 @@ import { CreateToChucProfileDto } from '../dto/create-to-chuc-profile.dto';
 import { UpdateToChucProfileDto } from '../dto/update-to-chuc-profile.dto';
 import { User } from '@/modules/user/entities/user.entity';
 import { UsersService } from '@/modules/user/services/user.service';
+import { AuthUser } from '@/common/interfaces/auth-user.interface';
 
 @Injectable()
 export class ToChucProfileService extends BaseService<ToChucProfile> {
@@ -15,10 +16,10 @@ export class ToChucProfileService extends BaseService<ToChucProfile> {
   ) {
     super(toChucProfileRepository);
   }
-  async updateMe(user: User, dto: UpdateToChucProfileDto) {
+  async updateMe(user: AuthUser, dto: UpdateToChucProfileDto) {
     const res = await this.toChucProfileRepository.updateOne(dto, {
       where: {
-        userId: user._id,
+        userId: user.id,
       },
     });
     if (res) {
@@ -29,7 +30,7 @@ export class ToChucProfileService extends BaseService<ToChucProfile> {
           },
           {
             where: {
-              _id: user._id,
+              _id: user.id,
             },
           },
         );
