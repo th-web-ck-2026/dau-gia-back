@@ -18,6 +18,7 @@ describe('AuctionController', () => {
     getPage: jest.fn(),
     getSessionStatus: jest.fn(),
     closeSession: jest.fn(),
+    getRanking: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -96,5 +97,11 @@ describe('AuctionController', () => {
     const user = { id: 'user1' };
     await controller.closeSession(user as any, 'session1');
     expect(service.closeSession).toHaveBeenCalledWith('user1', 'session1', false, undefined);
+  });
+
+  it('should call service.getRanking', async () => {
+    const user = { id: 'user1' };
+    await controller.getRanking(user as any, 'session1');
+    expect(service.getRanking).toHaveBeenCalledWith('user1', 'session1');
   });
 });

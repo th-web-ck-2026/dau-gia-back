@@ -86,7 +86,7 @@ describe('TenderService', () => {
       const dto = {
         tieuDe: 'Phien test',
         thoiGianBatDau: '2020-01-01T00:00:00.000Z',
-        thoiGianKetThuc: '2030-06-02T00:00:00.000Z',
+        thoiGianKetThuc: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
         tieuChi: [],
       };
       await expect(service.createSession('user1', dto as any)).rejects.toThrow(ApiError);
@@ -95,7 +95,7 @@ describe('TenderService', () => {
     it('should throw BadRequest if end date is in the past', async () => {
       const dto = {
         tieuDe: 'Phien test',
-        thoiGianBatDau: '2030-06-01T00:00:00.000Z',
+        thoiGianBatDau: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         thoiGianKetThuc: '2020-01-01T00:00:00.000Z',
         tieuChi: [],
       };
@@ -103,20 +103,24 @@ describe('TenderService', () => {
     });
 
     it('should throw BadRequest if start date is after end date', async () => {
+      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      const dayAfterTomorrow = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
       const dto = {
         tieuDe: 'Phien test',
-        thoiGianBatDau: '2030-06-02T00:00:00.000Z',
-        thoiGianKetThuc: '2030-06-01T00:00:00.000Z',
+        thoiGianBatDau: dayAfterTomorrow,
+        thoiGianKetThuc: tomorrow,
         tieuChi: [],
       };
       await expect(service.createSession('user1', dto as any)).rejects.toThrow(ApiError);
     });
 
-    it('should create session and criteria successfully and log audit', async () => {
+    it('should create session and criteria successfully', async () => {
+      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      const dayAfterTomorrow = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
       const dto = {
         tieuDe: 'Phien test',
-        thoiGianBatDau: '2030-06-01T00:00:00.000Z',
-        thoiGianKetThuc: '2030-06-02T00:00:00.000Z',
+        thoiGianBatDau: tomorrow,
+        thoiGianKetThuc: dayAfterTomorrow,
         danhSachHinhAnh: ['img1.jpg', 'img2.jpg'],
         tieuChi: [
           {

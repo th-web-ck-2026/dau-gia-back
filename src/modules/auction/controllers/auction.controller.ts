@@ -17,10 +17,14 @@ import { AuctionSession } from '../entities/auction-session.entity';
 import { AuctionBid } from '../entities/auction-bid.entity';
 import { AuctionSessionStatusDto } from '../dto/auction-session-status.dto';
 import { PageableDto } from '@/common/dto/pageable.dto';
+<<<<<<< HEAD
 import { Throttle } from '@nestjs/throttler';
 
 import { UserModel } from '@/modules/user/models/user.model';
 import { AuctionBidModel } from '../models/auction-bid.model';
+=======
+import { AuctionRankingResponse, AuctionRankingOrMessage } from '../dto/auction-ranking.dto';
+>>>>>>> ranking-auc
 
 @ApiTags('Auction')
 @Controller('auction-sessions')
@@ -120,12 +124,42 @@ export class AuctionController {
   @Post(':id/evaluate')
   @Auth()
   @ApiOperation({ summary: 'Danh gia va xep hang phien dau gia' })
-  @ApiOkResponse({ type: AuctionSession })
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      properties: {
+        phienId: { type: 'string' },
+        trangThai: { type: 'string' },
+        danhSach: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              thuHang: { type: 'number' },
+              bidId: { type: 'string' },
+              nguoiThamGiaId: { type: 'string' },
+              bietDanh: { type: 'string' },
+              giaDat: { type: 'number' },
+              diemGia: { type: 'number' },
+              diemTongHop: { type: 'number' },
+              trangThai: { type: 'string' },
+              thoiDiemDat: { type: 'string', format: 'date-time' },
+            },
+          },
+        },
+      },
+    },
+  })
   async evaluateSession(
     @ReqUser() user: AuthUser,
     @Param('id') id: string,
+<<<<<<< HEAD
   ): Promise<AuctionSession | { message: string }> {
     return this.auctionService.evaluateSession(user.id, id, false, false, user.role);
+=======
+  ): Promise<AuctionRankingOrMessage> {
+    return this.auctionService.evaluateSession(user.id, id);
+>>>>>>> ranking-auc
   }
 
   @Public()
@@ -134,6 +168,42 @@ export class AuctionController {
   @ApiOkResponse({ type: AuctionSession })
   async getSessionDetails(@Param('id') id: string): Promise<AuctionSession> {
     return this.auctionService.getSessionDetails(id);
+  }
+
+  @Get(':id/ranking')
+  @Auth()
+  @ApiOperation({ summary: 'Lay bang xep hang phien dau gia' })
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      properties: {
+        phienId: { type: 'string' },
+        trangThai: { type: 'string' },
+        danhSach: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              thuHang: { type: 'number' },
+              bidId: { type: 'string' },
+              nguoiThamGiaId: { type: 'string' },
+              bietDanh: { type: 'string' },
+              giaDat: { type: 'number' },
+              diemGia: { type: 'number' },
+              diemTongHop: { type: 'number' },
+              trangThai: { type: 'string' },
+              thoiDiemDat: { type: 'string', format: 'date-time' },
+            },
+          },
+        },
+      },
+    },
+  })
+  async getRanking(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+  ): Promise<AuctionRankingResponse> {
+    return this.auctionService.getRanking(user.id, id);
   }
 
   @Public()
@@ -147,12 +217,42 @@ export class AuctionController {
   @Post(':id/close')
   @Auth()
   @ApiOperation({ summary: 'Dong phien dau gia' })
-  @ApiOkResponse({ type: AuctionSession })
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      properties: {
+        phienId: { type: 'string' },
+        trangThai: { type: 'string' },
+        danhSach: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              thuHang: { type: 'number' },
+              bidId: { type: 'string' },
+              nguoiThamGiaId: { type: 'string' },
+              bietDanh: { type: 'string' },
+              giaDat: { type: 'number' },
+              diemGia: { type: 'number' },
+              diemTongHop: { type: 'number' },
+              trangThai: { type: 'string' },
+              thoiDiemDat: { type: 'string', format: 'date-time' },
+            },
+          },
+        },
+      },
+    },
+  })
   async closeSession(
     @ReqUser() user: AuthUser,
     @Param('id') id: string,
+<<<<<<< HEAD
   ): Promise<AuctionSession | { message: string }> {
     return this.auctionService.closeSession(user.id, id, false, user.role);
+=======
+  ): Promise<AuctionRankingOrMessage> {
+    return this.auctionService.closeSession(user.id, id);
+>>>>>>> ranking-auc
   }
 
   @Get(':id/bids')
