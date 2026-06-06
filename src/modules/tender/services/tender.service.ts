@@ -407,7 +407,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
       }
     }
 
-    if (scoredSubmissions.length === 0) return { message: 'Khong co de xuat nao dat muc diem ky thaut toi thieu' };
+    if (scoredSubmissions.length === 0) return { message: 'Khong co de xuat nao dat muc diem ky thuat toi thieu' };
 
     const lowestPrice = Math.min(...scoredSubmissions.map((item) => Number(item.sub.giaDeXuat)));
     for (const item of scoredSubmissions) {
@@ -525,34 +525,153 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
     const isAdmin = userRole === UserRoles.ADMIN;
     const isClosed = session.trangThai === TrangThaiPhien.DONG;
 
-    let submissions = await this.tenderSubmissionRepository.getMany({
+    const submissions = await this.tenderSubmissionRepository.getMany({
       where: { phienId: sessionId },
-      order: [['diemTongHop', 'DESC']],
       include: [
         { model: UserModel, as: 'nguoiThamGia', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
       ],
     });
 
-    if (!isOwner && !isAdmin && !isClosed) {
-      submissions = submissions.filter((sub) => sub.nguoiThamGiaId === userId);
+    if (isClosed) {
+      // Sort by thuHang or diemTongHop DESC
+      submissions.sort((a, b) => {
+        if (a.thuHang && b.thuHang) return a.thuHang - b.thuHang;
+        return (b.diemTongHop ?? 0) - (a.diemTongHop ?? 0);
+      });
+      const resultList = submissions.map((sub, index) => {
+        let participantId = sub.nguoiThamGiaId;
+        let participant = (sub as any).nguoiThamGia;
+        if (session.anDanh && !isOwner && !isAdmin && sub.nguoiThamGiaId !== userId) {
+          participantId = 'ANONYMOUS';
+          participant = null;
+        }
+        return {
+          thuHang: sub.thuHang || index + 1,
+          deXuatId: sub._id,
+          nguoiThamGiaId: participantId,
+          nguoiThamGia: participant,
+          diemKyThuat: sub.diemKyThuat,
+          diemGia: sub.diemGia,
+          diemTongHop: sub.diemTongHop,
+          trangThai: sub.trangThai,
+        };
+      });
+      return { phienId: session._id, trangThai: session.trangThai, danhSach: resultList };
     }
 
-    const resultList = submissions.map((sub, index) => {
+    const criteriaList = await this.tenderCriteriaRepository.getMany({ where: { phienId: sessionId } });
+
+    // Step 1: Filter out screening criteria
+    const validSubmissions: any[] = [];
+    for (const sub of submissions) {
+      let isRejected = false;
+      const values = await this.tenderSubmissionValueRepository.getMany({ where: { deXuatId: sub._id } });
+      const valuesMap = new Map(values.map((v) => [v.tieuChiId, v]));
+
+      for (const cri of criteriaList) {
+        const val = valuesMap.get(cri._id);
+        if (cri.nhom === 'sang_loc') {
+          if (cri.loai === LoaiTieuChi.DUNG_SAI) {
+            const ok = val ? Boolean(val.giaTriDungSai) : false;
+            if (!ok && (cri.batBuoc || cri.rangBuocCung)) {
+              isRejected = true;
+              break;
+            }
+          }
+        }
+      }
+      if (!isRejected) {
+        validSubmissions.push({ sub, values, valuesMap });
+      }
+    }
+
+    // Step 2: Calculate Technical Scores
+    const technicalCriteria = criteriaList.filter((c) => c.nhom !== 'sang_loc');
+    const criteriaMinMax = new Map<string, { min: number; max: number }>();
+    for (const cri of technicalCriteria) {
+      if (cri.loai === LoaiTieuChi.SO || cri.loai === LoaiTieuChi.PHAN_TRAM) {
+        let min = cri.giaTriToiThieu ?? Infinity;
+        let max = cri.giaTriToiDa ?? -Infinity;
+        for (const item of validSubmissions) {
+          const valObj = item.valuesMap.get(cri._id);
+          if (valObj && valObj.giaTriSo !== undefined) {
+            if (valObj.giaTriSo < min) min = valObj.giaTriSo;
+            if (valObj.giaTriSo > max) max = valObj.giaTriSo;
+          }
+        }
+        if (min === Infinity) min = 0;
+        if (max === -Infinity) max = 100;
+        criteriaMinMax.set(cri._id, { min, max });
+      }
+    }
+
+    const scoredSubmissions: any[] = [];
+    for (const item of validSubmissions) {
+      const technicalScores: Array<{ score: number; weight: number }> = [];
+      for (const cri of technicalCriteria) {
+        const valObj = item.valuesMap.get(cri._id);
+        if (!valObj) continue;
+        let score = 0;
+        if (cri.loai === LoaiTieuChi.SO || cri.loai === LoaiTieuChi.PHAN_TRAM) {
+          const { min, max } = criteriaMinMax.get(cri._id) || { min: 0, max: 100 };
+          score = this.scoringService.normalizeNumber(valObj.giaTriSo ?? 0, min, max, cri.huongToiUu === HuongToiUu.THAP_HON);
+        } else if (cri.loai === LoaiTieuChi.DUNG_SAI) {
+          score = this.scoringService.normalizeBoolean(Boolean(valObj.giaTriDungSai));
+        } else if (cri.loai === LoaiTieuChi.LUA_CHON) {
+          score = this.scoringService.normalizeEnum(valObj.giaTriChuoi || '', cri.cacLuaChon || []);
+        }
+        technicalScores.push({ score, weight: cri.trongSo });
+      }
+      const technicalScore = this.scoringService.calculateWeightedScore(technicalScores);
+      if (technicalScore >= (session.diemKyThuatToiThieu ?? 0)) {
+        scoredSubmissions.push({ ...item, technicalScore });
+      }
+    }
+
+    // Step 3: Calculate Price Scores & Final Scores
+    if (scoredSubmissions.length > 0) {
+      const lowestPrice = Math.min(...scoredSubmissions.map((item) => Number(item.sub.giaDeXuat)));
+      for (const item of scoredSubmissions) {
+        const priceScore = this.scoringService.calculateTenderPriceScore(Number(item.sub.giaDeXuat), lowestPrice);
+        const finalScore = this.scoringService.calculateTenderFinalScore(item.technicalScore, priceScore, {
+          trongSoKyThuat: session.trongSoKyThuat,
+          trongSoGia: session.trongSoGia,
+        });
+        item.priceScore = priceScore;
+        item.finalScore = finalScore;
+      }
+      scoredSubmissions.sort((a, b) => b.finalScore - a.finalScore);
+    }
+
+    // Filter submissions: normal users only see their own when session is open
+    let finalSubList = scoredSubmissions;
+    if (!isOwner && !isAdmin && !isClosed) {
+      finalSubList = scoredSubmissions.filter((item) => item.sub.nguoiThamGiaId === userId);
+    }
+
+    const resultList = finalSubList.map((item, index) => {
+      const sub = item.sub;
       let participantId = sub.nguoiThamGiaId;
       let participant = (sub as any).nguoiThamGia;
       if (session.anDanh && !isOwner && !isAdmin && sub.nguoiThamGiaId !== userId) {
         participantId = 'ANONYMOUS';
         participant = null;
       }
+
+      const rank = index + 1;
+      const state = isClosed
+        ? (rank === 1 ? TrangThaiDeXuat.THANG : TrangThaiDeXuat.THUA)
+        : (rank === 1 ? TrangThaiDeXuat.THANG : TrangThaiDeXuat.HOP_LE);
+
       return {
-        thuHang: sub.thuHang || index + 1,
+        thuHang: rank,
         deXuatId: sub._id,
         nguoiThamGiaId: participantId,
         nguoiThamGia: participant,
-        diemKyThuat: sub.diemKyThuat,
-        diemGia: sub.diemGia,
-        diemTongHop: sub.diemTongHop,
-        trangThai: sub.trangThai,
+        diemKyThuat: item.technicalScore,
+        diemGia: item.priceScore,
+        diemTongHop: item.finalScore,
+        trangThai: state,
       };
     });
 
