@@ -17,6 +17,7 @@ import { Sequelize } from 'sequelize-typescript';
 import { AuctionSessionStatusDto } from '../dto/auction-session-status.dto';
 import { UserModel } from '@/modules/user/models/user.model';
 import { AuctionBidModel } from '../models/auction-bid.model';
+import { AuctionRankingResponse, AuctionRankingOrMessage } from '../dto/auction-ranking.dto';
 
 @Injectable()
 export class AuctionService extends BaseService<AuctionSession> implements OnModuleInit {
@@ -255,7 +256,7 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
 
     return bid;
   }
-  async evaluateSession(userId: string | null, sessionId: string, force = false, isSystem = false, userRole?: string): Promise<AuctionSession | { message: string }> {
+  async evaluateSession(userId: string | null, sessionId: string, force = false, isSystem = false, userRole?: string): Promise<AuctionRankingOrMessage> {
     const session = await this.auctionSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau gia khong ton tai');
@@ -283,19 +284,11 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
 
     const highestBidPrice = Math.max(...bids.map((b) => Number(b.giaDat)));
 
+    // Step 2: Score all bids (only priceScore matters for final score)
     const scoredBids: any[] = [];
     for (const bid of bids) {
       const priceScore = this.scoringService.calculateAuctionPriceScore(Number(bid.giaDat), highestBidPrice);
-      const finalScore = this.scoringService.calculateAuctionFinalScore(
-        priceScore,
-        bid.diemUyTin,
-        bid.diemCamKet ?? 0,
-        {
-          trongSoGia: session.trongSoGia,
-          trongSoUyTin: session.trongSoUyTin,
-          trongSoCamKet: session.trongSoCamKet,
-        },
-      );
+      const finalScore = priceScore;
 
       scoredBids.push({
         bid,
@@ -368,7 +361,7 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
       console.error('Failed to send auction result notifications:', err);
     }
 
-    return this.getSessionDetails(sessionId);
+    return this.getRanking(userId, sessionId);
   }
 
   async getSessionDetails(sessionId: string): Promise<AuctionSession> {
@@ -468,7 +461,50 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
     };
   }
 
-  async closeSession(userId: string, sessionId: string, isSystem = false, userRole?: string): Promise<AuctionSession | { message: string }> {
+  async getRanking(userId: string, sessionId: string): Promise<AuctionRankingResponse> {
+    let session = await this.auctionSessionRepository.getOne({ where: { _id: sessionId } });
+    if (!session) {
+      throw ApiError.NotFound('Phien dau gia khong ton tai');
+    }
+
+    session = await this.checkAndTransitionStateInternal(session);
+
+    const isOwner = session.chuPhienId === userId;
+    const bids = await this.auctionBidRepository.getMany({
+      where: { phienId: sessionId },
+      order: [['diemTongHop', 'DESC'], ['thoiDiemDat', 'ASC']],
+    });
+
+    const resultList = bids.map((bid, index) => {
+      const isSelf = bid.nguoiThamGiaId === userId;
+      let bietDanh = `Bidder ${String.fromCharCode(65 + index)}`;
+      let participantId = bid.nguoiThamGiaId;
+      if (session.anDanh && !isOwner && !isSelf) {
+        participantId = 'ANONYMOUS';
+      } else {
+        bietDanh = bid.nguoiThamGiaId;
+      }
+      return {
+        thuHang: bid.thuHang || index + 1,
+        bidId: bid._id,
+        nguoiThamGiaId: participantId,
+        bietDanh,
+        giaDat: bid.giaDat,
+        diemGia: bid.diemChuanHoaGia,
+        diemTongHop: bid.diemTongHop,
+        trangThai: bid.trangThai,
+        thoiDiemDat: bid.thoiDiemDat,
+      };
+    });
+
+    return {
+      phienId: session._id,
+      trangThai: session.trangThai,
+      danhSach: resultList,
+    };
+  }
+
+  async closeSession(userId: string, sessionId: string, isSystem = false, userRole?: string): Promise<AuctionRankingOrMessage> {
     let session = await this.auctionSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau gia khong ton tai');

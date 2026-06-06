@@ -76,7 +76,7 @@ describe('AuctionService', () => {
       const dto = {
         tieuDe: 'Phien test',
         thoiGianBatDau: '2020-01-01T00:00:00.000Z',
-        thoiGianKetThuc: '2030-06-02T00:00:00.000Z',
+        thoiGianKetThuc: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
         giaKhoiDiem: 100,
         buocGia: 10,
       };
@@ -86,7 +86,7 @@ describe('AuctionService', () => {
     it('should throw BadRequest if end date is in the past', async () => {
       const dto = {
         tieuDe: 'Phien test',
-        thoiGianBatDau: '2030-06-01T00:00:00.000Z',
+        thoiGianBatDau: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         thoiGianKetThuc: '2020-01-01T00:00:00.000Z',
         giaKhoiDiem: 100,
         buocGia: 10,
@@ -95,21 +95,25 @@ describe('AuctionService', () => {
     });
 
     it('should throw BadRequest if start date is after end date', async () => {
+      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      const dayAfterTomorrow = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
       const dto = {
         tieuDe: 'Phien test',
-        thoiGianBatDau: '2030-06-02T00:00:00.000Z',
-        thoiGianKetThuc: '2030-06-01T00:00:00.000Z',
+        thoiGianBatDau: dayAfterTomorrow,
+        thoiGianKetThuc: tomorrow,
         giaKhoiDiem: 100,
         buocGia: 10,
       };
       await expect(service.createSession('user1', dto as any)).rejects.toThrow(ApiError);
     });
 
-    it('should create session successfully and log audit', async () => {
+    it('should create session successfully', async () => {
+      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      const dayAfterTomorrow = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
       const dto = {
         tieuDe: 'Phien test',
-        thoiGianBatDau: '2030-06-01T00:00:00.000Z',
-        thoiGianKetThuc: '2030-06-02T00:00:00.000Z',
+        thoiGianBatDau: tomorrow,
+        thoiGianKetThuc: dayAfterTomorrow,
         giaKhoiDiem: 100,
         buocGia: 10,
         danhSachHinhAnh: ['img1.jpg', 'img2.jpg'],
@@ -316,7 +320,7 @@ describe('AuctionService', () => {
       };
       sessionRepo.getOne.mockResolvedValue(session);
       sessionRepo.updateOne.mockResolvedValue({});
-      
+
       // Stub evaluateSession since closeSession delegates to it
       jest.spyOn(service, 'evaluateSession').mockResolvedValue(session as any);
 
@@ -330,6 +334,31 @@ describe('AuctionService', () => {
         { trangThai: TrangThaiPhien.MO },
         { trangThai: TrangThaiPhien.DONG },
       );
+    });
+  });
+
+  describe('getRanking', () => {
+    it('should throw NotFound if session does not exist', async () => {
+      sessionRepo.getOne.mockResolvedValue(null);
+      await expect(service.getRanking('user1', 'session1')).rejects.toThrow(ApiError);
+    });
+
+    it('should return ranking representation', async () => {
+      const mockSession = { _id: 'session1', trangThai: TrangThaiPhien.MO, anDanh: true, chuPhienId: 'host1' };
+      const mockBids = [
+        { _id: 'bid1', nguoiThamGiaId: 'user1', diemChuanHoaGia: 90, diemUyTin: 90, diemCamKet: 90, diemTongHop: 90, thuHang: 1, trangThai: TrangThaiDeXuat.THANG, giaDat: 1000, thoiDiemDat: new Date() },
+        { _id: 'bid2', nguoiThamGiaId: 'user2', diemChuanHoaGia: 80, diemUyTin: 80, diemCamKet: 80, diemTongHop: 80, thuHang: 2, trangThai: TrangThaiDeXuat.THUA, giaDat: 900, thoiDiemDat: new Date() }
+      ];
+      sessionRepo.getOne.mockResolvedValue(mockSession);
+      bidRepo.getMany.mockResolvedValue(mockBids);
+
+      const res = await service.getRanking('user1', 'session1');
+      expect(res.phienId).toBe('session1');
+      expect(res.danhSach).toHaveLength(2);
+      expect(res.danhSach[0].bietDanh).toBe('user1'); // self is exposed
+      expect(res.danhSach[1].bietDanh).toBe('Bidder B'); // others anonymized
+      expect((res.danhSach[0] as any).diemUyTin).toBeUndefined();
+      expect((res.danhSach[0] as any).diemCamKet).toBeUndefined();
     });
   });
 });
