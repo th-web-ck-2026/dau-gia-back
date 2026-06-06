@@ -17,14 +17,10 @@ import { AuctionSession } from '../entities/auction-session.entity';
 import { AuctionBid } from '../entities/auction-bid.entity';
 import { AuctionSessionStatusDto } from '../dto/auction-session-status.dto';
 import { PageableDto } from '@/common/dto/pageable.dto';
-<<<<<<< HEAD
 import { Throttle } from '@nestjs/throttler';
-
 import { UserModel } from '@/modules/user/models/user.model';
 import { AuctionBidModel } from '../models/auction-bid.model';
-=======
 import { AuctionRankingResponse, AuctionRankingOrMessage } from '../dto/auction-ranking.dto';
->>>>>>> ranking-auc
 
 @ApiTags('Auction')
 @Controller('auction-sessions')
@@ -153,13 +149,8 @@ export class AuctionController {
   async evaluateSession(
     @ReqUser() user: AuthUser,
     @Param('id') id: string,
-<<<<<<< HEAD
-  ): Promise<AuctionSession | { message: string }> {
-    return this.auctionService.evaluateSession(user.id, id, false, false, user.role);
-=======
   ): Promise<AuctionRankingOrMessage> {
-    return this.auctionService.evaluateSession(user.id, id);
->>>>>>> ranking-auc
+    return this.auctionService.evaluateSession(user.id, id, false, false, user.role);
   }
 
   @Public()
@@ -246,13 +237,8 @@ export class AuctionController {
   async closeSession(
     @ReqUser() user: AuthUser,
     @Param('id') id: string,
-<<<<<<< HEAD
-  ): Promise<AuctionSession | { message: string }> {
-    return this.auctionService.closeSession(user.id, id, false, user.role);
-=======
   ): Promise<AuctionRankingOrMessage> {
-    return this.auctionService.closeSession(user.id, id);
->>>>>>> ranking-auc
+    return this.auctionService.closeSession(user.id, id, false, user.role);
   }
 
   @Get(':id/bids')

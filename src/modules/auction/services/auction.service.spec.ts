@@ -5,12 +5,9 @@ import { AuctionBidRepository } from '../repositories/auction-bid.repository';
 import { ScoringService } from '@/modules/scoring/services/scoring.service';
 import { ApiError } from '@/common/exceptions/api-error';
 import { TrangThaiPhien, TrangThaiDeXuat } from '@/modules/scoring/common/constants';
-<<<<<<< HEAD
 import { AuditLogService } from '@/modules/audit-log/services/audit-log.service';
 import { NotificationService } from '@/modules/notification/services/notification.service';
 import { Sequelize } from 'sequelize-typescript';
-=======
->>>>>>> ranking-auc
 
 describe('AuctionService', () => {
   let service: AuctionService;
@@ -79,11 +76,7 @@ describe('AuctionService', () => {
       const dto = {
         tieuDe: 'Phien test',
         thoiGianBatDau: '2020-01-01T00:00:00.000Z',
-<<<<<<< HEAD
-        thoiGianKetThuc: '2030-06-02T00:00:00.000Z',
-=======
         thoiGianKetThuc: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
->>>>>>> ranking-auc
         giaKhoiDiem: 100,
         buocGia: 10,
       };
@@ -93,11 +86,7 @@ describe('AuctionService', () => {
     it('should throw BadRequest if end date is in the past', async () => {
       const dto = {
         tieuDe: 'Phien test',
-<<<<<<< HEAD
-        thoiGianBatDau: '2030-06-01T00:00:00.000Z',
-=======
         thoiGianBatDau: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
->>>>>>> ranking-auc
         thoiGianKetThuc: '2020-01-01T00:00:00.000Z',
         giaKhoiDiem: 100,
         buocGia: 10,
@@ -110,26 +99,14 @@ describe('AuctionService', () => {
       const dayAfterTomorrow = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
       const dto = {
         tieuDe: 'Phien test',
-<<<<<<< HEAD
-        thoiGianBatDau: '2030-06-02T00:00:00.000Z',
-        thoiGianKetThuc: '2030-06-01T00:00:00.000Z',
-=======
         thoiGianBatDau: dayAfterTomorrow,
         thoiGianKetThuc: tomorrow,
->>>>>>> ranking-auc
         giaKhoiDiem: 100,
         buocGia: 10,
       };
       await expect(service.createSession('user1', dto as any)).rejects.toThrow(ApiError);
     });
 
-<<<<<<< HEAD
-    it('should create session successfully and log audit', async () => {
-      const dto = {
-        tieuDe: 'Phien test',
-        thoiGianBatDau: '2030-06-01T00:00:00.000Z',
-        thoiGianKetThuc: '2030-06-02T00:00:00.000Z',
-=======
     it('should create session successfully', async () => {
       const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       const dayAfterTomorrow = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
@@ -137,7 +114,6 @@ describe('AuctionService', () => {
         tieuDe: 'Phien test',
         thoiGianBatDau: tomorrow,
         thoiGianKetThuc: dayAfterTomorrow,
->>>>>>> ranking-auc
         giaKhoiDiem: 100,
         buocGia: 10,
         danhSachHinhAnh: ['img1.jpg', 'img2.jpg'],
@@ -344,7 +320,7 @@ describe('AuctionService', () => {
       };
       sessionRepo.getOne.mockResolvedValue(session);
       sessionRepo.updateOne.mockResolvedValue({});
-      
+
       // Stub evaluateSession since closeSession delegates to it
       jest.spyOn(service, 'evaluateSession').mockResolvedValue(session as any);
 

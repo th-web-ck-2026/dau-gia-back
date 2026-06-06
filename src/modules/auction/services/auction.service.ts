@@ -284,10 +284,7 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
 
     const highestBidPrice = Math.max(...bids.map((b) => Number(b.giaDat)));
 
-<<<<<<< HEAD
-=======
     // Step 2: Score all bids (only priceScore matters for final score)
->>>>>>> ranking-auc
     const scoredBids: any[] = [];
     for (const bid of bids) {
       const priceScore = this.scoringService.calculateAuctionPriceScore(Number(bid.giaDat), highestBidPrice);
@@ -334,7 +331,6 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
       rank++;
     }
 
-<<<<<<< HEAD
     await this.auditLogService.logAction(userId, 'EVALUATE_AUCTION_SESSION', 'AuctionSession', sessionId, null, null);
 
     try {
@@ -365,10 +361,7 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
       console.error('Failed to send auction result notifications:', err);
     }
 
-    return this.getSessionDetails(sessionId);
-=======
     return this.getRanking(userId, sessionId);
->>>>>>> ranking-auc
   }
 
   async getSessionDetails(sessionId: string): Promise<AuctionSession> {
@@ -468,9 +461,6 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
     };
   }
 
-<<<<<<< HEAD
-  async closeSession(userId: string, sessionId: string, isSystem = false, userRole?: string): Promise<AuctionSession | { message: string }> {
-=======
   async getRanking(userId: string, sessionId: string): Promise<AuctionRankingResponse> {
     let session = await this.auctionSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
@@ -514,8 +504,7 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
     };
   }
 
-  async closeSession(userId: string, sessionId: string, isSystem = false): Promise<AuctionRankingOrMessage> {
->>>>>>> ranking-auc
+  async closeSession(userId: string, sessionId: string, isSystem = false, userRole?: string): Promise<AuctionRankingOrMessage> {
     let session = await this.auctionSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau gia khong ton tai');
