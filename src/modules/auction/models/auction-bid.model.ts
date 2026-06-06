@@ -45,18 +45,6 @@ export class AuctionBidModel extends Model implements AuctionBid {
   })
   giaDat: number;
 
-  @Column({
-    type: DataType.FLOAT,
-    defaultValue: 100,
-    allowNull: false,
-  })
-  diemUyTin: number;
-
-  @Column({
-    type: DataType.FLOAT,
-    defaultValue: 100,
-  })
-  diemCamKet?: number;
 
   @Column({
     type: DataType.FLOAT,
@@ -70,7 +58,7 @@ export class AuctionBidModel extends Model implements AuctionBid {
 
   @Column({
     type: DataType.ENUM(...Object.values(TrangThaiDeXuat)),
-    defaultValue: TrangThaiDeXuat.CHO_DUYET,
+    defaultValue: TrangThaiDeXuat.HOP_LE,
     allowNull: false,
   })
   trangThai: TrangThaiDeXuat;

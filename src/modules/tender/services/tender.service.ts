@@ -78,7 +78,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
       if (affected > 0) {
         session.trangThai = TrangThaiPhien.DONG;
         session.thoiDiemDong = now;
-        await this.evaluateSession(null, session._id, true, true);
+        await this.evaluateSession(null, session._id, undefined, true, true);
 
         const submissions = await this.tenderSubmissionRepository.getMany({
           where: { phienId: session._id },
@@ -118,9 +118,6 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
       trangThai: TrangThaiPhien.NHAP,
       thoiGianBatDau: start,
       thoiGianKetThuc: end,
-      giaToiDa: dto.giaToiDa,
-      trongSoKyThuat: dto.trongSoKyThuat ?? 0.6,
-      trongSoGia: dto.trongSoGia ?? 0.4,
       diemKyThuatToiThieu: dto.diemKyThuatToiThieu ?? 50,
       anDanh: dto.anDanh ?? false,
       danhSachHinhAnh: dto.danhSachHinhAnh ?? [],
@@ -131,12 +128,10 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
         phienId: session._id,
         tenTieuChi: cri.tenTieuChi,
         maTieuChi: cri.maTieuChi,
-        nhom: cri.nhom,
         loai: cri.loai,
         trongSo: cri.trongSo,
         huongToiUu: cri.huongToiUu,
         batBuoc: cri.batBuoc,
-        rangBuocCung: cri.rangBuocCung,
         cacLuaChon: cri.cacLuaChon,
         giaTriToiThieu: cri.giaTriToiThieu,
         giaTriToiDa: cri.giaTriToiDa,
@@ -202,11 +197,6 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
     if (session.chuPhienId === userId) {
       throw ApiError.Forbidden('Chu phien khong duoc nop de xuat cho phien cua minh');
     }
-
-    if (session.giaToiDa && dto.giaDeXuat > session.giaToiDa) {
-      throw ApiError.BadRequest(`Gia de xuat vuot qua gia tran cua phien (${session.giaToiDa})`);
-    }
-
     const existing = await this.tenderSubmissionRepository.getOne({
       where: { phienId: dto.phienId, nguoiThamGiaId: userId },
     });
@@ -244,12 +234,9 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
       const criteria = criteriaMap.get(valDto.tieuChiId);
       let giaTriSo: number | undefined;
       let giaTriChuoi: string | undefined;
-      let giaTriDungSai: boolean | undefined;
 
       if (criteria.loai === LoaiTieuChi.SO || criteria.loai === LoaiTieuChi.PHAN_TRAM) {
         giaTriSo = Number(valDto.giaTriGoc);
-      } else if (criteria.loai === LoaiTieuChi.DUNG_SAI) {
-        giaTriDungSai = Boolean(valDto.giaTriGoc);
       } else {
         giaTriChuoi = String(valDto.giaTriGoc);
       }
@@ -259,7 +246,6 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
         tieuChiId: valDto.tieuChiId,
         giaTriSo,
         giaTriChuoi,
-        giaTriDungSai,
         giaTriGoc: valDto.giaTriGoc,
       });
     }
@@ -292,7 +278,14 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
     return submission;
   }
 
-  async evaluateSession(userId: string | null, sessionId: string, force = false, isSystem = false, userRole?: string): Promise<TenderSessionDetails | { message: string }> {
+  async evaluateSession(
+    userId: string | null,
+    sessionId: string,
+    winnerSubmissionId?: string,
+    force = false,
+    isSystem = false,
+    userRole?: string,
+  ): Promise<TenderSessionDetails | { message: string }> {
     const session = await this.tenderSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau thau khong ton tai');
@@ -330,15 +323,10 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
 
       for (const cri of criteriaList) {
         const val = valuesMap.get(cri._id);
-        if (cri.nhom === 'sang_loc') {
-          if (cri.loai === LoaiTieuChi.DUNG_SAI) {
-            const ok = val ? Boolean(val.giaTriDungSai) : false;
-            if (!ok && (cri.batBuoc || cri.rangBuocCung)) {
-              isRejected = true;
-              rejectReason = `Khong dat tieu chi loc: ${cri.tenTieuChi}`;
-              break;
-            }
-          }
+        if (cri.batBuoc && (!val || val.giaTriGoc === undefined || val.giaTriGoc === null || val.giaTriGoc === '')) {
+          isRejected = true;
+          rejectReason = `Khong nhap tieu chi bat buoc: ${cri.tenTieuChi}`;
+          break;
         }
       }
 
@@ -356,7 +344,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
       return { message: 'Tat ca de xuat deu khong vuot qua vong sang loc' };
     }
 
-    const technicalCriteria = criteriaList.filter((c) => c.nhom !== 'sang_loc');
+    const technicalCriteria = criteriaList;
     const criteriaMinMax = new Map<string, { min: number; max: number }>();
     for (const cri of technicalCriteria) {
       if (cri.loai === LoaiTieuChi.SO || cri.loai === LoaiTieuChi.PHAN_TRAM) {
@@ -385,10 +373,10 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
         if (cri.loai === LoaiTieuChi.SO || cri.loai === LoaiTieuChi.PHAN_TRAM) {
           const { min, max } = criteriaMinMax.get(cri._id) || { min: 0, max: 100 };
           score = this.scoringService.normalizeNumber(valObj.giaTriSo ?? 0, min, max, cri.huongToiUu === HuongToiUu.THAP_HON);
-        } else if (cri.loai === LoaiTieuChi.DUNG_SAI) {
-          score = this.scoringService.normalizeBoolean(Boolean(valObj.giaTriDungSai));
         } else if (cri.loai === LoaiTieuChi.LUA_CHON) {
-          score = this.scoringService.normalizeEnum(valObj.giaTriChuoi || '', cri.cacLuaChon || []);
+          const options = cri.cacLuaChon || [];
+          const found = options.find((opt) => String(opt.giaTri) === valObj.giaTriChuoi || opt.nhan === valObj.giaTriChuoi);
+          score = found ? Number(found.giaTri) : 0;
         }
         await this.tenderSubmissionValueRepository.updateOne(
           { diemChuanHoa: score, diemCoTrongSo: score * cri.trongSo },
@@ -409,25 +397,24 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
 
     if (scoredSubmissions.length === 0) return { message: 'Khong co de xuat nao dat muc diem ky thuat toi thieu' };
 
-    const lowestPrice = Math.min(...scoredSubmissions.map((item) => Number(item.sub.giaDeXuat)));
     for (const item of scoredSubmissions) {
-      const priceScore = this.scoringService.calculateTenderPriceScore(Number(item.sub.giaDeXuat), lowestPrice);
-      const finalScore = this.scoringService.calculateTenderFinalScore(item.technicalScore, priceScore, {
-        trongSoKyThuat: session.trongSoKyThuat,
-        trongSoGia: session.trongSoGia,
-      });
-      item.priceScore = priceScore;
-      item.finalScore = finalScore;
+      item.priceScore = null;
+      item.finalScore = item.technicalScore;
     }
     scoredSubmissions.sort((a, b) => b.finalScore - a.finalScore);
+
+    let winnerId = winnerSubmissionId;
+    if (!winnerId && scoredSubmissions.length > 0) {
+      winnerId = scoredSubmissions[0].sub._id;
+    }
 
     let rank = 1;
     let winnerUserId: string | null = null;
     const loserUserIds: string[] = [];
     for (const item of scoredSubmissions) {
-      const isWinner = rank === 1;
+      const isWinner = item.sub._id === winnerId;
       await this.tenderSubmissionRepository.updateOne(
-        { trangThai: isWinner ? TrangThaiDeXuat.THANG : TrangThaiDeXuat.HOP_LE, diemKyThuat: item.technicalScore, diemGia: item.priceScore, diemTongHop: item.finalScore, thuHang: rank },
+        { trangThai: isWinner ? TrangThaiDeXuat.THANG : TrangThaiDeXuat.THUA, diemKyThuat: item.technicalScore, diemGia: null, diemTongHop: item.finalScore, thuHang: rank },
         { where: { _id: item.sub._id } },
       );
       if (isWinner) {
@@ -467,6 +454,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
 
     return this.getSessionDetails(sessionId);
   }
+
 
   async getSessionDetails(sessionId: string): Promise<TenderSessionDetails> {
     let session = await this.tenderSessionRepository.getOne({
@@ -561,7 +549,6 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
 
     const criteriaList = await this.tenderCriteriaRepository.getMany({ where: { phienId: sessionId } });
 
-    // Step 1: Filter out screening criteria
     const validSubmissions: any[] = [];
     for (const sub of submissions) {
       let isRejected = false;
@@ -570,14 +557,9 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
 
       for (const cri of criteriaList) {
         const val = valuesMap.get(cri._id);
-        if (cri.nhom === 'sang_loc') {
-          if (cri.loai === LoaiTieuChi.DUNG_SAI) {
-            const ok = val ? Boolean(val.giaTriDungSai) : false;
-            if (!ok && (cri.batBuoc || cri.rangBuocCung)) {
-              isRejected = true;
-              break;
-            }
-          }
+        if (cri.batBuoc && (!val || val.giaTriGoc === undefined || val.giaTriGoc === null || val.giaTriGoc === '')) {
+          isRejected = true;
+          break;
         }
       }
       if (!isRejected) {
@@ -585,8 +567,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
       }
     }
 
-    // Step 2: Calculate Technical Scores
-    const technicalCriteria = criteriaList.filter((c) => c.nhom !== 'sang_loc');
+    const technicalCriteria = criteriaList;
     const criteriaMinMax = new Map<string, { min: number; max: number }>();
     for (const cri of technicalCriteria) {
       if (cri.loai === LoaiTieuChi.SO || cri.loai === LoaiTieuChi.PHAN_TRAM) {
@@ -615,10 +596,10 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
         if (cri.loai === LoaiTieuChi.SO || cri.loai === LoaiTieuChi.PHAN_TRAM) {
           const { min, max } = criteriaMinMax.get(cri._id) || { min: 0, max: 100 };
           score = this.scoringService.normalizeNumber(valObj.giaTriSo ?? 0, min, max, cri.huongToiUu === HuongToiUu.THAP_HON);
-        } else if (cri.loai === LoaiTieuChi.DUNG_SAI) {
-          score = this.scoringService.normalizeBoolean(Boolean(valObj.giaTriDungSai));
         } else if (cri.loai === LoaiTieuChi.LUA_CHON) {
-          score = this.scoringService.normalizeEnum(valObj.giaTriChuoi || '', cri.cacLuaChon || []);
+          const options = cri.cacLuaChon || [];
+          const found = options.find((opt) => String(opt.giaTri) === valObj.giaTriChuoi || opt.nhan === valObj.giaTriChuoi);
+          score = found ? Number(found.giaTri) : 0;
         }
         technicalScores.push({ score, weight: cri.trongSo });
       }
@@ -628,17 +609,10 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
       }
     }
 
-    // Step 3: Calculate Price Scores & Final Scores
     if (scoredSubmissions.length > 0) {
-      const lowestPrice = Math.min(...scoredSubmissions.map((item) => Number(item.sub.giaDeXuat)));
       for (const item of scoredSubmissions) {
-        const priceScore = this.scoringService.calculateTenderPriceScore(Number(item.sub.giaDeXuat), lowestPrice);
-        const finalScore = this.scoringService.calculateTenderFinalScore(item.technicalScore, priceScore, {
-          trongSoKyThuat: session.trongSoKyThuat,
-          trongSoGia: session.trongSoGia,
-        });
-        item.priceScore = priceScore;
-        item.finalScore = finalScore;
+        item.priceScore = null;
+        item.finalScore = item.technicalScore;
       }
       scoredSubmissions.sort((a, b) => b.finalScore - a.finalScore);
     }
@@ -678,7 +652,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
     return { phienId: session._id, trangThai: session.trangThai, danhSach: resultList };
   }
 
-  async closeSession(userId: string, sessionId: string, isSystem = false, userRole?: string): Promise<TenderSessionDetails> {
+  async closeSession(userId: string, sessionId: string, winnerSubmissionId?: string, isSystem = false, userRole?: string): Promise<TenderSessionDetails> {
     let session = await this.tenderSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau thau khong ton tai');
@@ -697,19 +671,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
       { where: { _id: sessionId } },
     );
 
-    await this.evaluateSession(userId, sessionId, true, isSystem, userRole);
-
-    const submissions = await this.tenderSubmissionRepository.getMany({
-      where: { phienId: sessionId },
-    });
-    for (const sub of submissions) {
-      if (sub.trangThai === TrangThaiDeXuat.HOP_LE) {
-        await this.tenderSubmissionRepository.updateOne(
-          { trangThai: TrangThaiDeXuat.THUA },
-          { where: { _id: sub._id } },
-        );
-      }
-    }
+    await this.evaluateSession(userId, sessionId, winnerSubmissionId, true, isSystem, userRole);
 
     await this.auditLogService.logAction(
       userId,
@@ -723,3 +685,4 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
     return this.getSessionDetails(sessionId);
   }
 }
+

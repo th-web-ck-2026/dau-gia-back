@@ -74,30 +74,6 @@ export class AuctionSessionModel extends Model implements AuctionSession {
   })
   buocGia: number;
 
-  @Column({
-    type: DataType.DECIMAL,
-  })
-  giaTran?: number;
-
-  @Column({
-    type: DataType.FLOAT,
-    defaultValue: 0.8,
-    allowNull: false,
-  })
-  trongSoGia: number;
-
-  @Column({
-    type: DataType.FLOAT,
-    defaultValue: 0.2,
-    allowNull: false,
-  })
-  trongSoUyTin: number;
-
-  @Column({
-    type: DataType.FLOAT,
-    defaultValue: 0.0,
-  })
-  trongSoCamKet?: number;
 
   @ForeignKey(() => AuctionBidModel)
   @Column({

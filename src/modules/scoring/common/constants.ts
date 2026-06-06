@@ -14,9 +14,7 @@ export enum TrangThaiPhien {
 export enum LoaiTieuChi {
   SO = 'SO',
   PHAN_TRAM = 'PHAN_TRAM',
-  DUNG_SAI = 'DUNG_SAI',
   LUA_CHON = 'LUA_CHON',
-  TAI_LIEU = 'TAI_LIEU',
 }
 
 export enum TrangThaiDeXuat {

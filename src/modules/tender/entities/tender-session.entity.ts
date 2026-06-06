@@ -25,14 +25,6 @@ export class TenderSession implements BaseEntity {
   @ApiProperty()
   thoiGianKetThuc: Date;
 
-  @ApiPropertyOptional()
-  giaToiDa?: number;
-
-  @ApiProperty()
-  trongSoKyThuat: number;
-
-  @ApiProperty()
-  trongSoGia: number;
 
   @ApiProperty()
   diemKyThuatToiThieu: number;

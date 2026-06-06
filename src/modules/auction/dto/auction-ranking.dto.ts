@@ -2,6 +2,7 @@ export class AuctionRankingItem {
   thuHang: number;
   bidId: string;
   nguoiThamGiaId: string;
+  nguoiThamGia?: any;
   bietDanh: string;
   giaDat: number;
   diemGia: number;

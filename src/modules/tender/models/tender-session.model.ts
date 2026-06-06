@@ -62,24 +62,6 @@ export class TenderSessionModel extends Model implements TenderSession {
   })
   thoiGianKetThuc: Date;
 
-  @Column({
-    type: DataType.DECIMAL,
-  })
-  giaToiDa?: number;
-
-  @Column({
-    type: DataType.FLOAT,
-    defaultValue: 0.6,
-    allowNull: false,
-  })
-  trongSoKyThuat: number;
-
-  @Column({
-    type: DataType.FLOAT,
-    defaultValue: 0.4,
-    allowNull: false,
-  })
-  trongSoGia: number;
 
   @Column({
     type: DataType.FLOAT,

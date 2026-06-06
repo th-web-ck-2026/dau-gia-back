@@ -37,11 +37,6 @@ export class TenderCriteriaModel extends Model implements TenderCriteria {
   })
   maTieuChi: string;
 
-  @Column({
-    type: DataType.ENUM('sang_loc', 'ky_thuat', 'thuong_mai', 'gia_tri', 'rui_ro'),
-    allowNull: false,
-  })
-  nhom: 'sang_loc' | 'ky_thuat' | 'thuong_mai' | 'gia_tri' | 'rui_ro';
 
   @Column({
     type: DataType.ENUM(...Object.values(LoaiTieuChi)),
@@ -67,18 +62,10 @@ export class TenderCriteriaModel extends Model implements TenderCriteria {
     allowNull: false,
   })
   batBuoc: boolean;
-
-  @Column({
-    type: DataType.BOOLEAN,
-    defaultValue: false,
-    allowNull: false,
-  })
-  rangBuocCung: boolean;
-
   @Column({
     type: DataType.JSON,
   })
-  cacLuaChon?: Array<{ nhan: string; giaTri: string; diem: number }>;
+  cacLuaChon?: Array<{ nhan: string; giaTri: number }>;
 
   @Column({
     type: DataType.FLOAT,

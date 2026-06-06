@@ -11,10 +11,6 @@ export class CreateCriteriaDto {
   @IsNotEmpty()
   maTieuChi: string;
 
-  @IsString()
-  @IsNotEmpty()
-  nhom: 'sang_loc' | 'ky_thuat' | 'thuong_mai' | 'gia_tri' | 'rui_ro';
-
   @IsEnum(LoaiTieuChi)
   loai: LoaiTieuChi;
 
@@ -27,12 +23,9 @@ export class CreateCriteriaDto {
   @IsBoolean()
   batBuoc: boolean;
 
-  @IsBoolean()
-  rangBuocCung: boolean;
-
   @IsOptional()
   @IsArray()
-  cacLuaChon?: Array<{ nhan: string; giaTri: string; diem: number }>;
+  cacLuaChon?: Array<{ nhan: string; giaTri: number }>;
 
   @IsOptional()
   @IsNumber()
@@ -62,17 +55,6 @@ export class CreateTenderSessionDto {
   @IsDateString()
   thoiGianKetThuc: string;
 
-  @IsNumber()
-  @IsOptional()
-  giaToiDa?: number;
-
-  @IsNumber()
-  @IsOptional()
-  trongSoKyThuat?: number;
-
-  @IsNumber()
-  @IsOptional()
-  trongSoGia?: number;
 
   @IsNumber()
   @IsOptional()
@@ -91,4 +73,10 @@ export class CreateTenderSessionDto {
   @ValidateNested({ each: true })
   @Type(() => CreateCriteriaDto)
   tieuChi: CreateCriteriaDto[];
+}
+
+export class CloseTenderSessionDto {
+  @IsString()
+  @IsOptional()
+  winnerSubmissionId?: string;
 }

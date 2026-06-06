@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Param, Get } from '@nestjs/common';
 import { TenderService } from '../services/tender.service';
-import { CreateTenderSessionDto } from '../dto/create-tender-session.dto';
+import { CreateTenderSessionDto, CloseTenderSessionDto } from '../dto/create-tender-session.dto';
 import { SubmitTenderProposalDto } from '../dto/submit-tender-proposal.dto';
 import { Auth } from '@/common/decorators/auth.decorator';
 import { ReqUser } from '@/common/decorators/user.decorator';
@@ -127,7 +127,7 @@ export class TenderController {
     @ReqUser() user: AuthUser,
     @Param('id') id: string,
   ): Promise<TenderSessionDetails | { message: string }> {
-    return this.tenderService.evaluateSession(user.id, id, false, false, user.role);
+    return this.tenderService.evaluateSession(user.id, id, undefined, false, false, user.role);
   }
 
   @Public()
@@ -180,8 +180,9 @@ export class TenderController {
   async closeSession(
     @ReqUser() user: AuthUser,
     @Param('id') id: string,
+    @Body() dto: CloseTenderSessionDto,
   ): Promise<TenderSessionDetails> {
-    return this.tenderService.closeSession(user.id, id, false, user.role);
+    return this.tenderService.closeSession(user.id, id, dto.winnerSubmissionId, false, user.role);
   }
 
   @Get(':id/submissions')

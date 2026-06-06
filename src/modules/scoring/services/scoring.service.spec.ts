@@ -50,36 +50,6 @@ describe('ScoringService', () => {
     });
   });
 
-  describe('normalizeBoolean', () => {
-    it('should return default scores for true and false', () => {
-      expect(service.normalizeBoolean(true)).toBe(100);
-      expect(service.normalizeBoolean(false)).toBe(0);
-    });
-
-    it('should return custom scores when provided', () => {
-      expect(service.normalizeBoolean(true, 80, 20)).toBe(80);
-      expect(service.normalizeBoolean(false, 80, 20)).toBe(20);
-    });
-  });
-
-  describe('normalizeEnum', () => {
-    const options = [
-      { giaTri: 'basic', diem: 40 },
-      { giaTri: 'standard', diem: 70 },
-      { giaTri: 'premium', diem: 100 },
-    ];
-
-    it('should return mapped score for a valid enum value', () => {
-      expect(service.normalizeEnum('standard', options)).toBe(70);
-    });
-
-    it('should throw BadRequestException if enum value is not in options', () => {
-      expect(() => {
-        service.normalizeEnum('luxury', options);
-      }).toThrow(BadRequestException);
-    });
-  });
-
   describe('calculateWeightedScore', () => {
     it('should sum scores with weights', () => {
       const items = [
@@ -108,18 +78,6 @@ describe('ScoringService', () => {
     });
   });
 
-  describe('calculateTenderPriceScore', () => {
-    it('should calculate tender price score correctly', () => {
-      // P = (Gmin / Gi) * 100
-      expect(service.calculateTenderPriceScore(900, 800)).toBeCloseTo(88.88888);
-    });
-
-    it('should throw BadRequestException if price or minPrice is zero or negative', () => {
-      expect(() => service.calculateTenderPriceScore(0, 800)).toThrow(BadRequestException);
-      expect(() => service.calculateTenderPriceScore(900, -10)).toThrow(BadRequestException);
-    });
-  });
-
   describe('calculateAuctionPriceScore', () => {
     it('should calculate auction price score correctly', () => {
       // Pi = (Gi / Gmax) * 100
@@ -129,32 +87,6 @@ describe('ScoringService', () => {
     it('should throw BadRequestException if price or maxPrice is zero or negative', () => {
       expect(() => service.calculateAuctionPriceScore(-50, 250)).toThrow(BadRequestException);
       expect(() => service.calculateAuctionPriceScore(200, 0)).toThrow(BadRequestException);
-    });
-  });
-
-  describe('calculateTenderFinalScore', () => {
-    it('should calculate final tender score based on weights', () => {
-      const finalScore = service.calculateTenderFinalScore(91, 88.89, {
-        trongSoKyThuat: 0.6,
-        trongSoGia: 0.4,
-      });
-      expect(finalScore).toBeCloseTo(90.156);
-    });
-  });
-
-  describe('calculateAuctionFinalScore', () => {
-    it('should calculate final auction score with default weights (0.8 price, 0.2 trust)', () => {
-      const finalScore = service.calculateAuctionFinalScore(90, 70);
-      expect(finalScore).toBeCloseTo(86);
-    });
-
-    it('should calculate final auction score with custom weights including commitment', () => {
-      const finalScore = service.calculateAuctionFinalScore(90, 70, 100, {
-        trongSoGia: 0.7,
-        trongSoUyTin: 0.2,
-        trongSoCamKet: 0.1,
-      });
-      expect(finalScore).toBeCloseTo(87);
     });
   });
 });

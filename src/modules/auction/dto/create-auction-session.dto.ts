@@ -30,21 +30,6 @@ export class CreateAuctionSessionDto {
   @IsNotEmpty()
   buocGia: number;
 
-  @IsNumber()
-  @IsOptional()
-  giaTran?: number;
-
-  @IsNumber()
-  @IsOptional()
-  trongSoGia?: number;
-
-  @IsNumber()
-  @IsOptional()
-  trongSoUyTin?: number;
-
-  @IsNumber()
-  @IsOptional()
-  trongSoCamKet?: number;
 
   @IsBoolean()
   @IsOptional()

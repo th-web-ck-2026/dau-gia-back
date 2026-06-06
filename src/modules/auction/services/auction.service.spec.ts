@@ -234,9 +234,6 @@ describe('AuctionService', () => {
         chuPhienId: 'user1',
         thoiGianBatDau: new Date(Date.now() - 20000),
         thoiGianKetThuc: new Date(Date.now() - 10000),
-        trongSoGia: 0.8,
-        trongSoUyTin: 0.2,
-        trongSoCamKet: 0.0,
       };
       const mockBids = [
         {
@@ -244,7 +241,6 @@ describe('AuctionService', () => {
           phienId: 'session1',
           nguoiThamGiaId: 'user2',
           giaDat: 200,
-          diemUyTin: 100,
           thoiDiemDat: new Date(),
         },
       ];
@@ -346,8 +342,8 @@ describe('AuctionService', () => {
     it('should return ranking representation', async () => {
       const mockSession = { _id: 'session1', trangThai: TrangThaiPhien.MO, anDanh: true, chuPhienId: 'host1' };
       const mockBids = [
-        { _id: 'bid1', nguoiThamGiaId: 'user1', diemChuanHoaGia: 90, diemUyTin: 90, diemCamKet: 90, diemTongHop: 90, thuHang: 1, trangThai: TrangThaiDeXuat.THANG, giaDat: 1000, thoiDiemDat: new Date() },
-        { _id: 'bid2', nguoiThamGiaId: 'user2', diemChuanHoaGia: 80, diemUyTin: 80, diemCamKet: 80, diemTongHop: 80, thuHang: 2, trangThai: TrangThaiDeXuat.THUA, giaDat: 900, thoiDiemDat: new Date() }
+        { _id: 'bid1', nguoiThamGiaId: 'user1', diemChuanHoaGia: 90, diemTongHop: 90, thuHang: 1, trangThai: TrangThaiDeXuat.THANG, giaDat: 1000, thoiDiemDat: new Date() },
+        { _id: 'bid2', nguoiThamGiaId: 'user2', diemChuanHoaGia: 80, diemTongHop: 80, thuHang: 2, trangThai: TrangThaiDeXuat.THUA, giaDat: 900, thoiDiemDat: new Date() }
       ];
       sessionRepo.getOne.mockResolvedValue(mockSession);
       bidRepo.getMany.mockResolvedValue(mockBids);
@@ -356,9 +352,7 @@ describe('AuctionService', () => {
       expect(res.phienId).toBe('session1');
       expect(res.danhSach).toHaveLength(2);
       expect(res.danhSach[0].bietDanh).toBe('user1'); // self is exposed
-      expect(res.danhSach[1].bietDanh).toBe('Bidder B'); // others anonymized
-      expect((res.danhSach[0] as any).diemUyTin).toBeUndefined();
-      expect((res.danhSach[0] as any).diemCamKet).toBeUndefined();
+      expect(res.danhSach[1].bietDanh).toBe('Bidder 2'); // others anonymized
     });
   });
 });

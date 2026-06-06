@@ -126,12 +126,10 @@ describe('TenderService', () => {
           {
             tenTieuChi: 'Tieu chi 1',
             maTieuChi: 'TC1',
-            nhom: 'ky_thuat' as any,
             loai: LoaiTieuChi.SO,
             trongSo: 1.0,
             huongToiUu: HuongToiUu.CAO_HON,
             batBuoc: true,
-            rangBuocCung: false,
           },
         ],
       };
@@ -214,25 +212,10 @@ describe('TenderService', () => {
       await expect(service.submitProposal('user1', { phienId: 'session1' } as any)).rejects.toThrow(ApiError);
     });
 
-    it('should throw BadRequest if proposal price exceeds ceiling price', async () => {
-      const session = {
-        _id: 'session1',
-        trangThai: TrangThaiPhien.MO,
-        giaToiDa: 1000,
-        thoiGianBatDau: new Date(Date.now() - 10000),
-        thoiGianKetThuc: new Date(Date.now() + 10000),
-      };
-      sessionRepo.getOne.mockResolvedValue(session);
-      await expect(
-        service.submitProposal('user1', { phienId: 'session1', giaDeXuat: 1200, giaTriTieuChi: [] }),
-      ).rejects.toThrow(ApiError);
-    });
-
     it('should submit proposal successfully and log audit', async () => {
       const session = {
         _id: 'session1',
         trangThai: TrangThaiPhien.MO,
-        giaToiDa: 1000,
         thoiGianBatDau: new Date(Date.now() - 10000),
         thoiGianKetThuc: new Date(Date.now() + 10000),
         chuPhienId: 'host1',
@@ -276,8 +259,6 @@ describe('TenderService', () => {
         thoiGianBatDau: new Date(Date.now() - 20000),
         thoiGianKetThuc: new Date(Date.now() - 10000),
         diemKyThuatToiThieu: 0,
-        trongSoKyThuat: 0.7,
-        trongSoGia: 0.3,
       };
 
       const mockSubmission = {
@@ -294,7 +275,6 @@ describe('TenderService', () => {
           phienId: 'session1',
           tenTieuChi: 'Price',
           maTieuChi: 'PRICE',
-          nhom: 'ky_thuat',
           loai: LoaiTieuChi.SO,
           trongSo: 1.0,
           huongToiUu: HuongToiUu.THAP_HON,

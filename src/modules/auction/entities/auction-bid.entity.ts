@@ -15,11 +15,6 @@ export class AuctionBid implements BaseEntity {
   @ApiProperty()
   giaDat: number;
 
-  @ApiProperty()
-  diemUyTin: number;
-
-  @ApiPropertyOptional()
-  diemCamKet?: number;
 
   @ApiPropertyOptional()
   diemChuanHoaGia?: number;

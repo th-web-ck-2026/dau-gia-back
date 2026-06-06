@@ -6,8 +6,6 @@ export class TenderSubmissionValue implements BaseEntity {
   tieuChiId: string;
   giaTriSo?: number;
   giaTriChuoi?: string;
-  giaTriDungSai?: boolean;
-  giaTriJson?: object;
   giaTriGoc: any;
   diemChuanHoa?: number;
   diemCoTrongSo?: number;

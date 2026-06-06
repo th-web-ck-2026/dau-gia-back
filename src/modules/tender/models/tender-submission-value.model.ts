@@ -48,15 +48,6 @@ export class TenderSubmissionValueModel extends Model implements TenderSubmissio
   })
   giaTriChuoi?: string;
 
-  @Column({
-    type: DataType.BOOLEAN,
-  })
-  giaTriDungSai?: boolean;
-
-  @Column({
-    type: DataType.JSON,
-  })
-  giaTriJson?: object;
 
   @Column({
     type: DataType.JSON,

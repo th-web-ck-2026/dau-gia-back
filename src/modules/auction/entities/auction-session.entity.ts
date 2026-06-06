@@ -30,17 +30,6 @@ export class AuctionSession implements BaseEntity {
   @ApiProperty()
   buocGia: number;
 
-  @ApiPropertyOptional()
-  giaTran?: number;
-
-  @ApiProperty()
-  trongSoGia: number;
-
-  @ApiProperty()
-  trongSoUyTin: number;
-
-  @ApiPropertyOptional()
-  trongSoCamKet?: number;
 
   @ApiPropertyOptional()
   deXuatThangId?: string;

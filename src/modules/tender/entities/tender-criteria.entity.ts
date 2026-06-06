@@ -15,9 +15,6 @@ export class TenderCriteria implements BaseEntity {
   @ApiProperty()
   maTieuChi: string;
 
-  @ApiProperty()
-  nhom: 'sang_loc' | 'ky_thuat' | 'thuong_mai' | 'gia_tri' | 'rui_ro';
-
   @ApiProperty({ enum: LoaiTieuChi })
   loai: LoaiTieuChi;
 
@@ -30,11 +27,8 @@ export class TenderCriteria implements BaseEntity {
   @ApiProperty()
   batBuoc: boolean;
 
-  @ApiProperty()
-  rangBuocCung: boolean;
-
   @ApiPropertyOptional()
-  cacLuaChon?: Array<{ nhan: string; giaTri: string; diem: number }>;
+  cacLuaChon?: Array<{ nhan: string; giaTri: number }>;
 
   @ApiPropertyOptional()
   giaTriToiThieu?: number;

@@ -9,11 +9,4 @@ export class PlaceAuctionBidDto {
   @IsNotEmpty()
   giaDat: number;
 
-  @IsNumber()
-  @IsOptional()
-  diemUyTin?: number;
-
-  @IsNumber()
-  @IsOptional()
-  diemCamKet?: number;
 }

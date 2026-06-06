@@ -106,10 +106,6 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
       thoiGianKetThuc: end,
       giaKhoiDiem: dto.giaKhoiDiem,
       buocGia: dto.buocGia,
-      giaTran: dto.giaTran,
-      trongSoGia: dto.trongSoGia ?? 0.8,
-      trongSoUyTin: dto.trongSoUyTin ?? 0.2,
-      trongSoCamKet: dto.trongSoCamKet ?? 0.0,
       giaCaoNhat: dto.giaKhoiDiem,
       anDanh: dto.anDanh ?? false,
       danhSachHinhAnh: dto.danhSachHinhAnh ?? [],
@@ -180,12 +176,6 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
         transaction: t,
       } as any);
 
-      if (lockedSession.giaTran && dto.giaDat > lockedSession.giaTran) {
-        throw ApiError.BadRequest(
-          `Gia dat vuot qua gia tran cua phien (${lockedSession.giaTran})`,
-        );
-      }
-
       const currentMax = Number(lockedSession.giaCaoNhat ?? lockedSession.giaKhoiDiem);
       const minRequiredBid =
         currentMax === Number(lockedSession.giaKhoiDiem) && !lockedSession.deXuatThangId
@@ -206,9 +196,7 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
         phienId: dto.phienId,
         nguoiThamGiaId: userId,
         giaDat: dto.giaDat,
-        diemUyTin: dto.diemUyTin ?? 100,
-        diemCamKet: dto.diemCamKet ?? 100,
-        trangThai: TrangThaiDeXuat.CHO_DUYET,
+        trangThai: TrangThaiDeXuat.HOP_LE,
         thoiDiemDat: now,
       }, { transaction: t } as any);
 
@@ -472,6 +460,9 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
     const isOwner = session.chuPhienId === userId;
     const bids = await this.auctionBidRepository.getMany({
       where: { phienId: sessionId },
+      include: [
+        { model: UserModel, as: 'nguoiThamGia', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+      ],
     });
 
     // Sort in-memory: price DESC, thoiDiemDat ASC
@@ -487,12 +478,17 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
 
     const resultList = bids.map((bid, index) => {
       const isSelf = bid.nguoiThamGiaId === userId;
-      let bietDanh = `Bidder ${String.fromCharCode(65 + index)}`;
+      const userObj = (bid as any).nguoiThamGia;
+      
+      let bietDanh = `Bidder ${index + 1}`;
       let participantId = bid.nguoiThamGiaId;
+      let participantInfo = null;
+
       if (session.anDanh && !isOwner && !isSelf) {
         participantId = 'ANONYMOUS';
       } else {
-        bietDanh = bid.nguoiThamGiaId;
+        bietDanh = userObj?.fullname || bid.nguoiThamGiaId;
+        participantInfo = userObj;
       }
 
       const priceScore = highestBidPrice > 0 ? (Number(bid.giaDat) / highestBidPrice) * 100 : 0;
@@ -503,6 +499,7 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
         thuHang: rank,
         bidId: bid._id,
         nguoiThamGiaId: participantId,
+        nguoiThamGia: participantInfo,
         bietDanh,
         giaDat: bid.giaDat,
         diemGia: priceScore,
@@ -518,6 +515,7 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
       danhSach: resultList,
     };
   }
+
 
   async closeSession(userId: string, sessionId: string, isSystem = false, userRole?: string): Promise<AuctionRankingOrMessage> {
     let session = await this.auctionSessionRepository.getOne({ where: { _id: sessionId } });
