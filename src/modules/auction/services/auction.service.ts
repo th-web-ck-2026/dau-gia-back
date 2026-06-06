@@ -472,8 +472,18 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
     const isOwner = session.chuPhienId === userId;
     const bids = await this.auctionBidRepository.getMany({
       where: { phienId: sessionId },
-      order: [['diemTongHop', 'DESC'], ['thoiDiemDat', 'ASC']],
     });
+
+    // Sort in-memory: price DESC, thoiDiemDat ASC
+    bids.sort((a, b) => {
+      const priceDiff = Number(b.giaDat) - Number(a.giaDat);
+      if (Math.abs(priceDiff) > 1e-9) {
+        return priceDiff;
+      }
+      return new Date(a.thoiDiemDat).getTime() - new Date(b.thoiDiemDat).getTime();
+    });
+
+    const highestBidPrice = bids.length > 0 ? Number(bids[0].giaDat) : 0;
 
     const resultList = bids.map((bid, index) => {
       const isSelf = bid.nguoiThamGiaId === userId;
@@ -484,15 +494,20 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
       } else {
         bietDanh = bid.nguoiThamGiaId;
       }
+
+      const priceScore = highestBidPrice > 0 ? (Number(bid.giaDat) / highestBidPrice) * 100 : 0;
+      const rank = index + 1;
+      const state = rank === 1 ? TrangThaiDeXuat.THANG : TrangThaiDeXuat.THUA;
+
       return {
-        thuHang: bid.thuHang || index + 1,
+        thuHang: rank,
         bidId: bid._id,
         nguoiThamGiaId: participantId,
         bietDanh,
         giaDat: bid.giaDat,
-        diemGia: bid.diemChuanHoaGia,
-        diemTongHop: bid.diemTongHop,
-        trangThai: bid.trangThai,
+        diemGia: priceScore,
+        diemTongHop: priceScore,
+        trangThai: state,
         thoiDiemDat: bid.thoiDiemDat,
       };
     });
