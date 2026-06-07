@@ -128,7 +128,15 @@ export class SendMailService {
 
       const serverConfig = this.mailConfigs[currentConfigIndex];
       const transporter = this.transporters[currentConfigIndex];
-      const from = serverConfig.user;
+      
+      let fromEmail = serverConfig.user;
+      if (fromEmail === 'resend') {
+        fromEmail = 'onboarding@resend.dev';
+        Logger.warn(
+          `Resend user configured as 'resend'. Falling back to default testing email: ${fromEmail}`,
+          'SendMailService',
+        );
+      }
 
       try {
         if (serverConfig.host === 'smtp.resend.com') {
@@ -140,7 +148,7 @@ export class SendMailService {
             : [typeof mailOptions.to === 'string' ? mailOptions.to : (mailOptions.to as any).address];
 
           const { error } = await resend.emails.send({
-            from: `"${this.platformName}" <${from}>`,
+            from: `"${this.platformName}" <${fromEmail}>`,
             to: recipients,
             subject: mailOptions.subject as string,
             html: mailOptions.html as string,
@@ -156,17 +164,17 @@ export class SendMailService {
           }
           await transporter.sendMail({
             ...mailOptions,
-            from: `"${this.platformName}" <${from}>`,
+            from: `"${this.platformName}" <${fromEmail}>`,
           });
         }
 
         Logger.log(
-          `Email sent successfully to ${mailOptions.to} using ${from}`,
+          `Email sent successfully to ${mailOptions.to} using ${fromEmail}`,
         );
         return;
       } catch (error) {
         Logger.error(
-          `Failed to send email to ${mailOptions.to} using ${from}`,
+          `Failed to send email to ${mailOptions.to} using ${fromEmail}`,
           error.stack,
           'SendMailService',
         );
