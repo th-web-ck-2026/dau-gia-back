@@ -8,6 +8,7 @@ import { UsersService } from '@/modules/user/services/user.service';
 import { NotificationService } from '@/modules/notification/services/notification.service';
 import { AuditLogService } from '@/modules/audit-log/services/audit-log.service';
 import { ApiError } from '@Exceptions/api-error';
+import { DaChuyenKhoanDto } from '../dto/da-chuyen-khoan.dto';
 
 interface TaoTuPhienInput {
   phienId: string;
@@ -124,6 +125,98 @@ export class GiaoDichService extends BaseService<GiaoDich> {
       id,
     );
     return updated;
+  }
+
+  async baoDaChuyenKhoan(userId: string, id: string, dto: DaChuyenKhoanDto): Promise<GiaoDich> {
+    const gd = await this.layVaKiemTra(id);
+    this.kiemTraVai(gd, userId, 'NGUOI_THANG');
+    this.kiemTraTrangThai(gd, TrangThaiGiaoDich.CHO_THANH_TOAN);
+
+    const updated = await this.capNhat(id, {
+      trangThai: TrangThaiGiaoDich.DA_THANH_TOAN,
+      anhChungTu: dto.anhChungTu ?? [],
+      thoiDiemNguoiThangBaoDaCK: new Date(),
+    });
+    await this.auditLogService.logAction(userId, 'GIAODICH_BAO_CK', 'GiaoDich', id, null, null);
+    await this.guiThongBao(
+      [gd.chuPhienId],
+      'GIAODICH_DA_THANH_TOAN',
+      'Người thắng báo đã chuyển khoản',
+      'Vui lòng kiểm tra và xác nhận đã nhận tiền.',
+      id,
+    );
+    return updated;
+  }
+
+  async xacNhanNhanTien(userId: string, id: string): Promise<GiaoDich> {
+    const gd = await this.layVaKiemTra(id);
+    this.kiemTraVai(gd, userId, 'CHU_PHIEN');
+    this.kiemTraTrangThai(gd, TrangThaiGiaoDich.DA_THANH_TOAN);
+
+    const updated = await this.capNhat(id, { thoiDiemChuPhienXacNhanTien: new Date() });
+    await this.auditLogService.logAction(userId, 'GIAODICH_XAC_NHAN_TIEN', 'GiaoDich', id, null, null);
+    return updated;
+  }
+
+  async hoanTat(userId: string, id: string): Promise<GiaoDich> {
+    const gd = await this.layVaKiemTra(id);
+    this.kiemTraVai(gd, userId, 'CHU_PHIEN');
+    this.kiemTraTrangThai(gd, TrangThaiGiaoDich.DA_THANH_TOAN);
+
+    const updated = await this.capNhat(id, {
+      trangThai: TrangThaiGiaoDich.HOAN_TAT,
+      thoiDiemHoanTat: new Date(),
+    });
+    await this.auditLogService.logAction(userId, 'GIAODICH_HOAN_TAT', 'GiaoDich', id, null, null);
+    await this.guiThongBao(
+      [gd.chuPhienId, gd.nguoiThangId],
+      'GIAODICH_HOAN_TAT',
+      'Giao dịch hoàn tất',
+      'Giao dịch đã hoàn tất thành công.',
+      id,
+    );
+    return updated;
+  }
+
+  async getChiTiet(userId: string, id: string, userRole: string): Promise<any> {
+    const gd = await this.layVaKiemTra(id);
+    const isChuPhien = gd.chuPhienId === userId;
+    const isNguoiThang = gd.nguoiThangId === userId;
+    const isAdmin = userRole === 'ADMIN';
+    if (!isChuPhien && !isNguoiThang && !isAdmin) {
+      throw ApiError.Forbidden('Bạn không có quyền xem giao dịch này');
+    }
+
+    const daXacNhan = gd.trangThai !== TrangThaiGiaoDich.CHO_XAC_NHAN
+      && gd.trangThai !== TrangThaiGiaoDich.THAT_BAI;
+    if (!daXacNhan) return { ...gd };
+
+    const [chuPhien, nguoiThang] = await Promise.all([
+      this.usersService.getOne({ where: { _id: gd.chuPhienId } }),
+      this.usersService.getOne({ where: { _id: gd.nguoiThangId } }),
+    ]);
+
+    const lienHe = {
+      chuPhien: this.trichLienHe(chuPhien),
+      nguoiThang: this.trichLienHe(nguoiThang),
+    };
+
+    const result: any = { ...gd, lienHe };
+    if (gd.loaiPhien === LoaiPhien.DAU_GIA && chuPhien) {
+      result.thongTinChuyenKhoan = {
+        tenNganHang: chuPhien.tenNganHang ?? null,
+        soTaiKhoan: chuPhien.soTaiKhoan ?? null,
+        tenTaiKhoan: chuPhien.tenTaiKhoan ?? null,
+        soTien: gd.giaChot ?? null,
+        noiDungCK: `GD ${gd._id}`,
+      };
+    }
+    return result;
+  }
+
+  private trichLienHe(u: any): any {
+    if (!u) return null;
+    return { fullname: u.fullname, email: u.email, phone: u.phone, diaChi: u.diaChi ?? null };
   }
 
   private async guiThongBao(

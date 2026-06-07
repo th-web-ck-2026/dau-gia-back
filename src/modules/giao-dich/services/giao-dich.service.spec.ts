@@ -131,4 +131,70 @@ describe('GiaoDichService', () => {
       expect(res.lyDoThatBai).toBe(LyDoThatBai.TU_CHOI);
     });
   });
+
+  describe('luồng thanh toán (đấu giá)', () => {
+    const base = {
+      _id: 'gd1', nguoiThangId: 'winner1', chuPhienId: 'host1',
+      loaiPhien: LoaiPhien.DAU_GIA,
+    };
+
+    it('người thắng báo đã chuyển khoản → DA_THANH_TOAN', async () => {
+      repo.getById.mockResolvedValue({ ...base, trangThai: TrangThaiGiaoDich.CHO_THANH_TOAN });
+      repo.updateOne.mockImplementation(async (v: any) => ({ ...base, ...v }));
+
+      const res = await service.baoDaChuyenKhoan('winner1', 'gd1', { anhChungTu: ['a.jpg'] });
+      expect(res.trangThai).toBe(TrangThaiGiaoDich.DA_THANH_TOAN);
+      expect(res.anhChungTu).toEqual(['a.jpg']);
+    });
+
+    it('chủ phiên xác nhận nhận tiền → set mốc thời gian, vẫn DA_THANH_TOAN', async () => {
+      repo.getById.mockResolvedValue({ ...base, trangThai: TrangThaiGiaoDich.DA_THANH_TOAN });
+      repo.updateOne.mockImplementation(async (v: any) => ({ ...base, trangThai: TrangThaiGiaoDich.DA_THANH_TOAN, ...v }));
+
+      const res = await service.xacNhanNhanTien('host1', 'gd1');
+      expect(res.thoiDiemChuPhienXacNhanTien).toBeInstanceOf(Date);
+    });
+
+    it('chủ phiên hoàn tất → HOAN_TAT', async () => {
+      repo.getById.mockResolvedValue({ ...base, trangThai: TrangThaiGiaoDich.DA_THANH_TOAN });
+      repo.updateOne.mockImplementation(async (v: any) => ({ ...base, ...v }));
+
+      const res = await service.hoanTat('host1', 'gd1');
+      expect(res.trangThai).toBe(TrangThaiGiaoDich.HOAN_TAT);
+    });
+  });
+
+  describe('getChiTiet', () => {
+    it('chưa xác nhận → không lộ liên hệ', async () => {
+      repo.getById.mockResolvedValue({
+        _id: 'gd1', nguoiThangId: 'winner1', chuPhienId: 'host1',
+        loaiPhien: LoaiPhien.DAU_GIA, trangThai: TrangThaiGiaoDich.CHO_XAC_NHAN,
+      });
+      const res = await service.getChiTiet('host1', 'gd1', 'USER');
+      expect(res.lienHe).toBeUndefined();
+    });
+
+    it('đã xác nhận → lộ liên hệ 2 bên + thông tin CK chủ phiên', async () => {
+      repo.getById.mockResolvedValue({
+        _id: 'gd1', nguoiThangId: 'winner1', chuPhienId: 'host1',
+        loaiPhien: LoaiPhien.DAU_GIA, trangThai: TrangThaiGiaoDich.CHO_THANH_TOAN, giaChot: 500,
+      });
+      mockUsersService.getOne
+        .mockResolvedValueOnce({ _id: 'host1', fullname: 'Chủ', email: 'h@x.com', phone: '0900000000', diaChi: 'HN', tenNganHang: 'VCB', soTaiKhoan: '123', tenTaiKhoan: 'CHU' })
+        .mockResolvedValueOnce({ _id: 'winner1', fullname: 'Thắng', email: 'w@x.com', phone: '0911111111', diaChi: 'HCM' });
+
+      const res = await service.getChiTiet('winner1', 'gd1', 'USER');
+      expect(res.lienHe.chuPhien.email).toBe('h@x.com');
+      expect(res.lienHe.nguoiThang.phone).toBe('0911111111');
+      expect(res.thongTinChuyenKhoan.soTaiKhoan).toBe('123');
+    });
+
+    it('người ngoài cuộc → Forbidden', async () => {
+      repo.getById.mockResolvedValue({
+        _id: 'gd1', nguoiThangId: 'winner1', chuPhienId: 'host1',
+        loaiPhien: LoaiPhien.DAU_GIA, trangThai: TrangThaiGiaoDich.CHO_THANH_TOAN,
+      });
+      await expect(service.getChiTiet('nguoila', 'gd1', 'USER')).rejects.toThrow(ApiError);
+    });
+  });
 });
