@@ -354,6 +354,13 @@ export class AuthService implements OnModuleInit {
     if (!user) {
       throw ApiError.NotFound('Email không tồn tại');
     }
+    const authProvider = await this.authProviderService.findByProvider(
+      AuthProvider.EMAIL,
+      email,
+    );
+    if (!authProvider) {
+      throw ApiError.BadRequest('Tài khoản này được đăng ký bằng hình thức khác (ví dụ: Google), không thể đặt lại mật khẩu');
+    }
     const token = await this.generateToken({ id: user._id }, expiresIn);
     this.sendMailService.sendPasswordReset(user, token).catch((err) => {
       console.error(`Failed to send password reset email to ${email}:`, err);
