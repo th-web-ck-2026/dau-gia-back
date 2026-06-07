@@ -14,6 +14,7 @@ import { ToChucProfileModel } from '@/modules/to-chuc-profile/models/to-chuc-pro
 import { XacMinhUserModel } from '@/modules/xac-minh-user/models/xac-minh-user.model';
 import { LoaiDanhMucModel } from '@/modules/danh-muc-chung/models/loai-danh-muc.model';
 import { DanhMucModel } from '@/modules/danh-muc-chung/models/danh-muc.model';
+import { ThongKeModel } from '@/modules/thong-ke/models/thong-ke.model';
 
 export const SequelizeModel: ModelCtor<Model>[] = [
   UserModel,
@@ -31,4 +32,5 @@ export const SequelizeModel: ModelCtor<Model>[] = [
   XacMinhUserModel,
   LoaiDanhMucModel,
   DanhMucModel,
+  ThongKeModel,
 ];

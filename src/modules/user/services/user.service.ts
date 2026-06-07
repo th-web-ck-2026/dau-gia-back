@@ -9,9 +9,11 @@ import { AuthUser } from '@/common/interfaces/auth-user.interface';
 import * as bcrypt from 'bcrypt';
 import { ConditionUserDto } from '../dto/condition-user.dto';
 import { PageableDto } from '@/common/dto/pageable.dto';
-import { UserRoles, UserStatus } from '../common/constant';
+import { UserRoles, UserStatus, UserRoleType } from '../common/constant';
 import { QueryOption } from '@/common/pipe/query-option.interface';
 import { Op } from 'sequelize';
+import { UpdateUserAdminDto } from '../dto/update-user-admin.dto';
+
 @Injectable()
 export class UsersService extends BaseService<User> {
   constructor(private readonly userRepository: UserRepository) {
@@ -75,5 +77,47 @@ export class UsersService extends BaseService<User> {
       },
       query,
     );
+  }
+
+  async getPageAdmin(
+    condition: any,
+    query: QueryOption,
+  ): Promise<PageableDto<User>> {
+    return this.userRepository.getPage(
+      {
+        where: condition,
+      },
+      query,
+    );
+  }
+
+  async updateUserByAdmin(userId: string, updateDto: UpdateUserAdminDto) {
+    const { phone, email } = updateDto;
+    if (phone) {
+      const existingUser = await this.userRepository.getOne({
+        where: { phone },
+        attributes: ['_id'],
+      });
+      if (existingUser && existingUser._id !== userId) {
+        throw ApiError.Conflict('Số điện thoại đã tồn tại');
+      }
+    }
+    if (email) {
+      const existingUser = await this.userRepository.getOne({
+        where: { email },
+        attributes: ['_id'],
+      });
+      if (existingUser && existingUser._id !== userId) {
+        throw ApiError.Conflict('Email đã tồn tại');
+      }
+    }
+
+    const updatedUser = await this.userRepository.updateOne(updateDto, {
+      where: { _id: userId },
+    });
+    if (!updatedUser) {
+      throw ApiError.NotFound('Người dùng không tồn tại');
+    }
+    return updatedUser;
   }
 }
