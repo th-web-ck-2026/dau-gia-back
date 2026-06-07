@@ -285,7 +285,7 @@ export class AuctionController {
     @ReqUser() user: AuthUser,
     @Param('id') id: string,
   ): Promise<AuctionRankingResponse> {
-    return this.auctionService.getRanking(user.id, id);
+    return this.auctionService.getRanking(user.id, id, user.role);
   }
 
   @Public()

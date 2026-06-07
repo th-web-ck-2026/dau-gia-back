@@ -292,11 +292,13 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
     for (const bid of highestBids) {
       const priceScore = this.scoringService.calculateAuctionPriceScore(Number(bid.giaDat), highestBidPrice);
       const finalScore = priceScore;
+      const time = new Date(bid.thoiDiemDat).getTime();
 
       scoredBids.push({
         bid,
         priceScore,
         finalScore,
+        time,
       });
     }
 
@@ -304,31 +306,36 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
       if (Math.abs(b.finalScore - a.finalScore) > 1e-9) {
         return b.finalScore - a.finalScore;
       }
-      return new Date(a.bid.thoiDiemDat).getTime() - new Date(b.bid.thoiDiemDat).getTime();
+      return a.time - b.time;
     });
 
     let rank = 1;
     let winnerUserId: string | null = null;
     const loserUserIds: string[] = [];
+    const dbPromises: Promise<any>[] = [];
 
     for (const item of scoredBids) {
       const participantId = item.bid.nguoiThamGiaId;
       const isWinner = rank === 1;
 
-      await this.auctionBidRepository.updateOne(
-        {
-          trangThai: isWinner ? TrangThaiDeXuat.THANG : TrangThaiDeXuat.THUA,
-          diemChuanHoaGia: item.priceScore,
-          diemTongHop: item.finalScore,
-          thuHang: rank,
-        },
-        { where: { _id: item.bid._id } },
+      dbPromises.push(
+        this.auctionBidRepository.updateOne(
+          {
+            trangThai: isWinner ? TrangThaiDeXuat.THANG : TrangThaiDeXuat.THUA,
+            diemChuanHoaGia: item.priceScore,
+            diemTongHop: item.finalScore,
+            thuHang: rank,
+          },
+          { where: { _id: item.bid._id } },
+        )
       );
 
       if (isWinner) {
-        await this.auctionSessionRepository.updateOne(
-          { deXuatThangId: item.bid._id },
-          { where: { _id: sessionId } },
+        dbPromises.push(
+          this.auctionSessionRepository.updateOne(
+            { deXuatThangId: item.bid._id },
+            { where: { _id: sessionId } },
+          )
         );
         winnerUserId = participantId;
       } else {
@@ -341,16 +348,20 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
     const lowerBids = bids.filter((b) => !highestBidIds.has(b._id));
     for (const bid of lowerBids) {
       const priceScore = this.scoringService.calculateAuctionPriceScore(Number(bid.giaDat), highestBidPrice);
-      await this.auctionBidRepository.updateOne(
-        {
-          trangThai: TrangThaiDeXuat.THUA,
-          diemChuanHoaGia: priceScore,
-          diemTongHop: priceScore,
-          thuHang: null,
-        },
-        { where: { _id: bid._id } },
+      dbPromises.push(
+        this.auctionBidRepository.updateOne(
+          {
+            trangThai: TrangThaiDeXuat.THUA,
+            diemChuanHoaGia: priceScore,
+            diemTongHop: priceScore,
+            thuHang: null,
+          },
+          { where: { _id: bid._id } },
+        )
       );
     }
+
+    await Promise.all(dbPromises);
 
     await this.auditLogService.logAction(userId, 'EVALUATE_AUCTION_SESSION', 'AuctionSession', sessionId, null, null);
 
@@ -382,7 +393,7 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
       console.error('Failed to send auction result notifications:', err);
     }
 
-    return this.getRanking(userId, sessionId);
+    return this.getRanking(userId, sessionId, userRole);
   }
 
   async getSessionDetails(sessionId: string): Promise<AuctionSession> {
@@ -482,7 +493,7 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
     };
   }
 
-  async getRanking(userId: string, sessionId: string): Promise<AuctionRankingResponse> {
+  async getRanking(userId: string, sessionId: string, userRole?: string): Promise<AuctionRankingResponse> {
     let session = await this.auctionSessionRepository.getOne({ where: { _id: sessionId } });
     if (!session) {
       throw ApiError.NotFound('Phien dau gia khong ton tai');
@@ -491,6 +502,7 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
     session = await this.checkAndTransitionStateInternal(session);
 
     const isOwner = session.chuPhienId === userId;
+    const isAdmin = userRole === UserRoles.ADMIN;
     const bids = await this.auctionBidRepository.getMany({
       where: { phienId: sessionId },
       include: [
@@ -511,22 +523,38 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
     const highestBidPrice = Math.max(...bids.map((b) => Number(b.giaDat)), 0);
     const isClosed = session.trangThai === TrangThaiPhien.DONG;
 
+    // Pre-calculate parsed values for uniqueBids to optimize sorting
+    const enrichedBids = uniqueBids.map((bid) => ({
+      bid,
+      time: new Date(bid.thoiDiemDat).getTime(),
+      price: Number(bid.giaDat),
+      thuHang: bid.thuHang,
+      diemTongHop: bid.diemTongHop !== undefined && bid.diemTongHop !== null ? Number(bid.diemTongHop) : null,
+    }));
+
     if (isClosed) {
-      uniqueBids.sort((a, b) => {
+      enrichedBids.sort((a, b) => {
         if (a.thuHang && b.thuHang) return a.thuHang - b.thuHang;
-        return (b.diemTongHop ?? 0) - (a.diemTongHop ?? 0);
-      });
-    } else {
-      uniqueBids.sort((a, b) => {
-        const priceDiff = Number(b.giaDat) - Number(a.giaDat);
+        if (a.diemTongHop !== null && b.diemTongHop !== null) return b.diemTongHop - a.diemTongHop;
+        
+        const priceDiff = b.price - a.price;
         if (Math.abs(priceDiff) > 1e-9) {
           return priceDiff;
         }
-        return new Date(a.thoiDiemDat).getTime() - new Date(b.thoiDiemDat).getTime();
+        return a.time - b.time;
+      });
+    } else {
+      enrichedBids.sort((a, b) => {
+        const priceDiff = b.price - a.price;
+        if (Math.abs(priceDiff) > 1e-9) {
+          return priceDiff;
+        }
+        return a.time - b.time;
       });
     }
 
-    const resultList = uniqueBids.map((bid, index) => {
+    const resultList = enrichedBids.map((item, index) => {
+      const bid = item.bid;
       const isSelf = bid.nguoiThamGiaId === userId;
       const userObj = (bid as any).nguoiThamGia;
 
@@ -534,14 +562,14 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
       let participantId = bid.nguoiThamGiaId;
       let participantInfo = null;
 
-      if (session.anDanh && !isOwner && !isSelf) {
+      if (session.anDanh && !isOwner && !isAdmin && !isSelf) {
         participantId = 'ANONYMOUS';
       } else {
         bietDanh = userObj?.fullname || bid.nguoiThamGiaId;
         participantInfo = userObj;
       }
 
-      const calculatedPriceScore = highestBidPrice > 0 ? (Number(bid.giaDat) / highestBidPrice) * 100 : 0;
+      const calculatedPriceScore = highestBidPrice > 0 ? (item.price / highestBidPrice) * 100 : 0;
       const rank = isClosed && bid.thuHang ? bid.thuHang : (index + 1);
       const state = isClosed && bid.trangThai ? bid.trangThai : (rank === 1 ? TrangThaiDeXuat.THANG : TrangThaiDeXuat.THUA);
       const score = isClosed && bid.diemTongHop !== undefined && bid.diemTongHop !== null ? Number(bid.diemTongHop) : calculatedPriceScore;
