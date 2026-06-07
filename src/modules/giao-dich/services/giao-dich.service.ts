@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Op } from 'sequelize';
 import { BaseService } from '@Base/base.service';
 import { GiaoDich } from '../entities/giao-dich.entity';
 import { GiaoDichRepository } from '../repositories/giao-dich.repository';
@@ -9,6 +10,8 @@ import { NotificationService } from '@/modules/notification/services/notificatio
 import { AuditLogService } from '@/modules/audit-log/services/audit-log.service';
 import { ApiError } from '@Exceptions/api-error';
 import { DaChuyenKhoanDto } from '../dto/da-chuyen-khoan.dto';
+import { GhiChuDto } from '../dto/ghi-chu.dto';
+import { ConditionGiaoDichDto } from '../dto/condition-giao-dich.dto';
 
 interface TaoTuPhienInput {
   phienId: string;
@@ -237,5 +240,132 @@ export class GiaoDichService extends BaseService<GiaoDich> {
     } catch (err) {
       // Không chặn flow nếu gửi thông báo lỗi
     }
+  }
+
+  async kyHopDong(userId: string, id: string): Promise<GiaoDich> {
+    const gd = await this.layVaKiemTra(id);
+    const isChuPhien = gd.chuPhienId === userId;
+    const isNguoiThang = gd.nguoiThangId === userId;
+    if (!isChuPhien && !isNguoiThang) {
+      throw ApiError.Forbidden('Bạn không có quyền ký hợp đồng này');
+    }
+    this.kiemTraTrangThai(gd, TrangThaiGiaoDich.CHO_KY_HOP_DONG);
+
+    const chuPhienDaKy = isChuPhien ? true : gd.chuPhienDaKy;
+    const nguoiThangDaKy = isNguoiThang ? true : gd.nguoiThangDaKy;
+    const duHaiBen = chuPhienDaKy && nguoiThangDaKy;
+
+    const updated = await this.capNhat(id, {
+      chuPhienDaKy,
+      nguoiThangDaKy,
+      trangThai: duHaiBen ? TrangThaiGiaoDich.DA_KY_HOP_DONG : TrangThaiGiaoDich.CHO_KY_HOP_DONG,
+    });
+    await this.auditLogService.logAction(userId, 'GIAODICH_KY_HD', 'GiaoDich', id, null, null);
+    if (duHaiBen) {
+      await this.guiThongBao(
+        [gd.chuPhienId, gd.nguoiThangId],
+        'GIAODICH_CAN_BAN_GIAO',
+        'Hợp đồng đã ký đủ 2 bên',
+        'Tiến hành bàn giao.',
+        id,
+      );
+    }
+    return updated;
+  }
+
+  async banGiao(userId: string, id: string): Promise<GiaoDich> {
+    const gd = await this.layVaKiemTra(id);
+    this.kiemTraVai(gd, userId, 'CHU_PHIEN');
+    this.kiemTraTrangThai(gd, TrangThaiGiaoDich.DA_KY_HOP_DONG);
+
+    const updated = await this.capNhat(id, {
+      trangThai: TrangThaiGiaoDich.DANG_BAN_GIAO,
+      daBanGiao: true,
+    });
+    await this.auditLogService.logAction(userId, 'GIAODICH_BAN_GIAO', 'GiaoDich', id, null, null);
+    await this.guiThongBao(
+      [gd.nguoiThangId],
+      'GIAODICH_CAN_XAC_NHAN_NHAN',
+      'Chủ phiên đã bàn giao',
+      'Vui lòng xác nhận đã nhận để hoàn tất.',
+      id,
+    );
+    return updated;
+  }
+
+  async xacNhanNhan(userId: string, id: string): Promise<GiaoDich> {
+    const gd = await this.layVaKiemTra(id);
+    this.kiemTraVai(gd, userId, 'NGUOI_THANG');
+    this.kiemTraTrangThai(gd, TrangThaiGiaoDich.DANG_BAN_GIAO);
+
+    const updated = await this.capNhat(id, {
+      trangThai: TrangThaiGiaoDich.HOAN_TAT,
+      nguoiThangXacNhanNhan: true,
+      thoiDiemHoanTat: new Date(),
+    });
+    await this.auditLogService.logAction(userId, 'GIAODICH_XAC_NHAN_NHAN', 'GiaoDich', id, null, null);
+    await this.guiThongBao(
+      [gd.chuPhienId, gd.nguoiThangId],
+      'GIAODICH_HOAN_TAT',
+      'Giao dịch hoàn tất',
+      'Giao dịch đã hoàn tất thành công.',
+      id,
+    );
+    return updated;
+  }
+
+  async capNhatGhiChu(userId: string, id: string, dto: GhiChuDto): Promise<GiaoDich> {
+    const gd = await this.layVaKiemTra(id);
+    const isChuPhien = gd.chuPhienId === userId;
+    const isNguoiThang = gd.nguoiThangId === userId;
+    if (!isChuPhien && !isNguoiThang) {
+      throw ApiError.Forbidden('Bạn không có quyền ghi chú giao dịch này');
+    }
+    const daXacNhan = gd.trangThai !== TrangThaiGiaoDich.CHO_XAC_NHAN
+      && gd.trangThai !== TrangThaiGiaoDich.THAT_BAI
+      && gd.trangThai !== TrangThaiGiaoDich.DA_HUY;
+    if (!daXacNhan) {
+      throw ApiError.BadRequest('Chỉ ghi chú liên hệ sau khi giao dịch được xác nhận');
+    }
+
+    const values = isChuPhien
+      ? { ghiChuLienHeChuPhien: dto.ghiChu }
+      : { ghiChuLienHeNguoiThang: dto.ghiChu };
+    return this.capNhat(id, values);
+  }
+
+  async huy(userId: string, id: string): Promise<GiaoDich> {
+    const gd = await this.layVaKiemTra(id);
+    this.kiemTraVai(gd, userId, 'CHU_PHIEN');
+    const terminal = [TrangThaiGiaoDich.HOAN_TAT, TrangThaiGiaoDich.THAT_BAI, TrangThaiGiaoDich.DA_HUY];
+    if (terminal.includes(gd.trangThai)) {
+      throw ApiError.BadRequest('Giao dịch đã kết thúc, không thể hủy');
+    }
+    const updated = await this.capNhat(id, { trangThai: TrangThaiGiaoDich.DA_HUY });
+    await this.auditLogService.logAction(userId, 'GIAODICH_HUY', 'GiaoDich', id, null, null);
+    await this.guiThongBao(
+      [gd.chuPhienId, gd.nguoiThangId],
+      'GIAODICH_THAT_BAI',
+      'Giao dịch đã bị hủy',
+      'Chủ phiên đã hủy giao dịch này.',
+      id,
+    );
+    return updated;
+  }
+
+  async getPageMe(
+    userId: string,
+    condition: ConditionGiaoDichDto,
+    query: any,
+  ): Promise<any> {
+    return this.giaoDichRepository.getPage(
+      {
+        where: {
+          ...(condition as any),
+          [Op.or]: [{ chuPhienId: userId }, { nguoiThangId: userId }],
+        },
+      },
+      query,
+    );
   }
 }

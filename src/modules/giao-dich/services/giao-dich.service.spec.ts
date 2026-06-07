@@ -197,4 +197,97 @@ describe('GiaoDichService', () => {
       await expect(service.getChiTiet('nguoila', 'gd1', 'USER')).rejects.toThrow(ApiError);
     });
   });
+
+  describe('luồng đấu thầu (ký HĐ + bàn giao)', () => {
+    const base = {
+      _id: 'gd1', nguoiThangId: 'winner1', chuPhienId: 'host1',
+      loaiPhien: LoaiPhien.DAU_THAU,
+    };
+
+    it('chủ phiên ký → chỉ set chuPhienDaKy, vẫn CHO_KY_HOP_DONG', async () => {
+      repo.getById.mockResolvedValue({ ...base, trangThai: TrangThaiGiaoDich.CHO_KY_HOP_DONG, chuPhienDaKy: false, nguoiThangDaKy: false });
+      repo.updateOne.mockImplementation(async (v: any) => ({ ...base, trangThai: TrangThaiGiaoDich.CHO_KY_HOP_DONG, nguoiThangDaKy: false, ...v }));
+
+      const res = await service.kyHopDong('host1', 'gd1');
+      expect(res.chuPhienDaKy).toBe(true);
+      expect(res.trangThai).toBe(TrangThaiGiaoDich.CHO_KY_HOP_DONG);
+    });
+
+    it('người thắng ký khi chủ phiên đã ký → DA_KY_HOP_DONG', async () => {
+      repo.getById.mockResolvedValue({ ...base, trangThai: TrangThaiGiaoDich.CHO_KY_HOP_DONG, chuPhienDaKy: true, nguoiThangDaKy: false });
+      repo.updateOne.mockImplementation(async (v: any) => ({ ...base, chuPhienDaKy: true, ...v }));
+
+      const res = await service.kyHopDong('winner1', 'gd1');
+      expect(res.nguoiThangDaKy).toBe(true);
+      expect(res.trangThai).toBe(TrangThaiGiaoDich.DA_KY_HOP_DONG);
+    });
+
+    it('chủ phiên bàn giao → DANG_BAN_GIAO', async () => {
+      repo.getById.mockResolvedValue({ ...base, trangThai: TrangThaiGiaoDich.DA_KY_HOP_DONG });
+      repo.updateOne.mockImplementation(async (v: any) => ({ ...base, ...v }));
+
+      const res = await service.banGiao('host1', 'gd1');
+      expect(res.trangThai).toBe(TrangThaiGiaoDich.DANG_BAN_GIAO);
+      expect(res.daBanGiao).toBe(true);
+    });
+
+    it('người thắng xác nhận nhận → HOAN_TAT', async () => {
+      repo.getById.mockResolvedValue({ ...base, trangThai: TrangThaiGiaoDich.DANG_BAN_GIAO });
+      repo.updateOne.mockImplementation(async (v: any) => ({ ...base, ...v }));
+
+      const res = await service.xacNhanNhan('winner1', 'gd1');
+      expect(res.trangThai).toBe(TrangThaiGiaoDich.HOAN_TAT);
+      expect(res.nguoiThangXacNhanNhan).toBe(true);
+    });
+  });
+
+  describe('capNhatGhiChu', () => {
+    it('chủ phiên cập nhật ghi chú của mình', async () => {
+      repo.getById.mockResolvedValue({
+        _id: 'gd1', nguoiThangId: 'winner1', chuPhienId: 'host1',
+        loaiPhien: LoaiPhien.DAU_GIA, trangThai: TrangThaiGiaoDich.CHO_THANH_TOAN,
+      });
+      repo.updateOne.mockImplementation(async (v: any) => ({ _id: 'gd1', ...v }));
+
+      const res = await service.capNhatGhiChu('host1', 'gd1', { ghiChu: 'Gặp 9h' });
+      expect(res.ghiChuLienHeChuPhien).toBe('Gặp 9h');
+    });
+
+    it('chưa xác nhận → BadRequest', async () => {
+      repo.getById.mockResolvedValue({
+        _id: 'gd1', nguoiThangId: 'winner1', chuPhienId: 'host1',
+        loaiPhien: LoaiPhien.DAU_GIA, trangThai: TrangThaiGiaoDich.CHO_XAC_NHAN,
+      });
+      await expect(service.capNhatGhiChu('host1', 'gd1', { ghiChu: 'x' })).rejects.toThrow(ApiError);
+    });
+  });
+
+  describe('huy', () => {
+    it('chủ phiên hủy giao dịch non-terminal → DA_HUY', async () => {
+      repo.getById.mockResolvedValue({
+        _id: 'gd1', nguoiThangId: 'winner1', chuPhienId: 'host1',
+        loaiPhien: LoaiPhien.DAU_GIA, trangThai: TrangThaiGiaoDich.CHO_THANH_TOAN,
+      });
+      repo.updateOne.mockImplementation(async (v: any) => ({ _id: 'gd1', ...v }));
+
+      const res = await service.huy('host1', 'gd1');
+      expect(res.trangThai).toBe(TrangThaiGiaoDich.DA_HUY);
+    });
+
+    it('hủy giao dịch đã HOAN_TAT → BadRequest', async () => {
+      repo.getById.mockResolvedValue({
+        _id: 'gd1', nguoiThangId: 'winner1', chuPhienId: 'host1',
+        loaiPhien: LoaiPhien.DAU_GIA, trangThai: TrangThaiGiaoDich.HOAN_TAT,
+      });
+      await expect(service.huy('host1', 'gd1')).rejects.toThrow(ApiError);
+    });
+  });
+
+  describe('getPageMe', () => {
+    it('lọc giao dịch mà tôi là chủ phiên HOẶC người thắng', async () => {
+      repo.getPage.mockResolvedValue({ data: [], total: 0 } as any);
+      await service.getPageMe('u1', {}, {});
+      expect(repo.getPage).toHaveBeenCalled();
+    });
+  });
 });
