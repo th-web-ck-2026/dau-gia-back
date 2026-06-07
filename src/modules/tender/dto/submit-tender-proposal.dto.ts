@@ -15,10 +15,6 @@ export class SubmitTenderProposalDto {
   @IsOptional()
   phienId: string;
 
-  @IsNumber()
-  @IsNotEmpty()
-  giaDeXuat: number;
-
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => SubmissionValueDto)

@@ -15,9 +15,6 @@ export class TenderSubmission implements BaseEntity {
   @ApiProperty({ enum: TrangThaiDeXuat })
   trangThai: TrangThaiDeXuat;
 
-  @ApiProperty()
-  giaDeXuat: number;
-
   @ApiPropertyOptional()
   diemKyThuat?: number;
 

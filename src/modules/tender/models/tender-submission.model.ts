@@ -63,12 +63,6 @@ export class TenderSubmissionModel extends Model implements TenderSubmission {
   trangThai: TrangThaiDeXuat;
 
   @Column({
-    type: DataType.DECIMAL,
-    allowNull: false,
-  })
-  giaDeXuat: number;
-
-  @Column({
     type: DataType.FLOAT,
   })
   diemKyThuat?: number;

@@ -228,14 +228,13 @@ describe('TenderService', () => {
         _id: 'sub1',
         phienId: 'session1',
         nguoiThamGiaId: 'user1',
-        giaDeXuat: 800,
       };
       sessionRepo.getOne.mockResolvedValue(session);
       submissionRepo.create.mockResolvedValue(mockSubmission);
       submissionValueRepo.create.mockResolvedValue({});
 
-      const dto = { phienId: 'session1', giaDeXuat: 800, giaTriTieuChi: [] };
-      const res = await service.submitProposal('user1', dto);
+      const dto = { phienId: 'session1', giaTriTieuChi: [] };
+      const res = await service.submitProposal('user1', dto as any);
 
       expect(res).toEqual(mockSubmission);
       expect(auditLogService.logAction).toHaveBeenCalledWith(
@@ -269,7 +268,6 @@ describe('TenderService', () => {
         _id: 'sub1',
         phienId: 'session1',
         nguoiThamGiaId: 'user2',
-        giaDeXuat: 100,
         trangThai: TrangThaiDeXuat.HOP_LE,
       };
 
@@ -328,7 +326,6 @@ describe('TenderService', () => {
         _id: 'sub1',
         phienId: 'session1',
         nguoiThamGiaId: 'user2',
-        giaDeXuat: 100,
         trangThai: TrangThaiDeXuat.HOP_LE,
       };
 

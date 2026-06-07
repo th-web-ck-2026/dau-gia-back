@@ -233,7 +233,6 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
       phienId: dto.phienId,
       nguoiThamGiaId: userId,
       trangThai: TrangThaiDeXuat.CHO_DUYET,
-      giaDeXuat: dto.giaDeXuat,
       thoiDiemNop: now,
     });
 
