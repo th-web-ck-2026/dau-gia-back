@@ -20,8 +20,9 @@
 | BACK-9 | Module Review & Hardening | ✅ DONE |
 | BACK-10 | Danh Muc Chung Relational | ✅ DONE |
 | BACK-11 | Báo Cáo User | ✅ DONE |
+| BACK-12 | Giao Dịch Hậu Kỳ | ✅ DONE |
 
-**Đang ở:** Backend phases + đợt rà soát hardening đã xong. Sẵn sàng cho frontend integration.
+**Đang ở:** BACK-12 đã xong. Sẵn sàng cho phase tiếp theo.
 
 ---
 
@@ -124,6 +125,25 @@ Báo cáo: `docs/html-tailwind/module-review-report.html`
 - **Ban user**: tái dùng API sẵn có `PUT /user/admin/:id` với `{ userStatus: BLOCKED }` — không tạo logic ban trùng trong module này
 - Build pass (cần Node ≥16 cho `nest build`)
 
+### ✅ BACK-12: Giao Dịch Hậu Kỳ (module `giao-dich`)
+
+**Mục tiêu:** Xử lý toàn bộ luồng sau khi có người thắng đấu giá/đấu thầu: xác nhận (48h) → thanh toán (đấu giá) / ký HĐ + bàn giao (đấu thầu) → hoàn tất, kèm lộ thông tin liên hệ 2 bên.
+
+**Đã hoàn thành:**
+- `giao-dich/common/constants.ts` — enum `TrangThaiGiaoDich` (10 trạng thái), `LyDoThatBai`, `HAN_XAC_NHAN_GIO=48`
+- `giao-dich/entities/`, `models/`, `repositories/` — data layer đầy đủ
+- `giao-dich/dto/` — ConditionGiaoDichDto, DaChuyenKhoanDto, GhiChuDto
+- `GiaoDichService` — state machine 13 methods: taoTuPhien (idempotent), xacNhan/tuChoi, baoDaChuyenKhoan/xacNhanNhanTien/hoanTat (đấu giá), kyHopDong/banGiao/xacNhanNhan (đấu thầu), capNhatGhiChu, huy, getChiTiet (lộ liên hệ + thông tin CK), getPageMe
+- `GiaoDichController` — 12 endpoints prefix `/giao-dich`
+- `GiaoDichModule` + đăng ký `AppModule`
+- Tích hợp `evaluateSession` (auction + tender) gọi `taoTuPhien`
+- Cron `xuLyGiaoDichQuaHan` — quét CHO_XAC_NHAN quá hanXacNhan → THAT_BAI/QUA_HAN
+- 106 tests pass
+
+**Điều chỉnh so với spec:**
+- Thông tin CK lấy realtime từ `user` (tenNganHang, soTaiKhoan, tenTaiKhoan) — không snapshot
+- NotificationModule + AuditLogModule dùng @Global() → chỉ inject, không import
+
 ---
 
 ## Vấn đề kỹ thuật cần lưu ý
@@ -141,4 +161,4 @@ Sau mỗi task/phase hoàn thành, AI worker cập nhật:
 2. Cập nhật chi tiết phase tương ứng (tick checkbox, ghi chú file đã tạo)
 3. Cập nhật dòng "Đang ở:" để chỉ phase tiếp theo
 
-_Last updated: 2026-06-07 (BACK-11 Báo Cáo User)_
+_Last updated: 2026-06-08 (BACK-12 Giao Dịch Hậu Kỳ)_

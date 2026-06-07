@@ -11,7 +11,8 @@ import { UserRoles } from '@/modules/user/common/constant';
 import { CreateAuctionSessionDto } from '../dto/create-auction-session.dto';
 import { PlaceAuctionBidDto } from '../dto/place-auction-bid.dto';
 import { ApiError } from '@/common/exceptions/api-error';
-import { TrangThaiPhien, TrangThaiDeXuat } from '@/modules/scoring/common/constants';
+import { TrangThaiPhien, TrangThaiDeXuat, LoaiPhien } from '@/modules/scoring/common/constants';
+import { GiaoDichService } from '@/modules/giao-dich/services/giao-dich.service';
 import { Op, Transaction } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { AuctionSessionStatusDto } from '../dto/auction-session-status.dto';
@@ -32,6 +33,7 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
     private readonly auditLogService: AuditLogService,
     private readonly notificationService: NotificationService,
     private readonly sequelize: Sequelize,
+    private readonly giaoDichService: GiaoDichService,
   ) {
     super(auctionSessionRepository);
   }
@@ -408,6 +410,16 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
       }
     } catch (err) {
       console.error('Failed to send auction result notifications:', err);
+    }
+
+    if (winnerUserId) {
+      await this.giaoDichService.taoTuPhien({
+        phienId: sessionId,
+        loaiPhien: LoaiPhien.DAU_GIA,
+        chuPhienId: session.chuPhienId,
+        nguoiThangId: winnerUserId,
+        giaChot: highestBidPrice,
+      });
     }
 
     return this.getRanking(userId, sessionId, userRole);

@@ -29,6 +29,7 @@ import { XacMinhUserModule } from './modules/xac-minh-user/xac-minh-user.module'
 import { DanhMucChungModule } from './modules/danh-muc-chung/danh-muc-chung.module';
 import { ThongKeModule } from './modules/thong-ke/thong-ke.module';
 import { BaoCaoUserModule } from './modules/bao-cao-user/bao-cao-user.module';
+import { GiaoDichModule } from './modules/giao-dich/giao-dich.module';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { BaoCaoUserModule } from './modules/bao-cao-user/bao-cao-user.module';
     DanhMucChungModule,
     ThongKeModule,
     BaoCaoUserModule,
+    GiaoDichModule,
   ],
   controllers: [AppController, ExampleController],
   providers: [

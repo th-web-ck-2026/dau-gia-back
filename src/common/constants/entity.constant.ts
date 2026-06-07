@@ -19,4 +19,5 @@ export const EntityTable = {
   DANH_MUC: 'danh_mucs',
   THONG_KE: 'thong_kes',
   BAO_CAO_USER: 'bao_cao_users',
+  GIAO_DICH: 'giao_dich',
 } as const;

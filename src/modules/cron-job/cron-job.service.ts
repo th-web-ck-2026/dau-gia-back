@@ -4,6 +4,8 @@ import { TenderService } from '@/modules/tender/services/tender.service';
 import { AuctionService } from '@/modules/auction/services/auction.service';
 import { TrangThaiPhien } from '@/modules/scoring/common/constants';
 import { Op } from 'sequelize';
+import { GiaoDichService } from '@/modules/giao-dich/services/giao-dich.service';
+import { TrangThaiGiaoDich, LyDoThatBai } from '@/modules/giao-dich/common/constants';
 
 @Injectable()
 export class CronJobService {
@@ -12,6 +14,7 @@ export class CronJobService {
   constructor(
     private readonly tenderService: TenderService,
     private readonly auctionService: AuctionService,
+    private readonly giaoDichService: GiaoDichService,
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
@@ -64,6 +67,35 @@ export class CronJobService {
       }
     } catch (error) {
       this.logger.error('Error fetching active auction sessions:', error);
+    }
+
+    await this.xuLyGiaoDichQuaHan();
+  }
+
+  async xuLyGiaoDichQuaHan(): Promise<void> {
+    try {
+      const now = new Date();
+      const quaHan = await this.giaoDichService.getMany({
+        where: {
+          trangThai: TrangThaiGiaoDich.CHO_XAC_NHAN,
+          hanXacNhan: { [Op.lt]: now },
+        },
+      });
+      for (const gd of quaHan) {
+        try {
+          await this.giaoDichService.updateOne(
+            { trangThai: TrangThaiGiaoDich.THAT_BAI, lyDoThatBai: LyDoThatBai.QUA_HAN },
+            { where: { _id: gd._id } },
+          );
+        } catch (e) {
+          this.logger.error(`Error failing giao dich ${gd._id}:`, e);
+        }
+      }
+      if (quaHan.length > 0) {
+        this.logger.log(`Marked ${quaHan.length} giao dich as THAT_BAI (qua han).`);
+      }
+    } catch (error) {
+      this.logger.error('Error processing overdue giao dich:', error);
     }
   }
 

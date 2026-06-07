@@ -5,9 +5,10 @@ import { AuctionSessionRepository } from './repositories/auction-session.reposit
 import { AuctionBidRepository } from './repositories/auction-bid.repository';
 import { ScoringModule } from '@/modules/scoring/scoring.module';
 import { NotificationModule } from '@/modules/notification/notification.module';
+import { GiaoDichModule } from '@/modules/giao-dich/giao-dich.module';
 
 @Module({
-  imports: [ScoringModule, NotificationModule],
+  imports: [ScoringModule, NotificationModule, GiaoDichModule],
   controllers: [AuctionController],
   providers: [
     AuctionService,

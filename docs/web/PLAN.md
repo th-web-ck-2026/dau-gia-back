@@ -4,6 +4,8 @@
 
 WEB can cung cap trai nghiem day du cho 4 nhom nguoi dung: guest, participant/bidder, host/owner va admin. Tai lieu nay tap trung vao man hinh, flow, state va API interaction. Chi tiet business rule chung nam tai `docs/chung/ALL.md`; chi tiet backend nam tai `docs/back/PLAN.md`.
 
+Tai lieu tich hop feature giao dich hau ky: `docs/web/giao-dich-integration-guide.md`.
+
 ## 2. Pham Vi WEB
 
 ### 2.1 Trong Pham Vi
