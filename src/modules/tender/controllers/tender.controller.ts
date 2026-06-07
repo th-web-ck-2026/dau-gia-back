@@ -31,6 +31,7 @@ export class TenderController {
     mode: 'page',
     summary: 'Lay danh sach phien dau thau cua toi',
     responseType: TenderSession,
+    path: 'me',
   })
   @ApiCondition({
     fields: [
@@ -52,7 +53,6 @@ export class TenderController {
       },
     ],
   })
-  @Get('me')
   @Auth()
   async getPageMe(
     @ReqUser() user: AuthUser,
@@ -66,8 +66,8 @@ export class TenderController {
     mode: 'page',
     summary: 'Lay danh sach cac ho so de xuat cua toi',
     responseType: TenderSubmission,
+    path: 'me/submissions',
   })
-  @Get('me/submissions')
   @Auth()
   async getMySubmissions(
     @ReqUser() user: AuthUser,

@@ -32,6 +32,7 @@ export class AuctionController {
     mode: 'page',
     summary: 'Lay danh sach phien dau gia cua toi',
     responseType: AuctionSession,
+    path: 'me',
   })
   @ApiCondition({
     fields: [
@@ -53,7 +54,6 @@ export class AuctionController {
       },
     ],
   })
-  @Get('me')
   @Auth()
   async getPageMe(
     @ReqUser() user: AuthUser,
@@ -67,8 +67,8 @@ export class AuctionController {
     mode: 'page',
     summary: 'Lay danh sach cac luot dat gia cua toi',
     responseType: AuctionBid,
+    path: 'me/bids',
   })
-  @Get('me/bids')
   @Auth()
   async getMyBids(
     @ReqUser() user: AuthUser,
