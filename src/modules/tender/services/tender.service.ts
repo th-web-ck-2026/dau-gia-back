@@ -466,16 +466,12 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
     }
 
     if (winnerUserId) {
-      try {
-        await this.giaoDichService.taoTuPhien({
-          phienId: sessionId,
-          loaiPhien: LoaiPhien.DAU_THAU,
-          chuPhienId: session.chuPhienId,
-          nguoiThangId: winnerUserId,
-        });
-      } catch (err) {
-        console.error('Failed to create giao dich (tender):', err);
-      }
+      await this.giaoDichService.taoTuPhien({
+        phienId: sessionId,
+        loaiPhien: LoaiPhien.DAU_THAU,
+        chuPhienId: session.chuPhienId,
+        nguoiThangId: winnerUserId,
+      });
     }
 
     return this.getSessionDetails(sessionId);
@@ -886,4 +882,3 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
     }, query);
   }
 }
-

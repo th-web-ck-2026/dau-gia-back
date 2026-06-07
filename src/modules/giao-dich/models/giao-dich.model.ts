@@ -12,7 +12,7 @@ export class GiaoDichModel extends Model implements GiaoDich {
   @StrObjectId()
   _id: string;
 
-  @Column({ allowNull: false })
+  @Column({ allowNull: false, unique: true })
   phienId: string;
 
   @Column({

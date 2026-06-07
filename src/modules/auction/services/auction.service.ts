@@ -413,17 +413,13 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
     }
 
     if (winnerUserId) {
-      try {
-        await this.giaoDichService.taoTuPhien({
-          phienId: sessionId,
-          loaiPhien: LoaiPhien.DAU_GIA,
-          chuPhienId: session.chuPhienId,
-          nguoiThangId: winnerUserId,
-          giaChot: highestBidPrice,
-        });
-      } catch (err) {
-        console.error('Failed to create giao dich (auction):', err);
-      }
+      await this.giaoDichService.taoTuPhien({
+        phienId: sessionId,
+        loaiPhien: LoaiPhien.DAU_GIA,
+        chuPhienId: session.chuPhienId,
+        nguoiThangId: winnerUserId,
+        giaChot: highestBidPrice,
+      });
     }
 
     return this.getRanking(userId, sessionId, userRole);

@@ -15,6 +15,7 @@ describe('AuctionService', () => {
   let sessionRepo: any;
   let bidRepo: any;
   let auditLogService: any;
+  let giaoDichService: any;
 
   const mockSessionRepo = {
     create: jest.fn(),
@@ -67,6 +68,7 @@ describe('AuctionService', () => {
     sessionRepo = module.get<AuctionSessionRepository>(AuctionSessionRepository);
     bidRepo = module.get<AuctionBidRepository>(AuctionBidRepository);
     auditLogService = module.get<AuditLogService>(AuditLogService);
+    giaoDichService = module.get<GiaoDichService>(GiaoDichService);
   });
 
   afterEach(() => {
@@ -261,6 +263,34 @@ describe('AuctionService', () => {
         'session1',
         null,
         null,
+      );
+    });
+
+    it('should fail evaluation when post-auction transaction cannot be created', async () => {
+      const session = {
+        _id: 'session1',
+        trangThai: TrangThaiPhien.MO,
+        chuPhienId: 'user1',
+        thoiGianBatDau: new Date(Date.now() - 20000),
+        thoiGianKetThuc: new Date(Date.now() - 10000),
+      };
+      const mockBids = [
+        {
+          _id: 'bid1',
+          phienId: 'session1',
+          nguoiThamGiaId: 'user2',
+          giaDat: 200,
+          thoiDiemDat: new Date(),
+        },
+      ];
+      sessionRepo.getOne.mockResolvedValue(session);
+      bidRepo.getMany.mockResolvedValue(mockBids);
+      bidRepo.updateOne.mockResolvedValue({});
+      sessionRepo.updateOne.mockResolvedValue({});
+      giaoDichService.taoTuPhien.mockRejectedValue(new Error('create giao dich failed'));
+
+      await expect(service.evaluateSession('user1', 'session1')).rejects.toThrow(
+        'create giao dich failed',
       );
     });
   });

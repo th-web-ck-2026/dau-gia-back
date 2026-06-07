@@ -18,6 +18,7 @@ describe('TenderService', () => {
   let submissionRepo: any;
   let submissionValueRepo: any;
   let auditLogService: any;
+  let giaoDichService: any;
 
   const mockSessionRepo = {
     create: jest.fn(),
@@ -77,6 +78,7 @@ describe('TenderService', () => {
     submissionRepo = module.get<TenderSubmissionRepository>(TenderSubmissionRepository);
     submissionValueRepo = module.get<TenderSubmissionValueRepository>(TenderSubmissionValueRepository);
     auditLogService = module.get<AuditLogService>(AuditLogService);
+    giaoDichService = module.get<GiaoDichService>(GiaoDichService);
   });
 
   afterEach(() => {
@@ -309,6 +311,58 @@ describe('TenderService', () => {
         'session1',
         null,
         null,
+      );
+    });
+
+    it('should fail evaluation when post-tender transaction cannot be created', async () => {
+      const session = {
+        _id: 'session1',
+        trangThai: TrangThaiPhien.MO,
+        chuPhienId: 'user1',
+        thoiGianBatDau: new Date(Date.now() - 20000),
+        thoiGianKetThuc: new Date(Date.now() - 10000),
+        diemKyThuatToiThieu: 0,
+      };
+
+      const mockSubmission = {
+        _id: 'sub1',
+        phienId: 'session1',
+        nguoiThamGiaId: 'user2',
+        giaDeXuat: 100,
+        trangThai: TrangThaiDeXuat.HOP_LE,
+      };
+
+      const mockCriteria = [
+        {
+          _id: 'cri1',
+          phienId: 'session1',
+          tenTieuChi: 'Price',
+          maTieuChi: 'PRICE',
+          loai: LoaiTieuChi.SO,
+          trongSo: 1.0,
+          huongToiUu: HuongToiUu.THAP_HON,
+        },
+      ];
+
+      const mockSubmissionValues = [
+        {
+          _id: 'val1',
+          deXuatId: 'sub1',
+          tieuChiId: 'cri1',
+          giaTriSo: 100,
+        },
+      ];
+
+      sessionRepo.getOne.mockResolvedValue(session);
+      criteriaRepo.getMany.mockResolvedValue(mockCriteria);
+      submissionRepo.getMany.mockResolvedValue([mockSubmission]);
+      submissionValueRepo.getMany.mockResolvedValue(mockSubmissionValues);
+      submissionValueRepo.updateOne.mockResolvedValue({});
+      submissionRepo.updateOne.mockResolvedValue({});
+      giaoDichService.taoTuPhien.mockRejectedValue(new Error('create giao dich failed'));
+
+      await expect(service.evaluateSession('user1', 'session1')).rejects.toThrow(
+        'create giao dich failed',
       );
     });
   });
