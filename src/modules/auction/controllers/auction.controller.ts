@@ -166,7 +166,7 @@ export class AuctionController {
     return this.auctionService.getPage({
       where: condition as any,
       include: [
-        { model: UserModel, as: 'chuPhien', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+        { model: UserModel, as: 'chuPhien' },
         { model: AuctionBidModel, as: 'deXuatThang' },
       ],
     }, query);
@@ -269,12 +269,14 @@ export class AuctionController {
               thuHang: { type: 'number' },
               bidId: { type: 'string' },
               nguoiThamGiaId: { type: 'string' },
+              nguoiThamGia: { type: 'object' },
               bietDanh: { type: 'string' },
               giaDat: { type: 'number' },
               diemGia: { type: 'number' },
               diemTongHop: { type: 'number' },
               trangThai: { type: 'string' },
               thoiDiemDat: { type: 'string', format: 'date-time' },
+              soLuotBid: { type: 'number' },
             },
           },
         },

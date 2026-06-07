@@ -28,7 +28,7 @@ export class AuditLogController {
   ): Promise<PageableDto<AuditLog>> {
     return this.auditLogService.getPage({
       include: [
-        { model: UserModel, as: 'nguoiThucHien', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] }
+        { model: UserModel, as: 'nguoiThucHien' }
       ]
     }, query);
   }

@@ -121,6 +121,7 @@ describe('AuctionService', () => {
 
       const mockSession = { _id: 'session1', ...dto, chuPhienId: 'user1', trangThai: TrangThaiPhien.NHAP };
       sessionRepo.create.mockResolvedValue(mockSession);
+      sessionRepo.getOne.mockResolvedValue(mockSession);
 
       const res = await service.createSession('user1', dto as any);
       expect(res.tieuDe).toBe('Phien test');
