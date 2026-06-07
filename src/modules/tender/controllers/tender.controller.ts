@@ -15,6 +15,7 @@ import { TrangThaiPhien } from '@/modules/scoring/common/constants';
 import { Public } from '@/common/decorators/public.decorator';
 import { TenderSession, TenderSessionDetails } from '../entities/tender-session.entity';
 import { TenderSubmission } from '../entities/tender-submission.entity';
+import { TenderSessionStatusDto } from '../dto/tender-session-status.dto';
 import { PageableDto } from '@/common/dto/pageable.dto';
 import { Throttle } from '@nestjs/throttler';
 
@@ -171,6 +172,14 @@ export class TenderController {
     @Param('id') id: string,
   ): Promise<any> {
     return this.tenderService.getRanking(user.id, id, user.role);
+  }
+
+  @Public()
+  @Get(':id/status')
+  @ApiOperation({ summary: 'Lay trang thai phien dau thau' })
+  @ApiOkResponse({ type: TenderSessionStatusDto })
+  async getSessionStatus(@Param('id') id: string): Promise<TenderSessionStatusDto> {
+    return this.tenderService.getSessionStatus(id);
   }
 
   @Post(':id/close')

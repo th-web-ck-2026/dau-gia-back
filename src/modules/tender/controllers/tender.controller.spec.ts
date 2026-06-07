@@ -18,6 +18,7 @@ describe('TenderController', () => {
     getPage: jest.fn(),
     getRanking: jest.fn(),
     closeSession: jest.fn(),
+    getSessionStatus: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -100,6 +101,11 @@ describe('TenderController', () => {
     const user = { id: 'user1' };
     await controller.closeSession(user as any, 'session1');
     expect(service.closeSession).toHaveBeenCalledWith('user1', 'session1', false, undefined);
+  });
+
+  it('should call service.getSessionStatus', async () => {
+    await controller.getSessionStatus('session1');
+    expect(service.getSessionStatus).toHaveBeenCalledWith('session1');
   });
 });
 
