@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { BaseService } from '@Base/base.service';
 import { MailConfig } from '../entities/mail-config.entity';
 import { MailConfigRepository } from '../repositories/mail-config.repository';
@@ -15,15 +15,40 @@ export class MailConfigService extends BaseService<MailConfig> implements OnModu
     const mailConfig = await this.mailConfigRepository.getOne({
       where: { name: 'default' },
     });
+
+    const envHost = process.env.MAIL_HOST;
+    const envPort = parseInt(process.env.MAIL_PORT) || 587;
+    const envUser = process.env.MAIL_USER;
+    const envPass = process.env.MAIL_PASSWORD;
+
     if (!mailConfig) {
       await this.mailConfigRepository.create({
         name: 'default',
-        host: process.env.MAIL_HOST,
-        port: parseInt(process.env.MAIL_PORT) || 587,
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASSWORD,
+        host: envHost,
+        port: envPort,
+        user: envUser,
+        pass: envPass,
         is_active: true,
       });
+    } else {
+      // Cập nhật lại cấu hình default nếu môi trường (.env) thay đổi
+      if (
+        mailConfig.host !== envHost ||
+        mailConfig.port !== envPort ||
+        mailConfig.user !== envUser ||
+        mailConfig.pass !== envPass
+      ) {
+        await this.mailConfigRepository.updateOne(
+          {
+            host: envHost,
+            port: envPort,
+            user: envUser,
+            pass: envPass,
+          },
+          { where: { _id: mailConfig._id } },
+        );
+        Logger.log('Đã cập nhật cấu hình email default từ file .env mới', 'MailConfigService');
+      }
     }
   }
 
