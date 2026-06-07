@@ -5,7 +5,8 @@ import { UsersService } from '@/modules/user/services/user.service';
 import { NotificationService } from '@/modules/notification/services/notification.service';
 import { AuditLogService } from '@/modules/audit-log/services/audit-log.service';
 import { LoaiPhien } from '@/modules/scoring/common/constants';
-import { TrangThaiGiaoDich } from '../common/constants';
+import { TrangThaiGiaoDich, LyDoThatBai } from '../common/constants';
+import { ApiError } from '@/common/exceptions/api-error';
 
 describe('GiaoDichService', () => {
   let service: GiaoDichService;
@@ -70,6 +71,60 @@ describe('GiaoDichService', () => {
       });
       expect(res._id).toBe('gd1');
       expect(repo.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('xacNhan', () => {
+    it('người thắng xác nhận đấu giá → DA_XAC_NHAN rồi auto CHO_THANH_TOAN', async () => {
+      repo.getById.mockResolvedValue({
+        _id: 'gd1', nguoiThangId: 'winner1', chuPhienId: 'host1',
+        loaiPhien: LoaiPhien.DAU_GIA, trangThai: TrangThaiGiaoDich.CHO_XAC_NHAN,
+      });
+      repo.updateOne.mockImplementation(async (v: any) => ({ _id: 'gd1', ...v }));
+
+      const res = await service.xacNhan('winner1', 'gd1');
+      expect(res.trangThai).toBe(TrangThaiGiaoDich.CHO_THANH_TOAN);
+    });
+
+    it('người thắng xác nhận đấu thầu → CHO_KY_HOP_DONG', async () => {
+      repo.getById.mockResolvedValue({
+        _id: 'gd1', nguoiThangId: 'winner1', chuPhienId: 'host1',
+        loaiPhien: LoaiPhien.DAU_THAU, trangThai: TrangThaiGiaoDich.CHO_XAC_NHAN,
+      });
+      repo.updateOne.mockImplementation(async (v: any) => ({ _id: 'gd1', ...v }));
+
+      const res = await service.xacNhan('winner1', 'gd1');
+      expect(res.trangThai).toBe(TrangThaiGiaoDich.CHO_KY_HOP_DONG);
+    });
+
+    it('không phải người thắng → Forbidden', async () => {
+      repo.getById.mockResolvedValue({
+        _id: 'gd1', nguoiThangId: 'winner1', chuPhienId: 'host1',
+        loaiPhien: LoaiPhien.DAU_GIA, trangThai: TrangThaiGiaoDich.CHO_XAC_NHAN,
+      });
+      await expect(service.xacNhan('hacker1', 'gd1')).rejects.toThrow(ApiError);
+    });
+
+    it('sai trạng thái nguồn → BadRequest', async () => {
+      repo.getById.mockResolvedValue({
+        _id: 'gd1', nguoiThangId: 'winner1', chuPhienId: 'host1',
+        loaiPhien: LoaiPhien.DAU_GIA, trangThai: TrangThaiGiaoDich.HOAN_TAT,
+      });
+      await expect(service.xacNhan('winner1', 'gd1')).rejects.toThrow(ApiError);
+    });
+  });
+
+  describe('tuChoi', () => {
+    it('người thắng từ chối → THAT_BAI (TU_CHOI)', async () => {
+      repo.getById.mockResolvedValue({
+        _id: 'gd1', nguoiThangId: 'winner1', chuPhienId: 'host1',
+        loaiPhien: LoaiPhien.DAU_GIA, trangThai: TrangThaiGiaoDich.CHO_XAC_NHAN,
+      });
+      repo.updateOne.mockImplementation(async (v: any) => ({ _id: 'gd1', ...v }));
+
+      const res = await service.tuChoi('winner1', 'gd1');
+      expect(res.trangThai).toBe(TrangThaiGiaoDich.THAT_BAI);
+      expect(res.lyDoThatBai).toBe(LyDoThatBai.TU_CHOI);
     });
   });
 });
