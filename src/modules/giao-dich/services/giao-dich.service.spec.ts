@@ -75,7 +75,7 @@ describe('GiaoDichService', () => {
   });
 
   describe('xacNhan', () => {
-    it('người thắng xác nhận đấu giá → DA_XAC_NHAN rồi auto CHO_THANH_TOAN', async () => {
+    it('người thắng xác nhận đấu giá → CHO_THANH_TOAN', async () => {
       repo.getById.mockResolvedValue({
         _id: 'gd1', nguoiThangId: 'winner1', chuPhienId: 'host1',
         loaiPhien: LoaiPhien.DAU_GIA, trangThai: TrangThaiGiaoDich.CHO_XAC_NHAN,
@@ -156,11 +156,16 @@ describe('GiaoDichService', () => {
     });
 
     it('chủ phiên hoàn tất → HOAN_TAT', async () => {
-      repo.getById.mockResolvedValue({ ...base, trangThai: TrangThaiGiaoDich.DA_THANH_TOAN });
+      repo.getById.mockResolvedValue({ ...base, trangThai: TrangThaiGiaoDich.DA_THANH_TOAN, thoiDiemChuPhienXacNhanTien: new Date() });
       repo.updateOne.mockImplementation(async (v: any) => ({ ...base, ...v }));
 
       const res = await service.hoanTat('host1', 'gd1');
       expect(res.trangThai).toBe(TrangThaiGiaoDich.HOAN_TAT);
+    });
+
+    it('chưa xacNhanNhanTien → BadRequest khi hoanTat', async () => {
+      repo.getById.mockResolvedValue({ ...base, trangThai: TrangThaiGiaoDich.DA_THANH_TOAN, thoiDiemChuPhienXacNhanTien: null });
+      await expect(service.hoanTat('host1', 'gd1')).rejects.toThrow(ApiError);
     });
   });
 

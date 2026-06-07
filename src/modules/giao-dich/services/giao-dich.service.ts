@@ -165,6 +165,9 @@ export class GiaoDichService extends BaseService<GiaoDich> {
     const gd = await this.layVaKiemTra(id);
     this.kiemTraVai(gd, userId, 'CHU_PHIEN');
     this.kiemTraTrangThai(gd, TrangThaiGiaoDich.DA_THANH_TOAN);
+    if (!gd.thoiDiemChuPhienXacNhanTien) {
+      throw ApiError.BadRequest('Vui lòng xác nhận đã nhận tiền trước khi hoàn tất');
+    }
 
     const updated = await this.capNhat(id, {
       trangThai: TrangThaiGiaoDich.HOAN_TAT,
