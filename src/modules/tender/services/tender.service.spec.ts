@@ -344,7 +344,9 @@ describe('TenderService', () => {
       expect(res.phienId).toBe('session1');
       expect(res.danhSach).toHaveLength(2);
       expect(res.danhSach[0].nguoiThamGiaId).toBe('user1'); // self is exposed
+      expect(res.danhSach[0].bietDanh).toBe('user1');
       expect(res.danhSach[1].nguoiThamGiaId).toBe('ANONYMOUS'); // others anonymized
+      expect(res.danhSach[1].bietDanh).toBe('Bidder B');
     });
   });
 

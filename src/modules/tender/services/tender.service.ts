@@ -533,15 +533,19 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
       const resultList = submissions.map((sub, index) => {
         let participantId = sub.nguoiThamGiaId;
         let participant = (sub as any).nguoiThamGia;
+        let bietDanh = `Bidder ${String.fromCharCode(65 + index)}`;
         if (session.anDanh && !isOwner && !isAdmin && sub.nguoiThamGiaId !== userId) {
           participantId = 'ANONYMOUS';
           participant = null;
+        } else {
+          bietDanh = participant?.fullname || sub.nguoiThamGiaId;
         }
         return {
           thuHang: sub.thuHang || index + 1,
           deXuatId: sub._id,
           nguoiThamGiaId: participantId,
           nguoiThamGia: participant,
+          bietDanh,
           diemKyThuat: sub.diemKyThuat,
           diemGia: sub.diemGia,
           diemTongHop: sub.diemTongHop,
@@ -631,9 +635,12 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
       const sub = item.sub;
       let participantId = sub.nguoiThamGiaId;
       let participant = (sub as any).nguoiThamGia;
+      let bietDanh = `Bidder ${String.fromCharCode(65 + index)}`;
       if (session.anDanh && !isOwner && !isAdmin && sub.nguoiThamGiaId !== userId) {
         participantId = 'ANONYMOUS';
         participant = null;
+      } else {
+        bietDanh = participant?.fullname || sub.nguoiThamGiaId;
       }
 
       const rank = index + 1;
@@ -646,6 +653,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
         deXuatId: sub._id,
         nguoiThamGiaId: participantId,
         nguoiThamGia: participant,
+        bietDanh,
         diemKyThuat: item.technicalScore,
         diemGia: item.priceScore,
         diemTongHop: item.finalScore,
