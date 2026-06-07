@@ -102,6 +102,6 @@ describe('AuctionController', () => {
   it('should call service.getRanking', async () => {
     const user = { id: 'user1' };
     await controller.getRanking(user as any, 'session1');
-    expect(service.getRanking).toHaveBeenCalledWith('user1', 'session1');
+    expect(service.getRanking).toHaveBeenCalledWith('user1', 'session1', undefined);
   });
 });

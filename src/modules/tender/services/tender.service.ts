@@ -415,20 +415,26 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
     let rank = 1;
     let winnerUserId: string | null = null;
     const loserUserIds: string[] = [];
+    const dbPromises: Promise<any>[] = [];
     for (const item of scoredSubmissions) {
       const isWinner = item.sub._id === winnerId;
-      await this.tenderSubmissionRepository.updateOne(
-        { trangThai: isWinner ? TrangThaiDeXuat.THANG : TrangThaiDeXuat.THUA, diemKyThuat: item.technicalScore, diemGia: null, diemTongHop: item.finalScore, thuHang: rank },
-        { where: { _id: item.sub._id } },
+      dbPromises.push(
+        this.tenderSubmissionRepository.updateOne(
+          { trangThai: isWinner ? TrangThaiDeXuat.THANG : TrangThaiDeXuat.THUA, diemKyThuat: item.technicalScore, diemGia: null, diemTongHop: item.finalScore, thuHang: rank },
+          { where: { _id: item.sub._id } },
+        )
       );
       if (isWinner) {
-        await this.tenderSessionRepository.updateOne({ deXuatThangId: item.sub._id }, { where: { _id: sessionId } });
+        dbPromises.push(
+          this.tenderSessionRepository.updateOne({ deXuatThangId: item.sub._id }, { where: { _id: sessionId } })
+        );
         winnerUserId = item.sub.nguoiThamGiaId;
       } else {
         loserUserIds.push(item.sub.nguoiThamGiaId);
       }
       rank++;
     }
+    await Promise.all(dbPromises);
 
     await this.auditLogService.logAction(userId, 'EVALUATE_TENDER_SESSION', 'TenderSession', sessionId, null, null);
 
@@ -525,23 +531,30 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
     });
 
     if (isClosed) {
-      // Sort by thuHang or diemTongHop DESC
+      // Sort by thuHang or diemTongHop DESC, fallback to diemKyThuat DESC
       submissions.sort((a, b) => {
         if (a.thuHang && b.thuHang) return a.thuHang - b.thuHang;
-        return (b.diemTongHop ?? 0) - (a.diemTongHop ?? 0);
+        if (a.diemTongHop !== undefined && a.diemTongHop !== null && b.diemTongHop !== undefined && b.diemTongHop !== null) {
+          return b.diemTongHop - a.diemTongHop;
+        }
+        return (b.diemKyThuat ?? 0) - (a.diemKyThuat ?? 0);
       });
       const resultList = submissions.map((sub, index) => {
         let participantId = sub.nguoiThamGiaId;
         let participant = (sub as any).nguoiThamGia;
+        let bietDanh = `Bidder ${String.fromCharCode(65 + index)}`;
         if (session.anDanh && !isOwner && !isAdmin && sub.nguoiThamGiaId !== userId) {
           participantId = 'ANONYMOUS';
           participant = null;
+        } else {
+          bietDanh = participant?.fullname || sub.nguoiThamGiaId;
         }
         return {
           thuHang: sub.thuHang || index + 1,
           deXuatId: sub._id,
           nguoiThamGiaId: participantId,
           nguoiThamGia: participant,
+          bietDanh,
           diemKyThuat: sub.diemKyThuat,
           diemGia: sub.diemGia,
           diemTongHop: sub.diemTongHop,
@@ -631,9 +644,12 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
       const sub = item.sub;
       let participantId = sub.nguoiThamGiaId;
       let participant = (sub as any).nguoiThamGia;
+      let bietDanh = `Bidder ${String.fromCharCode(65 + index)}`;
       if (session.anDanh && !isOwner && !isAdmin && sub.nguoiThamGiaId !== userId) {
         participantId = 'ANONYMOUS';
         participant = null;
+      } else {
+        bietDanh = participant?.fullname || sub.nguoiThamGiaId;
       }
 
       const rank = index + 1;
@@ -646,6 +662,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
         deXuatId: sub._id,
         nguoiThamGiaId: participantId,
         nguoiThamGia: participant,
+        bietDanh,
         diemKyThuat: item.technicalScore,
         diemGia: item.priceScore,
         diemTongHop: item.finalScore,
