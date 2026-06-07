@@ -496,7 +496,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
     const isAdmin = userRole === UserRoles.ADMIN;
     let submissions = await this.tenderSubmissionRepository.getMany({
       where: { phienId: sessionId },
-      order: [['diemTongHop', 'DESC']],
+      order: [['diemKyThuat', 'DESC']],
       include: [
         { model: UserModel, as: 'nguoiThamGia' },
         { model: TenderSubmissionValueModel, as: 'giaTriTieuChi' },
