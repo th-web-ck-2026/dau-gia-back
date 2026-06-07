@@ -8,6 +8,7 @@ import { TrangThaiPhien, TrangThaiDeXuat } from '@/modules/scoring/common/consta
 import { AuditLogService } from '@/modules/audit-log/services/audit-log.service';
 import { NotificationService } from '@/modules/notification/services/notification.service';
 import { Sequelize } from 'sequelize-typescript';
+import { GiaoDichService } from '@/modules/giao-dich/services/giao-dich.service';
 
 describe('AuctionService', () => {
   let service: AuctionService;
@@ -58,6 +59,7 @@ describe('AuctionService', () => {
           provide: Sequelize,
           useValue: mockSequelize,
         },
+        { provide: GiaoDichService, useValue: { taoTuPhien: jest.fn().mockResolvedValue({ _id: 'gd1' }) } },
       ],
     }).compile();
 

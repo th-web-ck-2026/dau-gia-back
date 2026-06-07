@@ -9,6 +9,7 @@ import { ApiError } from '@/common/exceptions/api-error';
 import { TrangThaiPhien, TrangThaiDeXuat, LoaiTieuChi, HuongToiUu } from '@/modules/scoring/common/constants';
 import { AuditLogService } from '@/modules/audit-log/services/audit-log.service';
 import { NotificationService } from '@/modules/notification/services/notification.service';
+import { GiaoDichService } from '@/modules/giao-dich/services/giao-dich.service';
 
 describe('TenderService', () => {
   let service: TenderService;
@@ -66,6 +67,7 @@ describe('TenderService', () => {
             createNotification: jest.fn().mockResolvedValue({}),
           },
         },
+        { provide: GiaoDichService, useValue: { taoTuPhien: jest.fn().mockResolvedValue({ _id: 'gd1' }) } },
       ],
     }).compile();
 

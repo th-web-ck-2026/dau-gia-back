@@ -13,7 +13,8 @@ import { UserRoles } from '@/modules/user/common/constant';
 import { CreateTenderSessionDto } from '../dto/create-tender-session.dto';
 import { SubmitTenderProposalDto } from '../dto/submit-tender-proposal.dto';
 import { ApiError } from '@/common/exceptions/api-error';
-import { TrangThaiPhien, TrangThaiDeXuat, LoaiTieuChi, HuongToiUu } from '@/modules/scoring/common/constants';
+import { TrangThaiPhien, TrangThaiDeXuat, LoaiTieuChi, HuongToiUu, LoaiPhien } from '@/modules/scoring/common/constants';
+import { GiaoDichService } from '@/modules/giao-dich/services/giao-dich.service';
 import { Op } from 'sequelize';
 import { UserModel } from '@/modules/user/models/user.model';
 import { TenderCriteriaModel } from '../models/tender-criteria.model';
@@ -35,6 +36,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
     private readonly scoringService: ScoringService,
     private readonly auditLogService: AuditLogService,
     private readonly notificationService: NotificationService,
+    private readonly giaoDichService: GiaoDichService,
   ) {
     super(tenderSessionRepository);
   }
@@ -461,6 +463,19 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
       }
     } catch (err) {
       console.error('Failed to send tender result notifications:', err);
+    }
+
+    if (winnerUserId) {
+      try {
+        await this.giaoDichService.taoTuPhien({
+          phienId: sessionId,
+          loaiPhien: LoaiPhien.DAU_THAU,
+          chuPhienId: session.chuPhienId,
+          nguoiThangId: winnerUserId,
+        });
+      } catch (err) {
+        console.error('Failed to create giao dich (tender):', err);
+      }
     }
 
     return this.getSessionDetails(sessionId);
