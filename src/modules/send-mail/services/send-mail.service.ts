@@ -9,6 +9,7 @@ import * as fs from 'fs';
 import * as handlebars from 'handlebars';
 import { MailConfigService } from '@/modules/mail-config/services/mail-config.service';
 import { MailConfig } from '@/modules/mail-config/entities/mail-config.entity';
+import { Resend } from 'resend';
 
 @Injectable()
 export class SendMailService {
@@ -36,6 +37,14 @@ export class SendMailService {
       where: { is_active: true },
     });
     this.transporters = this.mailConfigs.map((serverConfig) => {
+      if (serverConfig.host === 'smtp.resend.com') {
+        Logger.log(
+          `Configured Resend HTTP transporter for user: ${serverConfig.user}`,
+          'SendMailService',
+        );
+        return null;
+      }
+
       const isGmail = serverConfig.host === 'smtp.gmail.com';
 
       const transportOptions: any = {
@@ -71,7 +80,7 @@ export class SendMailService {
       return nodemailer.createTransport(transportOptions);
     });
 
-    if (this.transporters.length === 0) {
+    if (this.mailConfigs.length === 0) {
       Logger.warn('No mail transporters configured.', 'SendMailService');
     }
   }
@@ -105,24 +114,52 @@ export class SendMailService {
   async sendMail(mailOptions: nodemailer.SendMailOptions): Promise<void> {
     await this.loadMailConfigs();
 
-    if (!this.transporters || this.transporters.length === 0) {
-      Logger.error('No mail transporters configured.', 'SendMailService');
-      throw new Error('No mail transporters configured.');
+    if (!this.mailConfigs || this.mailConfigs.length === 0) {
+      Logger.error('No mail configurations found.', 'SendMailService');
+      throw new Error('No mail configurations found.');
     }
 
-    const maxRetries = this.transporters.length;
+    const maxRetries = this.mailConfigs.length;
     for (let i = 0; i < maxRetries; i++) {
-      const transporter = this.getNextTransporter();
-      const currentConfigIndex =
-        (this.currentTransporterIndex - 1 + this.transporters.length) %
-        this.transporters.length;
-      const from = this.mailConfigs[currentConfigIndex].user;
+      const currentConfigIndex = this.currentTransporterIndex;
+      
+      // Advance index for the next call
+      this.currentTransporterIndex = (this.currentTransporterIndex + 1) % this.mailConfigs.length;
+
+      const serverConfig = this.mailConfigs[currentConfigIndex];
+      const transporter = this.transporters[currentConfigIndex];
+      const from = serverConfig.user;
 
       try {
-        await transporter.sendMail({
-          ...mailOptions,
-          from: `"${this.platformName}" <${from}>`,
-        });
+        if (serverConfig.host === 'smtp.resend.com') {
+          Logger.log(`Sending email to ${mailOptions.to} using Resend SDK`, 'SendMailService');
+          
+          const resend = new Resend(serverConfig.pass);
+          const recipients = Array.isArray(mailOptions.to)
+            ? (mailOptions.to as string[]).map(t => typeof t === 'string' ? t : (t as any).address)
+            : [typeof mailOptions.to === 'string' ? mailOptions.to : (mailOptions.to as any).address];
+
+          const { error } = await resend.emails.send({
+            from: `"${this.platformName}" <${from}>`,
+            to: recipients,
+            subject: mailOptions.subject as string,
+            html: mailOptions.html as string,
+            text: mailOptions.text as string,
+          });
+
+          if (error) {
+            throw new Error(`Resend SDK failed to send email: ${error.message} (${error.name})`);
+          }
+        } else {
+          if (!transporter) {
+            throw new Error('SMTP Transporter not initialized.');
+          }
+          await transporter.sendMail({
+            ...mailOptions,
+            from: `"${this.platformName}" <${from}>`,
+          });
+        }
+
         Logger.log(
           `Email sent successfully to ${mailOptions.to} using ${from}`,
         );
@@ -136,7 +173,7 @@ export class SendMailService {
       }
     }
     Logger.error(
-      `All mail transporters failed to send email to ${mailOptions.to}`,
+      `All mail transporters/APIs failed to send email to ${mailOptions.to}`,
       '',
       'SendMailService',
     );
