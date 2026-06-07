@@ -239,6 +239,24 @@ describe('GiaoDichService', () => {
       expect(res.trangThai).toBe(TrangThaiGiaoDich.HOAN_TAT);
       expect(res.nguoiThangXacNhanNhan).toBe(true);
     });
+
+    it('người ngoài cuộc ký → Forbidden', async () => {
+      repo.getById.mockResolvedValue({
+        _id: 'gd1', nguoiThangId: 'winner1', chuPhienId: 'host1',
+        loaiPhien: LoaiPhien.DAU_THAU, trangThai: TrangThaiGiaoDich.CHO_KY_HOP_DONG,
+        chuPhienDaKy: false, nguoiThangDaKy: false,
+      });
+      await expect(service.kyHopDong('hacker1', 'gd1')).rejects.toThrow(ApiError);
+    });
+
+    it('sai trạng thái nguồn kyHopDong → BadRequest', async () => {
+      repo.getById.mockResolvedValue({
+        _id: 'gd1', nguoiThangId: 'winner1', chuPhienId: 'host1',
+        loaiPhien: LoaiPhien.DAU_THAU, trangThai: TrangThaiGiaoDich.DA_KY_HOP_DONG,
+        chuPhienDaKy: true, nguoiThangDaKy: true,
+      });
+      await expect(service.kyHopDong('host1', 'gd1')).rejects.toThrow(ApiError);
+    });
   });
 
   describe('capNhatGhiChu', () => {
