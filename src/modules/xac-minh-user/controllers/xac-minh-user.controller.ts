@@ -12,6 +12,7 @@ import { XacMinhUserService } from '../services/xac-minh-user.service';
 import { CreateXacMinhUserDto } from '../dto/create-xac-minh-user.dto';
 import { UpdateXacMinhUserDto } from '../dto/update-xac-minh-user.dto';
 import { AdminDuyetDonXacMinhDto } from '../dto/admin-duyet.dto';
+import { ConditionXacMinhUserDto } from '../dto/condition-xac-minh-user.dto';
 import { Auth } from '@Decorators/auth.decorator';
 import { Public } from '@Decorators/public.decorator';
 import { ReqUser } from '@/common/decorators/user.decorator';
@@ -66,7 +67,7 @@ export class XacMinhUserController {
         description: 'Mã người dùng',
       },
       {
-        name: 'status',
+        name: 'trangThai',
         type: 'string',
         description: 'Trạng thái xác minh',
         enum: Object.values(TrangThaiXacMinhUser),
@@ -75,14 +76,15 @@ export class XacMinhUserController {
   })
   @ApiGet({
     mode: 'page',
+    path: 'admin/page',
     summary: 'Admin lấy danh sách yêu cầu xác minh',
   })
-  @Get('admin/page')
   @Roles(UserRoles.ADMIN)
   async getDanhSach(
-    @RequestCondition(XacMinhUser) condition: XacMinhUser,
+    @RequestCondition(ConditionXacMinhUserDto) condition: ConditionXacMinhUserDto,
     @RequestQuery() query: QueryOption,
   ) {
+    console.log("condition", condition);
     return this.xacMinhUserService.getPage(
       {
         where: { ...condition },

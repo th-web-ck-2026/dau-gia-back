@@ -41,14 +41,23 @@ export function RequestCondition(DtoClass: any): ParameterDecorator {
     const request = ctx.switchToHttp().getRequest();
     const raw = request.query.condition;
 
-    if (!raw) return {};
-
     let parsed: ConditionInput;
-    try {
-      parsed = JSON.parse(raw);
-    } catch (e) {
-      throw new BadRequestException('Invalid JSON in "condition" query param.');
+    let isFlatFallback = false;
+
+    if (raw) {
+      try {
+        parsed = JSON.parse(raw);
+      } catch (e) {
+        throw new BadRequestException('Invalid JSON in "condition" query param.');
+      }
+    } else {
+      // Fallback: extract conditions from top-level query parameters
+      const { page, limit, offset, order, ...rest } = request.query;
+      parsed = rest as ConditionInput;
+      isFlatFallback = true;
     }
+
+    if (!parsed || Object.keys(parsed).length === 0) return {};
 
     const { $or: rawOr, $and: rawAnd, ...baseCondition } = parsed as ConditionInput &
       ConditionStructure;
@@ -77,7 +86,7 @@ export function RequestCondition(DtoClass: any): ParameterDecorator {
     ): val is Record<string, unknown> =>
       val !== null && typeof val === 'object' && !Array.isArray(val);
 
-    const validateValue = (field: string, value: unknown) => {
+    const validateValue = (field: string, value: unknown): boolean => {
       const dto = plainToInstance(DtoClass, { [field]: value }) as object;
       const errors = validateSync(dto, {
         whitelist: true,
@@ -86,6 +95,15 @@ export function RequestCondition(DtoClass: any): ParameterDecorator {
       });
 
       if (errors.length > 0) {
+        if (isFlatFallback) {
+          const isWhitelistError = errors.some(
+            (err) => err.constraints && 'whitelistValidation' in err.constraints,
+          );
+          if (isWhitelistError) {
+            return false;
+          }
+        }
+
         const errorMessages = errors
           .map((err) => Object.values(err.constraints || {}).join(', '))
           .join('; ');
@@ -93,6 +111,7 @@ export function RequestCondition(DtoClass: any): ParameterDecorator {
           `Invalid value "${value}" for field "${field}". ${errorMessages}`,
         );
       }
+      return true;
     };
 
     const buildWhere = (input: ConditionInput) => {
@@ -108,8 +127,10 @@ export function RequestCondition(DtoClass: any): ParameterDecorator {
         }
 
         if (Array.isArray(value)) {
-          value.forEach((element) => validateValue(key, element));
-          where[key] = { [Op.in]: value };
+          const validElements = value.filter((element) => validateValue(key, element));
+          if (validElements.length > 0) {
+            where[key] = { [Op.in]: validElements };
+          }
           continue;
         }
 
@@ -145,26 +166,35 @@ export function RequestCondition(DtoClass: any): ParameterDecorator {
                   `"${opKey}" must contain exactly two values.`,
                 );
               }
-              (opVal as Primitive[]).forEach((element) =>
+              const allValid = (opVal as Primitive[]).every((element) =>
                 validateValue(key, element),
               );
+              if (allValid) {
+                operatorClauses[mappedOp] = opVal as OperatorValue;
+              }
             } else if (Array.isArray(opVal)) {
-              (opVal as Primitive[]).forEach((element) =>
+              const validElements = (opVal as Primitive[]).filter((element) =>
                 validateValue(key, element),
               );
+              if (validElements.length > 0) {
+                operatorClauses[mappedOp] = validElements as OperatorValue;
+              }
             } else {
-              validateValue(key, opVal as Primitive);
+              if (validateValue(key, opVal as Primitive)) {
+                operatorClauses[mappedOp] = opVal as OperatorValue;
+              }
             }
-
-            operatorClauses[mappedOp] = opVal as OperatorValue;
           }
 
-          where[key] = operatorClauses;
+          if (Object.keys(operatorClauses).length > 0) {
+            where[key] = operatorClauses;
+          }
           continue;
         }
 
-        validateValue(key, value);
-        where[key] = { [Op.eq]: value };
+        if (validateValue(key, value)) {
+          where[key] = { [Op.eq]: value };
+        }
       }
 
       return where;
