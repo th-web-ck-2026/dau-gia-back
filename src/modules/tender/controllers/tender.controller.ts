@@ -21,6 +21,7 @@ import { UserModel } from '@/modules/user/models/user.model';
 import { TenderCriteriaModel } from '../models/tender-criteria.model';
 import { TenderSubmissionModel } from '../models/tender-submission.model';
 import { UpdateTenderSessionDto } from '../dto/update-tender-session.dto';
+import { TenderSessionStatusDto } from '../dto/tender-session-status.dto';
 
 @ApiTags('Tender')
 @Controller('tender-sessions')
@@ -226,6 +227,14 @@ export class TenderController {
   @ApiOkResponse({ type: TenderSessionDetails })
   async getSessionDetails(@Param('id') id: string): Promise<TenderSessionDetails> {
     return this.tenderService.getSessionDetails(id);
+  }
+
+  @Public()
+  @Get(':id/status')
+  @ApiOperation({ summary: 'Lay trang thai phien dau thau' })
+  @ApiOkResponse({ type: TenderSessionStatusDto })
+  async getSessionStatus(@Param('id') id: string): Promise<TenderSessionStatusDto> {
+    return this.tenderService.getSessionStatus(id);
   }
 
   @Get(':id/ranking')

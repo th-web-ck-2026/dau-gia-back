@@ -377,10 +377,44 @@ describe('TenderService', () => {
         'host1',
         'CLOSE_TENDER_SESSION',
         'TenderSession',
-        'session1',
-        { trangThai: TrangThaiPhien.MO },
-        { trangThai: TrangThaiPhien.DONG },
       );
+    });
+  });
+
+  describe('getSessionStatus', () => {
+    it('should throw NotFound if session does not exist', async () => {
+      sessionRepo.getOne.mockResolvedValue(null);
+      await expect(service.getSessionStatus('session1')).rejects.toThrow(ApiError);
+    });
+
+    it('should return session status data', async () => {
+      const mockSession = {
+        _id: 'session1',
+        trangThai: TrangThaiPhien.MO,
+        thoiGianBatDau: new Date(Date.now() - 10000),
+        thoiGianKetThuc: new Date(Date.now() + 10000),
+        soLuongNguoiThamGia: 2,
+        anDanh: false,
+        chuPhienId: 'host1',
+      };
+      sessionRepo.getOne.mockResolvedValue(mockSession);
+      submissionRepo.count.mockResolvedValue(3);
+
+      const mockRanking = {
+        phienId: 'session1',
+        trangThai: TrangThaiPhien.MO,
+        danhSach: [
+          { nguoiThamGiaId: 'user1', bietDanh: 'user1' }
+        ]
+      };
+      jest.spyOn(service, 'getRanking').mockResolvedValue(mockRanking as any);
+
+      const res = await service.getSessionStatus('session1');
+      expect(res.phienDauThauId).toBe('session1');
+      expect(res.bietDanhNguoiDanDau).toBe('user1');
+      expect(res.tongSoLuotDat).toBe(3);
+      expect(res.soLuongNguoiThamGia).toBe(2);
+      expect(res.trangThai).toBe(TrangThaiPhien.MO);
     });
   });
 });

@@ -21,6 +21,7 @@ import { TenderSubmissionModel } from '../models/tender-submission.model';
 import { TenderSubmissionValueModel } from '../models/tender-submission-value.model';
 import { TenderSessionModel } from '../models/tender-session.model';
 import { UpdateTenderSessionDto } from '../dto/update-tender-session.dto';
+import { TenderSessionStatusDto } from '../dto/tender-session-status.dto';
 import { QueryOption } from '@/common/pipe/query-option.interface';
 import { PageableDto } from '@/common/dto/pageable.dto';
 
@@ -704,6 +705,49 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
     );
 
     return this.getSessionDetails(sessionId);
+  }
+
+  async getSessionStatus(sessionId: string): Promise<TenderSessionStatusDto> {
+    let session = await this.tenderSessionRepository.getOne({ where: { _id: sessionId } });
+    if (!session) {
+      throw ApiError.NotFound('Phien dau thau khong ton tai');
+    }
+
+    session = await this.checkAndTransitionStateInternal(session);
+
+    const count = await this.tenderSubmissionRepository.count({ where: { phienId: sessionId } });
+
+    let bietDanhNguoiDanDau = 'None';
+    let leadingUserId = '';
+    if (session.deXuatThangId) {
+      const leadingSubmission = await this.tenderSubmissionRepository.getOne({ where: { _id: session.deXuatThangId } });
+      if (leadingSubmission) {
+        leadingUserId = leadingSubmission.nguoiThamGiaId;
+      }
+    } else {
+      const ranking = await this.getRanking(session.chuPhienId, sessionId, UserRoles.ADMIN);
+      if (ranking && ranking.danhSach && ranking.danhSach.length > 0) {
+        leadingUserId = ranking.danhSach[0].nguoiThamGiaId;
+      }
+    }
+
+    if (leadingUserId && leadingUserId !== 'ANONYMOUS') {
+      if (session.anDanh) {
+        bietDanhNguoiDanDau = `User_${leadingUserId.substring(0, 4)}`;
+      } else {
+        bietDanhNguoiDanDau = leadingUserId;
+      }
+    }
+
+    return {
+      phienDauThauId: session._id,
+      bietDanhNguoiDanDau,
+      tongSoLuotDat: count,
+      soLuongNguoiThamGia: session.soLuongNguoiThamGia,
+      thoiGianServer: new Date(),
+      thoiGianKetThuc: session.thoiGianKetThuc,
+      trangThai: session.trangThai,
+    };
   }
 
   async getPageMe(
