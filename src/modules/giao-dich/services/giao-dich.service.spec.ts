@@ -102,7 +102,9 @@ describe('GiaoDichService', () => {
         _id: 'gd1', nguoiThangId: 'winner1', chuPhienId: 'host1',
         loaiPhien: LoaiPhien.DAU_GIA, trangThai: TrangThaiGiaoDich.CHO_XAC_NHAN,
       });
-      await expect(service.xacNhan('hacker1', 'gd1')).rejects.toThrow(ApiError);
+      const err = await service.xacNhan('hacker1', 'gd1').catch(e => e);
+      expect(err).toBeInstanceOf(ApiError);
+      expect(err.getStatus()).toBe(403);
     });
 
     it('sai trạng thái nguồn → BadRequest', async () => {
@@ -110,7 +112,9 @@ describe('GiaoDichService', () => {
         _id: 'gd1', nguoiThangId: 'winner1', chuPhienId: 'host1',
         loaiPhien: LoaiPhien.DAU_GIA, trangThai: TrangThaiGiaoDich.HOAN_TAT,
       });
-      await expect(service.xacNhan('winner1', 'gd1')).rejects.toThrow(ApiError);
+      const err = await service.xacNhan('winner1', 'gd1').catch(e => e);
+      expect(err).toBeInstanceOf(ApiError);
+      expect(err.getStatus()).toBe(400);
     });
   });
 
