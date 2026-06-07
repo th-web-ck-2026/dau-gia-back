@@ -20,6 +20,12 @@ export const databaseConfig = (
   models: SequelizeModel,
   autoLoadModels: true,
   synchronize: configService.get<boolean>('DB_SYNC', false),
+  pool: {
+    max: configService.get<number>('DB_POOL_MAX', 30),
+    min: configService.get<number>('DB_POOL_MIN', 5),
+    acquire: 30000,
+    idle: 10000,
+  },
   sync: {
     alter: true,
     // force: true,

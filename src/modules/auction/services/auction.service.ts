@@ -155,12 +155,28 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
     return this.getSessionDetails(sessionId);
   }
   async placeBid(userId: string, dto: PlaceAuctionBidDto): Promise<AuctionBid> {
-    let session = await this.auctionSessionRepository.getOne({ where: { _id: dto.phienId } });
+    // Parallelize outer DB reads (saves 1 database roundtrip)
+    let [session, hasBidBefore] = await Promise.all([
+      this.auctionSessionRepository.getOne({ where: { _id: dto.phienId } }),
+      this.auctionBidRepository.getOne({
+        where: { phienId: dto.phienId, nguoiThamGiaId: userId },
+      } as any),
+    ]);
+
     if (!session) {
       throw ApiError.NotFound('Phien dau gia khong ton tai');
     }
 
-    session = await this.checkAndTransitionStateInternal(session);
+    // Only run state transitions if the current time matches transition thresholds (saves pointless DB write checks)
+    const now = new Date();
+    const startTime = new Date(session.thoiGianBatDau);
+    const endTime = new Date(session.thoiGianKetThuc);
+    if (
+      (session.trangThai === TrangThaiPhien.CONG_BO && now >= startTime) ||
+      (session.trangThai === TrangThaiPhien.MO && now >= endTime)
+    ) {
+      session = await this.checkAndTransitionStateInternal(session);
+    }
 
     if (session.trangThai !== TrangThaiPhien.MO) {
       if (session.trangThai === TrangThaiPhien.DONG) {
@@ -194,33 +210,27 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
         });
       }
 
-      // Check if user has bid before in this session (before creating the new bid)
-      const hasBidBefore = await this.auctionBidRepository.getOne({
-        where: { phienId: dto.phienId, nguoiThamGiaId: userId },
-        transaction: t,
-      } as any);
-
-      const now = new Date();
-
-      const newBid = await this.auctionBidRepository.create({
-        phienId: dto.phienId,
-        nguoiThamGiaId: userId,
-        giaDat: dto.giaDat,
-        trangThai: TrangThaiDeXuat.HOP_LE,
-        thoiDiemDat: now,
-      }, { transaction: t } as any);
-
       const uniqueParticipantsCount = hasBidBefore
         ? Number(lockedSession.soLuongNguoiThamGia ?? 0)
         : Number(lockedSession.soLuongNguoiThamGia ?? 0) + 1;
 
-      await this.auctionSessionRepository.updateOne(
-        {
-          giaCaoNhat: dto.giaDat,
-          soLuongNguoiThamGia: uniqueParticipantsCount,
-        },
-        { where: { _id: lockedSession._id }, transaction: t } as any,
-      );
+      // Parallelize DB writes inside transaction and use updateAtomic to avoid findOne (saves 1 database roundtrip)
+      const [newBid] = await Promise.all([
+        this.auctionBidRepository.create({
+          phienId: dto.phienId,
+          nguoiThamGiaId: userId,
+          giaDat: dto.giaDat,
+          trangThai: TrangThaiDeXuat.HOP_LE,
+          thoiDiemDat: now,
+        }, { transaction: t } as any),
+        this.auctionSessionRepository.updateAtomic(
+          {
+            giaCaoNhat: dto.giaDat,
+            soLuongNguoiThamGia: uniqueParticipantsCount,
+          },
+          { where: { _id: lockedSession._id }, transaction: t } as any,
+        ),
+      ]);
 
       return newBid;
     });
