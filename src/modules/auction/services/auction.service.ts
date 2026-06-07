@@ -299,28 +299,45 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
     let rank = 1;
     let winnerUserId: string | null = null;
     const loserUserIds: string[] = [];
-    for (const item of scoredBids) {
-      const isWinner = rank === 1;
-      await this.auctionBidRepository.updateOne(
-        {
-          trangThai: isWinner ? TrangThaiDeXuat.THANG : TrangThaiDeXuat.THUA,
-          diemChuanHoaGia: item.priceScore,
-          diemTongHop: item.finalScore,
-          thuHang: rank,
-        },
-        { where: { _id: item.bid._id } },
-      );
+    const seenUsers = new Set<string>();
 
-      if (isWinner) {
-        await this.auctionSessionRepository.updateOne(
-          { deXuatThangId: item.bid._id },
-          { where: { _id: sessionId } },
+    for (const item of scoredBids) {
+      const participantId = item.bid.nguoiThamGiaId;
+      
+      if (!seenUsers.has(participantId)) {
+        seenUsers.add(participantId);
+        const isWinner = rank === 1;
+        await this.auctionBidRepository.updateOne(
+          {
+            trangThai: isWinner ? TrangThaiDeXuat.THANG : TrangThaiDeXuat.THUA,
+            diemChuanHoaGia: item.priceScore,
+            diemTongHop: item.finalScore,
+            thuHang: rank,
+          },
+          { where: { _id: item.bid._id } },
         );
-        winnerUserId = item.bid.nguoiThamGiaId;
+
+        if (isWinner) {
+          await this.auctionSessionRepository.updateOne(
+            { deXuatThangId: item.bid._id },
+            { where: { _id: sessionId } },
+          );
+          winnerUserId = participantId;
+        } else {
+          loserUserIds.push(participantId);
+        }
+        rank++;
       } else {
-        loserUserIds.push(item.bid.nguoiThamGiaId);
+        await this.auctionBidRepository.updateOne(
+          {
+            trangThai: TrangThaiDeXuat.THUA,
+            diemChuanHoaGia: item.priceScore,
+            diemTongHop: item.finalScore,
+            thuHang: null,
+          },
+          { where: { _id: item.bid._id } },
+        );
       }
-      rank++;
     }
 
     await this.auditLogService.logAction(userId, 'EVALUATE_AUCTION_SESSION', 'AuctionSession', sessionId, null, null);
@@ -478,9 +495,19 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
       return new Date(a.thoiDiemDat).getTime() - new Date(b.thoiDiemDat).getTime();
     });
 
-    const highestBidPrice = bids.length > 0 ? Number(bids[0].giaDat) : 0;
+    // Keep only the highest bid of each user
+    const seenUsers = new Set<string>();
+    const uniqueBids = bids.filter((bid) => {
+      if (seenUsers.has(bid.nguoiThamGiaId)) {
+        return false;
+      }
+      seenUsers.add(bid.nguoiThamGiaId);
+      return true;
+    });
 
-    const resultList = bids.map((bid, index) => {
+    const highestBidPrice = uniqueBids.length > 0 ? Number(uniqueBids[0].giaDat) : 0;
+
+    const resultList = uniqueBids.map((bid, index) => {
       const isSelf = bid.nguoiThamGiaId === userId;
       const userObj = (bid as any).nguoiThamGia;
       
