@@ -719,15 +719,21 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
 
     let bietDanhNguoiDanDau = 'None';
     let leadingUserId = '';
+    let leadingUserFullname = '';
     if (session.deXuatThangId) {
-      const leadingSubmission = await this.tenderSubmissionRepository.getOne({ where: { _id: session.deXuatThangId } });
+      const leadingSubmission = await this.tenderSubmissionRepository.getOne({
+        where: { _id: session.deXuatThangId },
+        include: [{ model: UserModel, as: 'nguoiThamGia' }],
+      });
       if (leadingSubmission) {
         leadingUserId = leadingSubmission.nguoiThamGiaId;
+        leadingUserFullname = (leadingSubmission as any).nguoiThamGia?.fullname || '';
       }
     } else {
       const ranking = await this.getRanking(session.chuPhienId, sessionId, UserRoles.ADMIN);
       if (ranking && ranking.danhSach && ranking.danhSach.length > 0) {
         leadingUserId = ranking.danhSach[0].nguoiThamGiaId;
+        leadingUserFullname = ranking.danhSach[0].bietDanh;
       }
     }
 
@@ -735,7 +741,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
       if (session.anDanh) {
         bietDanhNguoiDanDau = `User_${leadingUserId.substring(0, 4)}`;
       } else {
-        bietDanhNguoiDanDau = leadingUserId;
+        bietDanhNguoiDanDau = leadingUserFullname || leadingUserId;
       }
     }
 

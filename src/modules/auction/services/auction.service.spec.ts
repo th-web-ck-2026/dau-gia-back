@@ -295,6 +295,41 @@ describe('AuctionService', () => {
       expect(res.giaHienTai).toBe(150);
       expect(res.giaHopLeKeTiep).toBe(160);
     });
+
+    it('should return anonymous leading bidder pseudonym if session is anonymous', async () => {
+      const mockSession = { _id: 'session1', buocGia: 10, giaKhoiDiem: 100, giaCaoNhat: 150, trangThai: TrangThaiPhien.MO, anDanh: true };
+      sessionRepo.getOne.mockResolvedValue(mockSession);
+      bidRepo.count.mockResolvedValue(5);
+      bidRepo.getOne.mockResolvedValue({ nguoiThamGiaId: 'user1234' });
+
+      const res = await service.getSessionStatus('session1');
+      expect(res.bietDanhNguoiDanDau).toBe('User_user');
+    });
+
+    it('should return leading bidder fullname if session is not anonymous and fullname exists', async () => {
+      const mockSession = { _id: 'session1', buocGia: 10, giaKhoiDiem: 100, giaCaoNhat: 150, trangThai: TrangThaiPhien.MO, anDanh: false };
+      sessionRepo.getOne.mockResolvedValue(mockSession);
+      bidRepo.count.mockResolvedValue(5);
+      bidRepo.getOne.mockResolvedValue({
+        nguoiThamGiaId: 'user1234',
+        nguoiThamGia: { fullname: 'Real Name' },
+      });
+
+      const res = await service.getSessionStatus('session1');
+      expect(res.bietDanhNguoiDanDau).toBe('Real Name');
+    });
+
+    it('should return leading bidder ID if session is not anonymous and fullname does not exist', async () => {
+      const mockSession = { _id: 'session1', buocGia: 10, giaKhoiDiem: 100, giaCaoNhat: 150, trangThai: TrangThaiPhien.MO, anDanh: false };
+      sessionRepo.getOne.mockResolvedValue(mockSession);
+      bidRepo.count.mockResolvedValue(5);
+      bidRepo.getOne.mockResolvedValue({
+        nguoiThamGiaId: 'user1234',
+      });
+
+      const res = await service.getSessionStatus('session1');
+      expect(res.bietDanhNguoiDanDau).toBe('user1234');
+    });
   });
 
   describe('closeSession', () => {

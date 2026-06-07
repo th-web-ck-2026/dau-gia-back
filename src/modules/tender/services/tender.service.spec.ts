@@ -407,17 +407,69 @@ describe('TenderService', () => {
         phienId: 'session1',
         trangThai: TrangThaiPhien.MO,
         danhSach: [
-          { nguoiThamGiaId: 'user1', bietDanh: 'user1' }
+          { nguoiThamGiaId: 'user1', bietDanh: 'Real Name' }
         ]
       };
       jest.spyOn(service, 'getRanking').mockResolvedValue(mockRanking as any);
 
       const res = await service.getSessionStatus('session1');
       expect(res.phienDauThauId).toBe('session1');
-      expect(res.bietDanhNguoiDanDau).toBe('user1');
+      expect(res.bietDanhNguoiDanDau).toBe('Real Name');
       expect(res.tongSoLuotDat).toBe(3);
       expect(res.soLuongNguoiThamGia).toBe(2);
       expect(res.trangThai).toBe(TrangThaiPhien.MO);
+    });
+
+    it('should return anonymous pseudonym when Tender session is anonymous', async () => {
+      const mockSession = {
+        _id: 'session1',
+        trangThai: TrangThaiPhien.MO,
+        thoiGianBatDau: new Date(Date.now() - 10000),
+        thoiGianKetThuc: new Date(Date.now() + 10000),
+        soLuongNguoiThamGia: 2,
+        anDanh: true,
+        chuPhienId: 'host1',
+      };
+      sessionRepo.getOne.mockResolvedValue(mockSession);
+      submissionRepo.count.mockResolvedValue(3);
+
+      const mockRanking = {
+        phienId: 'session1',
+        trangThai: TrangThaiPhien.MO,
+        danhSach: [
+          { nguoiThamGiaId: 'user1234', bietDanh: 'Real Name' }
+        ]
+      };
+      jest.spyOn(service, 'getRanking').mockResolvedValue(mockRanking as any);
+
+      const res = await service.getSessionStatus('session1');
+      expect(res.bietDanhNguoiDanDau).toBe('User_user');
+    });
+
+    it('should return leading bidder ID if fullname is not available', async () => {
+      const mockSession = {
+        _id: 'session1',
+        trangThai: TrangThaiPhien.MO,
+        thoiGianBatDau: new Date(Date.now() - 10000),
+        thoiGianKetThuc: new Date(Date.now() + 10000),
+        soLuongNguoiThamGia: 2,
+        anDanh: false,
+        chuPhienId: 'host1',
+      };
+      sessionRepo.getOne.mockResolvedValue(mockSession);
+      submissionRepo.count.mockResolvedValue(3);
+
+      const mockRanking = {
+        phienId: 'session1',
+        trangThai: TrangThaiPhien.MO,
+        danhSach: [
+          { nguoiThamGiaId: 'user1234', bietDanh: '' }
+        ]
+      };
+      jest.spyOn(service, 'getRanking').mockResolvedValue(mockRanking as any);
+
+      const res = await service.getSessionStatus('session1');
+      expect(res.bietDanhNguoiDanDau).toBe('user1234');
     });
   });
 });

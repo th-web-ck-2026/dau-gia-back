@@ -468,18 +468,25 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
 
     let bietDanhNguoiDanDau = 'None';
     let leadingUserId = '';
+    let leadingUserFullname = '';
     if (session.deXuatThangId) {
-      const leadingBid = await this.auctionBidRepository.getOne({ where: { _id: session.deXuatThangId } });
+      const leadingBid = await this.auctionBidRepository.getOne({
+        where: { _id: session.deXuatThangId },
+        include: [{ model: UserModel, as: 'nguoiThamGia' }],
+      });
       if (leadingBid) {
         leadingUserId = leadingBid.nguoiThamGiaId;
+        leadingUserFullname = (leadingBid as any).nguoiThamGia?.fullname || '';
       }
     } else {
       const highestBid = await this.auctionBidRepository.getOne({
         where: { phienId: sessionId },
         order: [['giaDat', 'DESC']],
+        include: [{ model: UserModel, as: 'nguoiThamGia' }],
       });
       if (highestBid) {
         leadingUserId = highestBid.nguoiThamGiaId;
+        leadingUserFullname = (highestBid as any).nguoiThamGia?.fullname || '';
       }
     }
 
@@ -487,7 +494,7 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
       if (session.anDanh) {
         bietDanhNguoiDanDau = `User_${leadingUserId.substring(0, 4)}`;
       } else {
-        bietDanhNguoiDanDau = leadingUserId;
+        bietDanhNguoiDanDau = leadingUserFullname || leadingUserId;
       }
     }
 
