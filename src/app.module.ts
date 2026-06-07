@@ -28,6 +28,7 @@ import { ToChucProfileModule } from './modules/to-chuc-profile/to-chuc-profile.m
 import { XacMinhUserModule } from './modules/xac-minh-user/xac-minh-user.module';
 import { DanhMucChungModule } from './modules/danh-muc-chung/danh-muc-chung.module';
 import { ThongKeModule } from './modules/thong-ke/thong-ke.module';
+import { BaoCaoUserModule } from './modules/bao-cao-user/bao-cao-user.module';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { ThongKeModule } from './modules/thong-ke/thong-ke.module';
     XacMinhUserModule,
     DanhMucChungModule,
     ThongKeModule,
+    BaoCaoUserModule,
   ],
   controllers: [AppController, ExampleController],
   providers: [

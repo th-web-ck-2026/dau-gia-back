@@ -19,6 +19,7 @@
 | BACK-8 | Unique Participant Count | ✅ DONE |
 | BACK-9 | Module Review & Hardening | ✅ DONE |
 | BACK-10 | Danh Muc Chung Relational | ✅ DONE |
+| BACK-11 | Báo Cáo User | ✅ DONE |
 
 **Đang ở:** Backend phases + đợt rà soát hardening đã xong. Sẵn sàng cho frontend integration.
 
@@ -108,6 +109,21 @@ Báo cáo: `docs/html-tailwind/module-review-report.html`
 - Repository: `LoaiDanhMucRepository`, `DanhMucRepository`
 - Service/API: `DanhMucChungService`, `DanhMucChungController` (CRUD endpoints, seeding on start, delete prevention on default types)
 
+### ✅ BACK-11: Báo Cáo User
+- `common/constants.ts` — enum `LoaiBaoCao` (LUA_DAO, SPAM, QUAY_ROI, NOI_DUNG_XAU, KHAC), `TrangThaiBaoCao` (CHUA_XU_LY, DA_XU_LY)
+- Entity + Model: `bao_cao_users` (nguoiToCaoId, nguoiBiToCaoId, loai, tieuDe, noiDung, danhSachHinhAnh[], trangThai, phanHoiAdmin, adminXuLyId, thoiGianXuLy)
+- DTO: `create` (PickType), `condition` (lọc admin: loai/trangThai/nguoiToCaoId/nguoiBiToCaoId), `reply`
+- Service: `taoBaoCao` (chặn tự tố cáo + check người bị tố tồn tại), `getPageMe`, `getPageAdmin`, `traLoiBaoCao` (lưu phản hồi + gửi NotificationService cho người tố cáo)
+- Controller (`/bao-cao-user`):
+  - `POST /` — user gửi báo cáo
+  - `GET /me` — báo cáo của tôi (paginate + filter)
+  - `GET /admin` — admin xem + lọc (Roles ADMIN)
+  - `GET /admin/:id` — admin chi tiết
+  - `PUT /admin/:id/tra-loi` — admin trả lời → set DA_XU_LY + notify
+- Module: import `UsersModule` + `NotificationModule` + `SequelizeModule.forFeature([BaoCaoUserModel])`
+- **Ban user**: tái dùng API sẵn có `PUT /user/admin/:id` với `{ userStatus: BLOCKED }` — không tạo logic ban trùng trong module này
+- Build pass (cần Node ≥16 cho `nest build`)
+
 ---
 
 ## Vấn đề kỹ thuật cần lưu ý
@@ -125,4 +141,4 @@ Sau mỗi task/phase hoàn thành, AI worker cập nhật:
 2. Cập nhật chi tiết phase tương ứng (tick checkbox, ghi chú file đã tạo)
 3. Cập nhật dòng "Đang ở:" để chỉ phase tiếp theo
 
-_Last updated: 2026-06-01 (revert `thuTuServer` autoIncrement → tie-break by `thoiDiemDat`)_
+_Last updated: 2026-06-07 (BACK-11 Báo Cáo User)_

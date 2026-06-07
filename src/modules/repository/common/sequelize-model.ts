@@ -15,6 +15,7 @@ import { XacMinhUserModel } from '@/modules/xac-minh-user/models/xac-minh-user.m
 import { LoaiDanhMucModel } from '@/modules/danh-muc-chung/models/loai-danh-muc.model';
 import { DanhMucModel } from '@/modules/danh-muc-chung/models/danh-muc.model';
 import { ThongKeModel } from '@/modules/thong-ke/models/thong-ke.model';
+import { BaoCaoUserModel } from '@/modules/bao-cao-user/models/bao-cao-user.model';
 
 export const SequelizeModel: ModelCtor<Model>[] = [
   UserModel,
@@ -33,4 +34,5 @@ export const SequelizeModel: ModelCtor<Model>[] = [
   LoaiDanhMucModel,
   DanhMucModel,
   ThongKeModel,
+  BaoCaoUserModel,
 ];
