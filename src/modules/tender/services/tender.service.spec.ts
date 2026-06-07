@@ -377,6 +377,9 @@ describe('TenderService', () => {
         'host1',
         'CLOSE_TENDER_SESSION',
         'TenderSession',
+        'session1',
+        { trangThai: TrangThaiPhien.MO },
+        { trangThai: TrangThaiPhien.DONG },
       );
     });
   });
