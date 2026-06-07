@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Param, Get } from '@nestjs/common';
+import { Controller, Post, Body, Param, Get, Put, Delete } from '@nestjs/common';
 import { AuctionService } from '../services/auction.service';
 import { CreateAuctionSessionDto } from '../dto/create-auction-session.dto';
 import { PlaceAuctionBidDto } from '../dto/place-auction-bid.dto';
@@ -21,11 +21,102 @@ import { Throttle } from '@nestjs/throttler';
 import { UserModel } from '@/modules/user/models/user.model';
 import { AuctionBidModel } from '../models/auction-bid.model';
 import { AuctionRankingResponse, AuctionRankingOrMessage } from '../dto/auction-ranking.dto';
+import { UpdateAuctionSessionDto } from '../dto/update-auction-session.dto';
 
 @ApiTags('Auction')
 @Controller('auction-sessions')
 export class AuctionController {
   constructor(private readonly auctionService: AuctionService) {}
+
+  @ApiGet({
+    mode: 'page',
+    summary: 'Lay danh sach phien dau gia cua toi',
+    responseType: AuctionSession,
+  })
+  @ApiCondition({
+    fields: [
+      {
+        name: '_id',
+        type: 'string',
+        description: 'Mã phiên đấu giá',
+      },
+      {
+        name: 'tieuDe',
+        type: 'string',
+        description: 'Tiêu đề phiên đấu giá',
+      },
+      {
+        name: 'trangThai',
+        type: 'string',
+        description: 'Trạng thái phiên',
+        enum: Object.values(TrangThaiPhien),
+      },
+    ],
+  })
+  @Get('me')
+  @Auth()
+  async getPageMe(
+    @ReqUser() user: AuthUser,
+    @RequestCondition(ConditionAuctionSessionDto) condition: ConditionAuctionSessionDto,
+    @RequestQuery() query: QueryOption,
+  ): Promise<PageableDto<AuctionSession>> {
+    return this.auctionService.getPageMe(user.id, condition, query);
+  }
+
+  @ApiGet({
+    mode: 'page',
+    summary: 'Lay danh sach cac luot dat gia cua toi',
+    responseType: AuctionBid,
+  })
+  @Get('me/bids')
+  @Auth()
+  async getMyBids(
+    @ReqUser() user: AuthUser,
+    @RequestQuery() query: QueryOption,
+  ): Promise<PageableDto<AuctionBid>> {
+    return this.auctionService.getMyBids(user.id, query);
+  }
+
+  @Get('me/:id')
+  @Auth()
+  @ApiOperation({ summary: 'Lay chi tiet phien dau gia cua toi' })
+  @ApiOkResponse({ type: AuctionSession })
+  async getOneMe(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+  ): Promise<AuctionSession> {
+    return this.auctionService.getOneMe(user.id, id);
+  }
+
+  @Put('me/:id')
+  @Auth()
+  @ApiOperation({ summary: 'Cap nhat phien dau gia cua toi (chi phien nhap)' })
+  @ApiOkResponse({ type: AuctionSession })
+  async updateMe(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateAuctionSessionDto,
+  ): Promise<AuctionSession> {
+    return this.auctionService.updateMe(user.id, id, dto);
+  }
+
+  @Delete('me/:id')
+  @Auth()
+  @ApiOperation({ summary: 'Xoa phien dau gia cua toi (chi phien nhap)' })
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+      },
+    },
+  })
+  async deleteMe(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+  ): Promise<{ success: boolean }> {
+    return this.auctionService.deleteMe(user.id, id);
+  }
 
   @ApiGet({
     mode: 'page',

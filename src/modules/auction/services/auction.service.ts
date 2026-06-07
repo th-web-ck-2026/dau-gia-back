@@ -17,7 +17,11 @@ import { Sequelize } from 'sequelize-typescript';
 import { AuctionSessionStatusDto } from '../dto/auction-session-status.dto';
 import { UserModel } from '@/modules/user/models/user.model';
 import { AuctionBidModel } from '../models/auction-bid.model';
+import { AuctionSessionModel } from '../models/auction-session.model';
 import { AuctionRankingResponse, AuctionRankingOrMessage } from '../dto/auction-ranking.dto';
+import { UpdateAuctionSessionDto } from '../dto/update-auction-session.dto';
+import { QueryOption } from '@/common/pipe/query-option.interface';
+import { PageableDto } from '@/common/dto/pageable.dto';
 
 @Injectable()
 export class AuctionService extends BaseService<AuctionSession> implements OnModuleInit {
@@ -546,5 +550,99 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
     );
 
     return this.evaluateSession(userId, sessionId, true, isSystem, userRole);
+  }
+
+  async getPageMe(
+    userId: string,
+    condition: any,
+    query: QueryOption,
+  ): Promise<PageableDto<AuctionSession>> {
+    return this.auctionSessionRepository.getPage({
+      where: {
+        ...condition,
+        chuPhienId: userId,
+      },
+      include: [
+        { model: UserModel, as: 'chuPhien', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+        { model: AuctionBidModel, as: 'deXuatThang' },
+      ],
+    }, query);
+  }
+
+  async getOneMe(userId: string, id: string): Promise<AuctionSession> {
+    const session = await this.auctionSessionRepository.getOne({
+      where: { _id: id, chuPhienId: userId },
+      include: [
+        { model: UserModel, as: 'chuPhien', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+        { model: AuctionBidModel, as: 'deXuatThang' },
+      ],
+    });
+    if (!session) {
+      throw ApiError.NotFound('Phien dau gia khong ton tai hoac ban khong co quyen');
+    }
+    return session;
+  }
+
+  async updateMe(userId: string, id: string, dto: UpdateAuctionSessionDto): Promise<AuctionSession> {
+    const session = await this.auctionSessionRepository.getOne({ where: { _id: id, chuPhienId: userId } });
+    if (!session) {
+      throw ApiError.NotFound('Phien dau gia khong ton tai hoac ban khong co quyen');
+    }
+    if (session.trangThai !== TrangThaiPhien.NHAP) {
+      throw ApiError.BadRequest('Chi co the chinh sua phien dau gia o trang thai nhap');
+    }
+
+    const start = dto.thoiGianBatDau ? new Date(dto.thoiGianBatDau) : new Date(session.thoiGianBatDau);
+    const end = dto.thoiGianKetThuc ? new Date(dto.thoiGianKetThuc) : new Date(session.thoiGianKetThuc);
+    const now = new Date();
+
+    if (dto.thoiGianBatDau && start <= now) {
+      throw ApiError.BadRequest('Thoi gian bat dau phai sau thoi gian hien tai');
+    }
+    if (dto.thoiGianKetThuc && end <= now) {
+      throw ApiError.BadRequest('Thoi gian ket thuc phai sau thoi gian hien tai');
+    }
+    if (start >= end) {
+      throw ApiError.BadRequest('Thoi gian bat dau phai truoc thoi gian ket thuc');
+    }
+
+    const updateData: any = { ...dto };
+    if (dto.thoiGianBatDau) updateData.thoiGianBatDau = start;
+    if (dto.thoiGianKetThuc) updateData.thoiGianKetThuc = end;
+
+    await this.auctionSessionRepository.updateOne(updateData, { where: { _id: id } });
+
+    const updatedSession = await this.getSessionDetails(id);
+    await this.auditLogService.logAction(userId, 'UPDATE_AUCTION_SESSION', 'AuctionSession', id, session, updatedSession);
+    return updatedSession;
+  }
+
+  async deleteMe(userId: string, id: string): Promise<{ success: boolean }> {
+    const session = await this.auctionSessionRepository.getOne({ where: { _id: id, chuPhienId: userId } });
+    if (!session) {
+      throw ApiError.NotFound('Phien dau gia khong ton tai hoac ban khong co quyen');
+    }
+    if (session.trangThai !== TrangThaiPhien.NHAP) {
+      throw ApiError.BadRequest('Chi co the xoa phien dau gia o trang thai nhap');
+    }
+
+    await this.auctionSessionRepository.deleteOne({ where: { _id: id } });
+    await this.auditLogService.logAction(userId, 'DELETE_AUCTION_SESSION', 'AuctionSession', id, session, null);
+    return { success: true };
+  }
+
+  async getMyBids(userId: string, query: QueryOption): Promise<PageableDto<AuctionBid>> {
+    return this.auctionBidRepository.getPage({
+      where: { nguoiThamGiaId: userId },
+      include: [
+        {
+          model: AuctionSessionModel,
+          as: 'phien',
+          include: [
+            { model: UserModel, as: 'chuPhien', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+          ],
+        },
+      ],
+    }, query);
   }
 }

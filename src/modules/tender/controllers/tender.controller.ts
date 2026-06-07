@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Param, Get } from '@nestjs/common';
+import { Controller, Post, Body, Param, Get, Put, Delete } from '@nestjs/common';
 import { TenderService } from '../services/tender.service';
 import { CreateTenderSessionDto, CloseTenderSessionDto } from '../dto/create-tender-session.dto';
 import { SubmitTenderProposalDto } from '../dto/submit-tender-proposal.dto';
@@ -17,15 +17,105 @@ import { TenderSession, TenderSessionDetails } from '../entities/tender-session.
 import { TenderSubmission } from '../entities/tender-submission.entity';
 import { PageableDto } from '@/common/dto/pageable.dto';
 import { Throttle } from '@nestjs/throttler';
-
 import { UserModel } from '@/modules/user/models/user.model';
 import { TenderCriteriaModel } from '../models/tender-criteria.model';
 import { TenderSubmissionModel } from '../models/tender-submission.model';
+import { UpdateTenderSessionDto } from '../dto/update-tender-session.dto';
 
 @ApiTags('Tender')
 @Controller('tender-sessions')
 export class TenderController {
   constructor(private readonly tenderService: TenderService) {}
+
+  @ApiGet({
+    mode: 'page',
+    summary: 'Lay danh sach phien dau thau cua toi',
+    responseType: TenderSession,
+  })
+  @ApiCondition({
+    fields: [
+      {
+        name: '_id',
+        type: 'string',
+        description: 'Mã phiên đấu thầu',
+      },
+      {
+        name: 'tieuDe',
+        type: 'string',
+        description: 'Tiêu đề phiên đấu thầu',
+      },
+      {
+        name: 'trangThai',
+        type: 'string',
+        description: 'Trạng thái phiên',
+        enum: Object.values(TrangThaiPhien),
+      },
+    ],
+  })
+  @Get('me')
+  @Auth()
+  async getPageMe(
+    @ReqUser() user: AuthUser,
+    @RequestCondition(ConditionTenderSessionDto) condition: ConditionTenderSessionDto,
+    @RequestQuery() query: QueryOption,
+  ): Promise<PageableDto<TenderSession>> {
+    return this.tenderService.getPageMe(user.id, condition, query);
+  }
+
+  @ApiGet({
+    mode: 'page',
+    summary: 'Lay danh sach cac ho so de xuat cua toi',
+    responseType: TenderSubmission,
+  })
+  @Get('me/submissions')
+  @Auth()
+  async getMySubmissions(
+    @ReqUser() user: AuthUser,
+    @RequestQuery() query: QueryOption,
+  ): Promise<PageableDto<TenderSubmission>> {
+    return this.tenderService.getMySubmissions(user.id, query);
+  }
+
+  @Get('me/:id')
+  @Auth()
+  @ApiOperation({ summary: 'Lay chi tiet phien dau thau cua toi' })
+  @ApiOkResponse({ type: TenderSessionDetails })
+  async getOneMe(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+  ): Promise<TenderSessionDetails> {
+    return this.tenderService.getOneMe(user.id, id);
+  }
+
+  @Put('me/:id')
+  @Auth()
+  @ApiOperation({ summary: 'Cap nhat phien dau thau cua toi (chi phien nhap)' })
+  @ApiOkResponse({ type: TenderSessionDetails })
+  async updateMe(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateTenderSessionDto,
+  ): Promise<TenderSessionDetails> {
+    return this.tenderService.updateMe(user.id, id, dto);
+  }
+
+  @Delete('me/:id')
+  @Auth()
+  @ApiOperation({ summary: 'Xoa phien dau thau cua toi (chi phien nhap)' })
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+      },
+    },
+  })
+  async deleteMe(
+    @ReqUser() user: AuthUser,
+    @Param('id') id: string,
+  ): Promise<{ success: boolean }> {
+    return this.tenderService.deleteMe(user.id, id);
+  }
 
   @ApiGet({
     mode: 'page',

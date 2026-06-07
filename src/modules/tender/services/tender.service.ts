@@ -19,6 +19,10 @@ import { UserModel } from '@/modules/user/models/user.model';
 import { TenderCriteriaModel } from '../models/tender-criteria.model';
 import { TenderSubmissionModel } from '../models/tender-submission.model';
 import { TenderSubmissionValueModel } from '../models/tender-submission-value.model';
+import { TenderSessionModel } from '../models/tender-session.model';
+import { UpdateTenderSessionDto } from '../dto/update-tender-session.dto';
+import { QueryOption } from '@/common/pipe/query-option.interface';
+import { PageableDto } from '@/common/dto/pageable.dto';
 
 @Injectable()
 export class TenderService extends BaseService<TenderSession> implements OnModuleInit {
@@ -683,6 +687,127 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
     );
 
     return this.getSessionDetails(sessionId);
+  }
+
+  async getPageMe(
+    userId: string,
+    condition: any,
+    query: QueryOption,
+  ): Promise<PageableDto<TenderSession>> {
+    return this.tenderSessionRepository.getPage({
+      where: {
+        ...condition,
+        chuPhienId: userId,
+      },
+      include: [
+        { model: UserModel, as: 'chuPhien', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+        { model: TenderCriteriaModel, as: 'tieuChi' },
+        { model: TenderSubmissionModel, as: 'deXuatThang' },
+      ],
+    }, query);
+  }
+
+  async getOneMe(userId: string, id: string): Promise<TenderSessionDetails> {
+    const session = await this.tenderSessionRepository.getOne({
+      where: { _id: id, chuPhienId: userId },
+      include: [
+        { model: UserModel, as: 'chuPhien', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+        { model: TenderCriteriaModel, as: 'tieuChi' },
+        { model: TenderSubmissionModel, as: 'deXuatThang' },
+      ],
+    });
+    if (!session) {
+      throw ApiError.NotFound('Phien dau thau khong ton tai hoac ban khong co quyen');
+    }
+    return session as unknown as TenderSessionDetails;
+  }
+
+  async updateMe(userId: string, id: string, dto: UpdateTenderSessionDto): Promise<TenderSessionDetails> {
+    const session = await this.tenderSessionRepository.getOne({ where: { _id: id, chuPhienId: userId } });
+    if (!session) {
+      throw ApiError.NotFound('Phien dau thau khong ton tai hoac ban khong co quyen');
+    }
+    if (session.trangThai !== TrangThaiPhien.NHAP) {
+      throw ApiError.BadRequest('Chi co the chinh sua phien dau thau o trang thai nhap');
+    }
+
+    const start = dto.thoiGianBatDau ? new Date(dto.thoiGianBatDau) : new Date(session.thoiGianBatDau);
+    const end = dto.thoiGianKetThuc ? new Date(dto.thoiGianKetThuc) : new Date(session.thoiGianKetThuc);
+    const now = new Date();
+
+    if (dto.thoiGianBatDau && start <= now) {
+      throw ApiError.BadRequest('Thoi gian bat dau phai sau thoi gian hien tai');
+    }
+    if (dto.thoiGianKetThuc && end <= now) {
+      throw ApiError.BadRequest('Thoi gian ket thuc phai sau thoi gian hien tai');
+    }
+    if (start >= end) {
+      throw ApiError.BadRequest('Thoi gian bat dau phai truoc thoi gian ket thuc');
+    }
+
+    const { tieuChi, ...sessionData } = dto;
+    const updateData: any = { ...sessionData };
+    if (dto.thoiGianBatDau) updateData.thoiGianBatDau = start;
+    if (dto.thoiGianKetThuc) updateData.thoiGianKetThuc = end;
+
+    await this.tenderSessionRepository.updateOne(updateData, { where: { _id: id } });
+
+    if (tieuChi) {
+      await this.tenderCriteriaRepository.deleteMany({ where: { phienId: id } } as any);
+      for (const cri of tieuChi) {
+        await this.tenderCriteriaRepository.create({
+          phienId: id,
+          tenTieuChi: cri.tenTieuChi,
+          maTieuChi: cri.maTieuChi,
+          loai: cri.loai,
+          trongSo: cri.trongSo,
+          huongToiUu: cri.huongToiUu,
+          batBuoc: cri.batBuoc,
+          cacLuaChon: cri.cacLuaChon,
+          giaTriToiThieu: cri.giaTriToiThieu,
+          giaTriToiDa: cri.giaTriToiDa,
+          donVi: cri.donVi,
+        });
+      }
+    }
+
+    const updatedSession = await this.getSessionDetails(id);
+    await this.auditLogService.logAction(userId, 'UPDATE_TENDER_SESSION', 'TenderSession', id, session, updatedSession);
+    return updatedSession;
+  }
+
+  async deleteMe(userId: string, id: string): Promise<{ success: boolean }> {
+    const session = await this.tenderSessionRepository.getOne({ where: { _id: id, chuPhienId: userId } });
+    if (!session) {
+      throw ApiError.NotFound('Phien dau thau khong ton tai hoac ban khong co quyen');
+    }
+    if (session.trangThai !== TrangThaiPhien.NHAP) {
+      throw ApiError.BadRequest('Chi co the xoa phien dau thau o trang thai nhap');
+    }
+
+    await this.tenderCriteriaRepository.deleteMany({ where: { phienId: id } } as any);
+    await this.tenderSessionRepository.deleteOne({ where: { _id: id } });
+    await this.auditLogService.logAction(userId, 'DELETE_TENDER_SESSION', 'TenderSession', id, session, null);
+    return { success: true };
+  }
+
+  async getMySubmissions(userId: string, query: QueryOption): Promise<PageableDto<TenderSubmission>> {
+    return this.tenderSubmissionRepository.getPage({
+      where: { nguoiThamGiaId: userId },
+      include: [
+        {
+          model: TenderSessionModel,
+          as: 'phien',
+          include: [
+            { model: UserModel, as: 'chuPhien', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+          ],
+        },
+        {
+          model: TenderSubmissionValueModel,
+          as: 'giaTriTieuChi',
+        },
+      ],
+    }, query);
   }
 }
 
