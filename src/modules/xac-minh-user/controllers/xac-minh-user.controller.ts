@@ -17,7 +17,7 @@ import { Public } from '@Decorators/public.decorator';
 import { ReqUser } from '@/common/decorators/user.decorator';
 import { AuthUser } from '@Interfaces/auth-user.interface';
 import { User } from '@/modules/user/entities/user.entity';
-import { UserRoles } from '@/modules/user/common/constant';
+import { UserRoles, UserStatus } from '@/modules/user/common/constant';
 import {
   ApiTags,
   ApiOperation,
@@ -30,7 +30,8 @@ import { RequestQuery } from '@/common/decorators/request-query.decorator';
 import { QueryOption } from '@/common/pipe/query-option.interface';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { UserModel } from '@/modules/user/models/user.model';
-import { ApiGet } from '@/common/decorators/swagger';
+import { ApiCondition, ApiGet } from '@/common/decorators/swagger';
+import { TrangThaiXacMinhUser } from '../common/constant';
 
 @ApiTags('XacMinhUser')
 @Auth()
@@ -52,6 +53,26 @@ export class XacMinhUserController {
     return this.xacMinhUserService.createMe({ _id: user.id } as User, dto);
   }
 
+  @ApiCondition({
+    fields: [
+      {
+        name: '_id',
+        type: 'string',
+        description: 'Mã yêu cầu xác minh',
+      },
+      {
+        name: 'userId',
+        type: 'string',
+        description: 'Mã người dùng',
+      },
+      {
+        name: 'status',
+        type: 'string',
+        description: 'Trạng thái xác minh',
+        enum: Object.values(TrangThaiXacMinhUser),
+      },
+    ],
+  })
   @ApiGet({
     mode: 'page',
     summary: 'Admin lấy danh sách yêu cầu xác minh',
