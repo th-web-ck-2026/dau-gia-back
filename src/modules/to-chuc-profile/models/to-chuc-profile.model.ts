@@ -7,6 +7,11 @@ import { User } from '@/modules/user/entities/user.entity';
 
 @Table({
   tableName: EntityTable.TO_CHUC_PROFILE,
+  indexes: [
+    {
+      fields: ['userId'],
+    },
+  ],
 })
 export class ToChucProfileModel extends Model implements ToChucProfile {
 

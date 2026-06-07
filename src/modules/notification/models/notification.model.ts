@@ -7,6 +7,12 @@ import { MetadataNotificationDto } from '../dto/metadata-notification.dto';
 
 @Table({
   tableName: EntityTable.NOTIFICATION,
+  indexes: [
+    {
+      fields: ['userIds'],
+      using: 'gin',
+    },
+  ],
 })
 export class NotificationModel extends Model implements Notification {
   @Column({

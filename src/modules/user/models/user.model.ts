@@ -7,6 +7,14 @@ import { ToChucProfileModel } from '@/modules/to-chuc-profile/models/to-chuc-pro
 import { AuthProvider } from '@/modules/auth/common/constants';
 @Table({
   tableName: EntityTable.USER,
+  indexes: [
+    {
+      fields: ['role'],
+    },
+    {
+      fields: ['soCccd'],
+    },
+  ],
 })
 export class UserModel extends Model implements User {
   @Column

@@ -14,6 +14,9 @@ import { TenderSubmissionValueModel } from './tender-submission-value.model';
       unique: true,
       fields: ['phienId', 'nguoiThamGiaId'],
     },
+    {
+      fields: ['nguoiThamGiaId'],
+    },
   ],
 })
 export class TenderSubmissionModel extends Model implements TenderSubmission {

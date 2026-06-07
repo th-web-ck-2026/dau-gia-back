@@ -194,6 +194,12 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
         });
       }
 
+      // Check if user has bid before in this session (before creating the new bid)
+      const hasBidBefore = await this.auctionBidRepository.getOne({
+        where: { phienId: dto.phienId, nguoiThamGiaId: userId },
+        transaction: t,
+      } as any);
+
       const now = new Date();
 
       const newBid = await this.auctionBidRepository.create({
@@ -204,12 +210,9 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
         thoiDiemDat: now,
       }, { transaction: t } as any);
 
-      const uniqueParticipantsCount = await this.auctionBidRepository.count({
-        where: { phienId: dto.phienId },
-        distinct: true,
-        col: 'nguoiThamGiaId',
-        transaction: t,
-      } as any);
+      const uniqueParticipantsCount = hasBidBefore
+        ? Number(lockedSession.soLuongNguoiThamGia ?? 0)
+        : Number(lockedSession.soLuongNguoiThamGia ?? 0) + 1;
 
       await this.auctionSessionRepository.updateOne(
         {
@@ -222,29 +225,33 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
       return newBid;
     });
 
-    await this.auditLogService.logAction(userId, 'PLACE_AUCTION_BID', 'AuctionBid', bid._id, null, bid);
+    // Run audit logging and outbid notifications in background (non-blocking)
+    this.auditLogService.logAction(userId, 'PLACE_AUCTION_BID', 'AuctionBid', bid._id, null, bid)
+      .catch((err) => console.error('Failed to log audit action for placeBid:', err));
 
-    try {
-      const previousLeader = await this.auctionBidRepository.getOne({
-        where: {
-          phienId: dto.phienId,
-          nguoiThamGiaId: { [Op.ne]: userId },
-          _id: { [Op.ne]: bid._id },
-        },
-        order: [['giaDat', 'DESC']],
-      });
-      if (previousLeader) {
-        await this.notificationService.createNotification({
-          userIds: [previousLeader.nguoiThamGiaId],
-          type: 'AUCTION_OUTBID',
-          title: 'Bạn đã bị vượt giá',
-          content: `Có người vừa đặt giá cao hơn bạn ở phiên "${session.tieuDe}".`,
-          metadata: { phienId: session._id, bidId: bid._id, giaMoi: dto.giaDat },
-        } as any);
+    (async () => {
+      try {
+        const previousLeader = await this.auctionBidRepository.getOne({
+          where: {
+            phienId: dto.phienId,
+            nguoiThamGiaId: { [Op.ne]: userId },
+            _id: { [Op.ne]: bid._id },
+          },
+          order: [['giaDat', 'DESC']],
+        });
+        if (previousLeader) {
+          await this.notificationService.createNotification({
+            userIds: [previousLeader.nguoiThamGiaId],
+            type: 'AUCTION_OUTBID',
+            title: 'Bạn đã bị vượt giá',
+            content: `Có người vừa đặt giá cao hơn bạn ở phiên "${session.tieuDe}".`,
+            metadata: { phienId: session._id, bidId: bid._id, giaMoi: dto.giaDat },
+          } as any);
+        }
+      } catch (err) {
+        console.error('Failed to send AUCTION_OUTBID notification:', err);
       }
-    } catch (err) {
-      console.error('Failed to send AUCTION_OUTBID notification:', err);
-    }
+    })();
 
     return bid;
   }

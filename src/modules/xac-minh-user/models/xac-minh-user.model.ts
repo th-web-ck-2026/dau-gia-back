@@ -15,6 +15,11 @@ import { User } from '@/modules/user/entities/user.entity';
 
 @Table({
   tableName: EntityTable.XAC_MINH_USER,
+  indexes: [
+    {
+      fields: ['userId'],
+    },
+  ],
 })
 export class XacMinhUserModel extends Model implements XacMinhUser {
   @Column

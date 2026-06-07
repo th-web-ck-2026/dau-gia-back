@@ -9,6 +9,11 @@ import { AuctionBidModel } from './auction-bid.model';
 
 @Table({
   tableName: EntityTable.AUCTION_SESSION,
+  indexes: [
+    {
+      fields: ['chuPhienId'],
+    },
+  ],
 })
 export class AuctionSessionModel extends Model implements AuctionSession {
   @Column({

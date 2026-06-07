@@ -7,6 +7,11 @@ import { TenderCriteriaModel } from './tender-criteria.model';
 
 @Table({
   tableName: EntityTable.TENDER_SUBMISSION_VALUE,
+  indexes: [
+    {
+      fields: ['deXuatId'],
+    },
+  ],
 })
 export class TenderSubmissionValueModel extends Model implements TenderSubmissionValue {
   @StrObjectId()

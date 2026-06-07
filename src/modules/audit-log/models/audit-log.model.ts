@@ -6,6 +6,14 @@ import { UserModel } from '@/modules/user/models/user.model';
 
 @Table({
   tableName: EntityTable.AUDIT_LOG,
+  indexes: [
+    {
+      fields: ['nguoiThucHienId'],
+    },
+    {
+      fields: ['loaiDoiTuong', 'doiTuongId'],
+    },
+  ],
 })
 export class AuditLogModel extends Model implements AuditLog {
   @StrObjectId()

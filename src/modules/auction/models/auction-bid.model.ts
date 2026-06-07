@@ -8,6 +8,17 @@ import { UserModel } from '@/modules/user/models/user.model';
 
 @Table({
   tableName: EntityTable.AUCTION_BID,
+  indexes: [
+    {
+      fields: ['nguoiThamGiaId'],
+    },
+    {
+      fields: ['phienId', 'nguoiThamGiaId'],
+    },
+    {
+      fields: ['phienId', 'giaDat'],
+    },
+  ],
 })
 export class AuctionBidModel extends Model implements AuctionBid {
   @StrObjectId()

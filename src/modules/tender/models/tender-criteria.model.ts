@@ -7,6 +7,11 @@ import { TenderSessionModel } from './tender-session.model';
 
 @Table({
   tableName: EntityTable.TENDER_CRITERIA,
+  indexes: [
+    {
+      fields: ['phienId'],
+    },
+  ],
 })
 export class TenderCriteriaModel extends Model implements TenderCriteria {
   @StrObjectId()
