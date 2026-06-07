@@ -404,11 +404,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
 
     if (scoredSubmissions.length === 0) return { message: 'Khong co de xuat nao dat muc diem ky thuat toi thieu' };
 
-    for (const item of scoredSubmissions) {
-      item.priceScore = null;
-      item.finalScore = item.technicalScore;
-    }
-    scoredSubmissions.sort((a, b) => b.finalScore - a.finalScore);
+    scoredSubmissions.sort((a, b) => b.technicalScore - a.technicalScore);
 
     let winnerId = winnerSubmissionId;
     if (!winnerId && scoredSubmissions.length > 0) {
@@ -423,7 +419,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
       const isWinner = item.sub._id === winnerId;
       dbPromises.push(
         this.tenderSubmissionRepository.updateOne(
-          { trangThai: isWinner ? TrangThaiDeXuat.THANG : TrangThaiDeXuat.THUA, diemKyThuat: item.technicalScore, diemGia: null, diemTongHop: item.finalScore, thuHang: rank },
+          { trangThai: isWinner ? TrangThaiDeXuat.THANG : TrangThaiDeXuat.THUA, diemKyThuat: item.technicalScore, thuHang: rank },
           { where: { _id: item.sub._id } },
         )
       );
@@ -543,12 +539,9 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
     });
 
     if (isClosed) {
-      // Sort by thuHang or diemTongHop DESC, fallback to diemKyThuat DESC
+      // Sort by thuHang, fallback to diemKyThuat DESC
       submissions.sort((a, b) => {
         if (a.thuHang && b.thuHang) return a.thuHang - b.thuHang;
-        if (a.diemTongHop !== undefined && a.diemTongHop !== null && b.diemTongHop !== undefined && b.diemTongHop !== null) {
-          return b.diemTongHop - a.diemTongHop;
-        }
         return (b.diemKyThuat ?? 0) - (a.diemKyThuat ?? 0);
       });
       const resultList = submissions.map((sub, index) => {
@@ -568,8 +561,6 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
           nguoiThamGia: participant,
           bietDanh,
           diemKyThuat: sub.diemKyThuat,
-          diemGia: sub.diemGia,
-          diemTongHop: sub.diemTongHop,
           trangThai: sub.trangThai,
         };
       });
@@ -639,11 +630,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
     }
 
     if (scoredSubmissions.length > 0) {
-      for (const item of scoredSubmissions) {
-        item.priceScore = null;
-        item.finalScore = item.technicalScore;
-      }
-      scoredSubmissions.sort((a, b) => b.finalScore - a.finalScore);
+      scoredSubmissions.sort((a, b) => b.technicalScore - a.technicalScore);
     }
 
     // Filter submissions: normal users only see their own when session is open
@@ -676,8 +663,6 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
         nguoiThamGia: participant,
         bietDanh,
         diemKyThuat: item.technicalScore,
-        diemGia: item.priceScore,
-        diemTongHop: item.finalScore,
         trangThai: state,
       };
     });

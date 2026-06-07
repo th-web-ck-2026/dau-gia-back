@@ -74,16 +74,6 @@ export class TenderSubmissionModel extends Model implements TenderSubmission {
   diemKyThuat?: number;
 
   @Column({
-    type: DataType.FLOAT,
-  })
-  diemGia?: number;
-
-  @Column({
-    type: DataType.FLOAT,
-  })
-  diemTongHop?: number;
-
-  @Column({
     type: DataType.INTEGER,
   })
   thuHang?: number;

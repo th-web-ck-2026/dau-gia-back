@@ -390,8 +390,8 @@ describe('TenderService', () => {
     it('should return ranking representation', async () => {
       const mockSession = { _id: 'session1', trangThai: TrangThaiPhien.DONG, anDanh: true, chuPhienId: 'host1' };
       const mockSubmissions = [
-        { _id: 'sub1', nguoiThamGiaId: 'user1', diemTongHop: 90, thuHang: 1, trangThai: TrangThaiDeXuat.HOP_LE },
-        { _id: 'sub2', nguoiThamGiaId: 'user2', diemTongHop: 80, thuHang: 2, trangThai: TrangThaiDeXuat.HOP_LE }
+        { _id: 'sub1', nguoiThamGiaId: 'user1', diemKyThuat: 90, thuHang: 1, trangThai: TrangThaiDeXuat.HOP_LE },
+        { _id: 'sub2', nguoiThamGiaId: 'user2', diemKyThuat: 80, thuHang: 2, trangThai: TrangThaiDeXuat.HOP_LE }
       ];
       sessionRepo.getOne.mockResolvedValue(mockSession);
       submissionRepo.getMany.mockResolvedValue(mockSubmissions);

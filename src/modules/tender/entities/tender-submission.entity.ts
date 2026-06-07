@@ -22,12 +22,6 @@ export class TenderSubmission implements BaseEntity {
   diemKyThuat?: number;
 
   @ApiPropertyOptional()
-  diemGia?: number;
-
-  @ApiPropertyOptional()
-  diemTongHop?: number;
-
-  @ApiPropertyOptional()
   thuHang?: number;
 
   @ApiPropertyOptional()

@@ -257,8 +257,6 @@ export class TenderController {
               nguoiThamGia: { type: 'object' },
               bietDanh: { type: 'string' },
               diemKyThuat: { type: 'number' },
-              diemGia: { type: 'number' },
-              diemTongHop: { type: 'number' },
               trangThai: { type: 'string' },
             },
           },
