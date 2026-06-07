@@ -117,7 +117,7 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
 
     await this.auditLogService.logAction(userId, 'CREATE_AUCTION_SESSION', 'AuctionSession', session._id, null, session);
 
-    return session;
+    return this.getSessionDetails(session._id);
   }
 
   async publishSession(userId: string, sessionId: string): Promise<AuctionSession> {
@@ -400,7 +400,7 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
     let session = await this.auctionSessionRepository.getOne({
       where: { _id: sessionId },
       include: [
-        { model: UserModel, as: 'chuPhien', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+        { model: UserModel, as: 'chuPhien' },
         { model: AuctionBidModel, as: 'deXuatThang' },
       ],
     });
@@ -425,7 +425,7 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
       where: { phienId: sessionId },
       order: [['giaDat', 'DESC']],
       include: [
-        { model: UserModel, as: 'nguoiThamGia', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+        { model: UserModel, as: 'nguoiThamGia' },
       ],
     });
 
@@ -506,9 +506,16 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
     const bids = await this.auctionBidRepository.getMany({
       where: { phienId: sessionId },
       include: [
-        { model: UserModel, as: 'nguoiThamGia', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+        { model: UserModel, as: 'nguoiThamGia' },
       ],
     });
+
+    // Count bid frequency per user in this session
+    const userBidCountMap = new Map<string, number>();
+    for (const b of bids) {
+      const cur = userBidCountMap.get(b.nguoiThamGiaId) || 0;
+      userBidCountMap.set(b.nguoiThamGiaId, cur + 1);
+    }
 
     // Keep only the highest bid of each user
     const userHighestBidsMap = new Map<string, any>();
@@ -585,6 +592,7 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
         diemTongHop: score,
         trangThai: state,
         thoiDiemDat: bid.thoiDiemDat,
+        soLuotBid: userBidCountMap.get(bid.nguoiThamGiaId) || 0,
       };
     });
 
@@ -638,7 +646,7 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
         chuPhienId: userId,
       },
       include: [
-        { model: UserModel, as: 'chuPhien', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+        { model: UserModel, as: 'chuPhien' },
         { model: AuctionBidModel, as: 'deXuatThang' },
       ],
     }, query);
@@ -648,7 +656,7 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
     const session = await this.auctionSessionRepository.getOne({
       where: { _id: id, chuPhienId: userId },
       include: [
-        { model: UserModel, as: 'chuPhien', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+        { model: UserModel, as: 'chuPhien' },
         { model: AuctionBidModel, as: 'deXuatThang' },
       ],
     });
@@ -714,7 +722,7 @@ export class AuctionService extends BaseService<AuctionSession> implements OnMod
           model: AuctionSessionModel,
           as: 'phien',
           include: [
-            { model: UserModel, as: 'chuPhien', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+            { model: UserModel, as: 'chuPhien' },
           ],
         },
       ],

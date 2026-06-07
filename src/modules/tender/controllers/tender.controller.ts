@@ -166,7 +166,7 @@ export class TenderController {
     return this.tenderService.getPage({
       where: { ...condition },
       include: [
-        { model: UserModel, as: 'chuPhien', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+        { model: UserModel, as: 'chuPhien' },
         { model: TenderCriteriaModel, as: 'tieuChi' },
         { model: TenderSubmissionModel, as: 'deXuatThang' },
       ],
@@ -245,6 +245,7 @@ export class TenderController {
               thuHang: { type: 'number' },
               deXuatId: { type: 'string' },
               nguoiThamGiaId: { type: 'string' },
+              nguoiThamGia: { type: 'object' },
               bietDanh: { type: 'string' },
               diemKyThuat: { type: 'number' },
               diemGia: { type: 'number' },

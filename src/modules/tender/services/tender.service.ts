@@ -470,7 +470,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
     let session = await this.tenderSessionRepository.getOne({
       where: { _id: sessionId },
       include: [
-        { model: UserModel, as: 'chuPhien', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+        { model: UserModel, as: 'chuPhien' },
         { model: TenderCriteriaModel, as: 'tieuChi' },
         { model: TenderSubmissionModel, as: 'deXuatThang' },
       ],
@@ -491,7 +491,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
       where: { phienId: sessionId },
       order: [['diemTongHop', 'DESC']],
       include: [
-        { model: UserModel, as: 'nguoiThamGia', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+        { model: UserModel, as: 'nguoiThamGia' },
         { model: TenderSubmissionValueModel, as: 'giaTriTieuChi' },
       ],
     });
@@ -526,7 +526,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
     const submissions = await this.tenderSubmissionRepository.getMany({
       where: { phienId: sessionId },
       include: [
-        { model: UserModel, as: 'nguoiThamGia', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+        { model: UserModel, as: 'nguoiThamGia' },
       ],
     });
 
@@ -717,7 +717,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
         chuPhienId: userId,
       },
       include: [
-        { model: UserModel, as: 'chuPhien', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+        { model: UserModel, as: 'chuPhien' },
         { model: TenderCriteriaModel, as: 'tieuChi' },
         { model: TenderSubmissionModel, as: 'deXuatThang' },
       ],
@@ -728,7 +728,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
     const session = await this.tenderSessionRepository.getOne({
       where: { _id: id, chuPhienId: userId },
       include: [
-        { model: UserModel, as: 'chuPhien', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+        { model: UserModel, as: 'chuPhien' },
         { model: TenderCriteriaModel, as: 'tieuChi' },
         { model: TenderSubmissionModel, as: 'deXuatThang' },
       ],
@@ -816,7 +816,7 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
           model: TenderSessionModel,
           as: 'phien',
           include: [
-            { model: UserModel, as: 'chuPhien', attributes: ['_id', 'fullname', 'email', 'phone', 'avatar'] },
+            { model: UserModel, as: 'chuPhien' },
           ],
         },
         {
