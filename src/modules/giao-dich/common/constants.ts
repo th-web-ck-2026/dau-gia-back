@@ -1,0 +1,19 @@
+export enum TrangThaiGiaoDich {
+  CHO_XAC_NHAN = 'CHO_XAC_NHAN',
+  DA_XAC_NHAN = 'DA_XAC_NHAN',
+  CHO_THANH_TOAN = 'CHO_THANH_TOAN',
+  DA_THANH_TOAN = 'DA_THANH_TOAN',
+  CHO_KY_HOP_DONG = 'CHO_KY_HOP_DONG',
+  DA_KY_HOP_DONG = 'DA_KY_HOP_DONG',
+  DANG_BAN_GIAO = 'DANG_BAN_GIAO',
+  HOAN_TAT = 'HOAN_TAT',
+  THAT_BAI = 'THAT_BAI',
+  DA_HUY = 'DA_HUY',
+}
+
+export enum LyDoThatBai {
+  TU_CHOI = 'TU_CHOI',
+  QUA_HAN = 'QUA_HAN',
+}
+
+export const HAN_XAC_NHAN_GIO = 48;

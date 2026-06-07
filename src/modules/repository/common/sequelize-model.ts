@@ -16,6 +16,7 @@ import { LoaiDanhMucModel } from '@/modules/danh-muc-chung/models/loai-danh-muc.
 import { DanhMucModel } from '@/modules/danh-muc-chung/models/danh-muc.model';
 import { ThongKeModel } from '@/modules/thong-ke/models/thong-ke.model';
 import { BaoCaoUserModel } from '@/modules/bao-cao-user/models/bao-cao-user.model';
+import { GiaoDichModel } from '@/modules/giao-dich/models/giao-dich.model';
 
 export const SequelizeModel: ModelCtor<Model>[] = [
   UserModel,
@@ -35,4 +36,5 @@ export const SequelizeModel: ModelCtor<Model>[] = [
   DanhMucModel,
   ThongKeModel,
   BaoCaoUserModel,
+  GiaoDichModel,
 ];
