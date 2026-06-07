@@ -12,6 +12,7 @@ import { NotificationService } from '@/modules/notification/services/notificatio
 import { UserRoles } from '@/modules/user/common/constant';
 import { CreateTenderSessionDto } from '../dto/create-tender-session.dto';
 import { SubmitTenderProposalDto } from '../dto/submit-tender-proposal.dto';
+import { TenderSessionStatusDto } from '../dto/tender-session-status.dto';
 import { ApiError } from '@/common/exceptions/api-error';
 import { TrangThaiPhien, TrangThaiDeXuat, LoaiTieuChi, HuongToiUu } from '@/modules/scoring/common/constants';
 import { Op } from 'sequelize';
@@ -721,5 +722,26 @@ export class TenderService extends BaseService<TenderSession> implements OnModul
     );
 
     return this.getSessionDetails(sessionId);
+  }
+
+  async getSessionStatus(sessionId: string): Promise<TenderSessionStatusDto> {
+    let session = await this.tenderSessionRepository.getOne({ where: { _id: sessionId } });
+    if (!session) {
+      throw ApiError.NotFound('Phien dau thau khong ton tai');
+    }
+
+    session = await this.checkAndTransitionStateInternal(session);
+
+    const count = await this.tenderSubmissionRepository.count({ where: { phienId: sessionId } });
+
+    return {
+      phienDauThauId: session._id,
+      tongSoHoSoNop: count,
+      soLuongNguoiThamGia: session.soLuongNguoiThamGia,
+      giaToiDa: session.giaToiDa,
+      thoiGianServer: new Date(),
+      thoiGianKetThuc: session.thoiGianKetThuc,
+      trangThai: session.trangThai,
+    };
   }
 }

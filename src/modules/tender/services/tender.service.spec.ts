@@ -401,4 +401,24 @@ describe('TenderService', () => {
       );
     });
   });
+
+  describe('getSessionStatus', () => {
+    it('should throw NotFound if session does not exist', async () => {
+      sessionRepo.getOne.mockResolvedValue(null);
+      await expect(service.getSessionStatus('session1')).rejects.toThrow(ApiError);
+    });
+
+    it('should return session status details successfully', async () => {
+      const mockSession = { _id: 'session1', trangThai: TrangThaiPhien.MO, thoiGianKetThuc: new Date(), soLuongNguoiThamGia: 5, giaToiDa: 1000000 };
+      sessionRepo.getOne.mockResolvedValue(mockSession);
+      submissionRepo.count.mockResolvedValue(10);
+
+      const res = await service.getSessionStatus('session1');
+      expect(res.phienDauThauId).toBe('session1');
+      expect(res.tongSoHoSoNop).toBe(10);
+      expect(res.soLuongNguoiThamGia).toBe(5);
+      expect(res.giaToiDa).toBe(1000000);
+      expect(res.trangThai).toBe(TrangThaiPhien.MO);
+    });
+  });
 });
