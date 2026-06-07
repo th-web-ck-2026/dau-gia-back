@@ -355,7 +355,9 @@ export class AuthService implements OnModuleInit {
       throw ApiError.NotFound('Email không tồn tại');
     }
     const token = await this.generateToken({ id: user._id }, expiresIn);
-    await this.sendMailService.sendPasswordReset(user, token);
+    this.sendMailService.sendPasswordReset(user, token).catch((err) => {
+      console.error(`Failed to send password reset email to ${email}:`, err);
+    });
   }
 
   // Reset password - kept from original
