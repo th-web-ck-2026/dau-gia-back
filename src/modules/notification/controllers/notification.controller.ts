@@ -7,7 +7,7 @@ import { ApiOperation } from '@nestjs/swagger';
 import { Auth } from '@/common/decorators/auth.decorator';
 import { UserRoles } from '@/modules/user/common/constant';
 
-@Auth(UserRoles.USER)
+@Auth(UserRoles.USER, UserRoles.ADMIN)
 @Controller('notification')
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}

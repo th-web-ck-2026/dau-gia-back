@@ -186,7 +186,7 @@ export function RequestCondition(DtoClass: any): ParameterDecorator {
             }
           }
 
-          if (Object.keys(operatorClauses).length > 0) {
+          if (Reflect.ownKeys(operatorClauses).length > 0) {
             where[key] = operatorClauses;
           }
           continue;
